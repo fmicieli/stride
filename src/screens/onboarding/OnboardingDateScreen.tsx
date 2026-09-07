@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   header: { height: 60, paddingHorizontal: spacing[4], justifyContent: 'center' },
   backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
   backIcon: { fontSize: 22, color: colors.ink[900], lineHeight: 26 },
-  progressContainer: { paddingHorizontal: spacing[4], paddingBottom: spacing[1] },
+  progressContainer: { paddingHorizontal: spacing[4], paddingBottom: spacing[1], alignItems: 'center' },
   content: { flex: 1, paddingHorizontal: spacing[4], paddingTop: spacing[5] },
   title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, lineHeight: 30, color: colors.ink[900], marginBottom: spacing[2] },
   subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500], marginBottom: spacing[7] },

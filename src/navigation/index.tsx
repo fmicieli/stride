@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Animated, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { StrideLogo } from '../components/StrideLogo';
+import { TabIcon } from '../components/TabIcon';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { TrainingPlan } from '../types';
@@ -71,21 +72,19 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
-function TabIcon({ name, focused }: { name: string; focused: boolean }) {
-  const icons: Record<string, string> = { Hoy: '⊙', Progreso: '◎', Perfil: '○' };
-  return (
-    <Text style={{ fontSize: 20, color: focused ? '#1B6E52' : '#8A8A8A' }}>
-      {icons[name] ?? '•'}
-    </Text>
-  );
-}
-
 function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarIcon: ({ focused }) => <TabIcon name={route.name} focused={focused} />,
+        tabBarIcon: ({ focused }) => (
+          <TabIcon
+            name={route.name}
+            focused={focused}
+            activeColor="#1B6E52"
+            inactiveColor="#8A8A8A"
+          />
+        ),
         tabBarActiveTintColor: '#1B6E52',
         tabBarInactiveTintColor: '#8A8A8A',
         tabBarLabelStyle: { fontFamily: 'PlusJakartaSans', fontSize: 11 },
