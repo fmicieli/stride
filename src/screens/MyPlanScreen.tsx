@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
@@ -20,15 +20,41 @@ function getCurrentWeek(plan: TrainingPlan, sessions: TrainingSession[]): number
   return plan.totalWeeks;
 }
 
+function CheckIcon() {
+  if (Platform.OS === 'web') {
+    return (
+      // @ts-ignore
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* @ts-ignore */}
+        <path d="M 3.5 9 L 6.5 12 L 14.5 4" stroke="#1E8563" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+  }
+  return <Text style={{ fontSize: 14, color: '#1E8563' }}>✓</Text>;
+}
+
+function ChevronIcon({ expanded }: { expanded: boolean }) {
+  if (Platform.OS === 'web') {
+    return (
+      // @ts-ignore
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+        {/* @ts-ignore */}
+        <path d="M 6.5 3.5 L 11.5 9 L 6.5 14.5" stroke="#777777" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+  }
+  return <Text style={{ fontSize: 14, color: '#777777' }}>{expanded ? '∧' : '›'}</Text>;
+}
+
 function WeekCard({ week, expanded, onToggle, completed }: { week: WeekPlan; expanded: boolean; onToggle: () => void; completed: boolean }) {
   return (
     <View style={styles.weekCard}>
       <TouchableOpacity style={styles.weekHeader} onPress={onToggle} activeOpacity={0.8}>
         <View style={styles.weekTitleRow}>
           <Text style={styles.weekTitle}>Semana {week.week}</Text>
-          {completed && <Text style={styles.completedBadge}>✓</Text>}
+          {completed && <CheckIcon />}
         </View>
-        <Text style={styles.chevron}>{expanded ? '∧' : '∨'}</Text>
+        <ChevronIcon expanded={expanded} />
       </TouchableOpacity>
       {expanded && (
         <View style={styles.weekDays}>
@@ -137,7 +163,6 @@ const styles = StyleSheet.create({
   weekTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   weekTitle: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 16, color: colors.ink[900] },
   completedBadge: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 14, color: colors.brand[500] },
-  chevron: { fontSize: 14, color: colors.ink[400] },
   weekDays: { paddingHorizontal: spacing[4], paddingBottom: spacing[3], gap: 8 },
   dayRow: { flexDirection: 'row', alignItems: 'center' },
   dayName: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 14, color: colors.ink[900], width: 36 },

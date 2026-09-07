@@ -88,6 +88,8 @@ export function HomeScreen() {
   const completedWeeks = plan ? getCompletedWeeks(plan, sessions) : 0;
   const progress = plan ? completedWeeks / plan.totalWeeks : 0;
 
+  const isRunDay = todayActivity?.type === 'run';
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       {!isConnected && (
@@ -111,8 +113,8 @@ export function HomeScreen() {
           <>
             <View style={styles.workoutCard}>
               <Text style={styles.cardLabel}>Entrenamiento de hoy</Text>
-              <Text style={styles.cardTitle}>{todayActivity?.type === 'run' ? 'Trote' : 'Día de descanso'}</Text>
-              {todayActivity?.type === 'run' && (
+              <Text style={styles.cardTitle}>{isRunDay ? 'Trote' : 'Día de descanso'}</Text>
+              {isRunDay && (
                 <Text style={styles.cardSub}>{todayActivity.duration} min · {plan.method}</Text>
               )}
               <View style={styles.separator} />
@@ -122,12 +124,6 @@ export function HomeScreen() {
                 <Text style={styles.progressLabel}>{Math.round(progress * 100)}%</Text>
               </View>
             </View>
-
-            {todayActivity?.type === 'run' && (
-              <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => navigation.navigate('GPSPermission')}>
-                <Text style={styles.primaryButtonText}>Iniciar entrenamiento</Text>
-              </TouchableOpacity>
-            )}
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Próximos días</Text>
@@ -157,12 +153,27 @@ export function HomeScreen() {
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>Sin plan activo</Text>
             <Text style={styles.emptyText}>Configurá tu plan de entrenamiento para empezar</Text>
-            <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => navigation.navigate('OnboardingGoal')}>
-              <Text style={styles.primaryButtonText}>Crear mi plan</Text>
-            </TouchableOpacity>
           </View>
         )}
       </ScrollView>
+
+      <View style={styles.footer}>
+        {plan ? (
+          isRunDay ? (
+            <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => navigation.navigate('GPSPermission')}>
+              <Text style={styles.primaryButtonText}>Iniciar entrenamiento</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.restFooter}>
+              <Text style={styles.restFooterText}>Hoy es día de descanso — ¡aprovechá para recuperarte!</Text>
+            </View>
+          )
+        ) : (
+          <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => navigation.navigate('OnboardingGoal')}>
+            <Text style={styles.primaryButtonText}>Activar mi plan</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -179,7 +190,10 @@ const styles = StyleSheet.create({
   headerHola: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[400] },
   headerSub: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[8], gap: spacing[5] },
+  scrollContent: { paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[4], gap: spacing[5] },
+  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.surfaceMuted },
+  restFooter: { alignItems: 'center', paddingVertical: spacing[3] },
+  restFooterText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], textAlign: 'center' },
   workoutCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], gap: 6 },
   cardLabel: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400] },
   cardTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
@@ -199,7 +213,7 @@ const styles = StyleSheet.create({
   dayChipTextActive: { color: colors.surface },
   goalCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4] },
   goalText: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 16, color: colors.ink[900] },
-  emptyState: { alignItems: 'center', paddingTop: 60, gap: spacing[3] },
+  emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 60, gap: spacing[3] },
   emptyTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
   emptyText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], textAlign: 'center', lineHeight: 20, marginBottom: 8 },
 });
