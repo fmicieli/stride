@@ -44,20 +44,16 @@ function formatDateDisplay(d: Date): string {
 export function OnboardingDateScreen() {
   const navigation = useNavigation<Nav>();
   const { data, setTargetDate } = useOnboarding();
-  const defaultDate = addDays(new Date(), 56);
-  const [date, setDate] = useState<Date>(defaultDate);
+  const minWeeks = data.goal ? (MIN_WEEKS[data.goal] ?? 4) : 4;
+  const minDate = addDays(new Date(), minWeeks * 7);
+  const [date, setDate] = useState<Date>(minDate);
 
   const weeks = weeksUntil(date.toISOString());
-  const minWeeks = data.goal ? (MIN_WEEKS[data.goal] ?? 4) : 4;
-  const hasEnoughTime = weeks >= minWeeks;
+  const isAtMinimum = weeks <= minWeeks + 1;
 
   const handleContinue = () => {
     setTargetDate(date.toISOString());
-    if (!hasEnoughTime) {
-      navigation.navigate('InsufficientTime');
-    } else {
-      navigation.navigate('PlanLoading');
-    }
+    navigation.navigate('PlanLoading');
   };
 
   const handleWebChange = (e: any) => {
@@ -87,8 +83,8 @@ export function OnboardingDateScreen() {
             // @ts-ignore — web-only HTML input
             <input
               type="date"
-              defaultValue={toDateString(defaultDate)}
-              min={toDateString(addDays(new Date(), 1))}
+              defaultValue={toDateString(minDate)}
+              min={toDateString(minDate)}
               onChange={handleWebChange}
               style={{
                 width: '100%',
@@ -113,7 +109,7 @@ export function OnboardingDateScreen() {
                   value={date}
                   mode="date"
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  minimumDate={addDays(new Date(), 1)}
+                  minimumDate={minDate}
                   onChange={(_: any, selected?: Date) => {
                     if (selected) setDate(selected);
                   }}
@@ -125,18 +121,12 @@ export function OnboardingDateScreen() {
           )}
         </View>
 
-        {weeks > 0 ? (
-          <>
-            <Text style={styles.dateDisplay}>{formatDateDisplay(date)}</Text>
-            <Text style={[styles.weeksInfo, !hasEnoughTime && styles.weeksWarning]}>
-              {hasEnoughTime
-                ? `Eso te da ${weeks} semana${weeks !== 1 ? 's' : ''} para entrenar`
-                : `Necesitás al menos ${minWeeks} semanas — elegí una fecha más lejana`}
-            </Text>
-          </>
-        ) : (
-          <Text style={styles.weeksInfo}>Elegí una fecha futura</Text>
-        )}
+        <Text style={styles.dateDisplay}>{formatDateDisplay(date)}</Text>
+        <Text style={[styles.weeksInfo, isAtMinimum && styles.weeksMinimum]}>
+          {isAtMinimum
+            ? `Esta es la fecha más pronta posible para tu meta. No se recomienda acortar el plazo.`
+            : `Eso te da ${weeks} semana${weeks !== 1 ? 's' : ''} para entrenar`}
+        </Text>
       </View>
 
       <View style={styles.footer}>
@@ -169,7 +159,7 @@ const styles = StyleSheet.create({
     marginTop: spacing[3],
     marginBottom: spacing[1],
   },
-  weeksInfo: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[500], textAlign: 'center', marginTop: spacing[1] },
-  weeksWarning: { color: colors.error.text },
+  weeksInfo: { fontFamily: 'PlusJakartaSans', fontSize: 14, lineHeight: 20, color: colors.ink[500], textAlign: 'center', marginTop: spacing[2] },
+  weeksMinimum: { color: colors.warning.text },
   footer: { paddingHorizontal: spacing[4], paddingBottom: spacing[4], paddingTop: spacing[3] },
 });
