@@ -113,20 +113,20 @@ export function HomeScreen() {
           <>
             <View style={styles.workoutCard}>
               <Text style={styles.cardLabel}>Entrenamiento de hoy</Text>
-              <Text style={styles.cardTitle}>{isRunDay ? 'Trote' : 'Día de descanso'}</Text>
+              <Text style={styles.cardTitle}>{isRunDay ? 'Trote con intervalos' : 'Día de descanso'}</Text>
               {isRunDay && (
                 <Text style={styles.cardSub}>{todayActivity.duration} min · {plan.method}</Text>
               )}
               <View style={styles.separator} />
-              <ProgressBar progress={progress} height={4} />
               <View style={styles.progressLabels}>
                 <Text style={styles.progressLabel}>Semana {completedWeeks + 1} de {plan.totalWeeks}</Text>
                 <Text style={styles.progressLabel}>{Math.round(progress * 100)}%</Text>
               </View>
+              <ProgressBar progress={progress} height={8} />
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Próximos días</Text>
+              <Text style={styles.sectionLabel}>Próximos días</Text>
               <FlatList
                 data={nextDays}
                 horizontal
@@ -134,9 +134,17 @@ export function HomeScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.daysList}
                 renderItem={({ item }) => (
-                  <View style={[styles.dayChip, item.isToday && styles.dayChipActive]}>
-                    <Text style={[styles.dayChipLabel, item.isToday && styles.dayChipTextActive]}>{item.label}</Text>
-                    <Text style={[styles.dayChipType, item.isToday && styles.dayChipTextActive]}>{item.type}</Text>
+                  <View style={[
+                    styles.dayChip,
+                    item.isToday && item.type === 'Trote' ? styles.dayChipActiveRun :
+                    item.isToday ? styles.dayChipActiveRest : null
+                  ]}>
+                    <Text style={[styles.dayChipLabel, item.isToday && styles.dayChipLabelActive]}>
+                      {item.label.toUpperCase()}
+                    </Text>
+                    <Text style={[styles.dayChipType, item.isToday && item.type === 'Trote' ? styles.dayChipTypeActiveRun : item.isToday ? styles.dayChipTypeActiveRest : null]}>
+                      {item.type === 'Trote' ? 'Trote' : 'Descanso'}
+                    </Text>
                   </View>
                 )}
               />
@@ -161,7 +169,7 @@ export function HomeScreen() {
         {plan ? (
           isRunDay ? (
             <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => navigation.navigate('GPSPermission')}>
-              <Text style={styles.primaryButtonText}>Iniciar entrenamiento</Text>
+              <Text style={styles.primaryButtonText}>Empezar</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.restFooter}>
@@ -204,13 +212,16 @@ const styles = StyleSheet.create({
   primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
   primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
   section: { gap: spacing[3] },
-  sectionTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 16, color: colors.ink[900] },
+  sectionLabel: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[900] },
   daysList: { gap: 8 },
-  dayChip: { backgroundColor: colors.surfaceMuted, borderRadius: radius.xs, paddingVertical: 8, paddingHorizontal: spacing[3], alignItems: 'center', minWidth: 72 },
-  dayChipActive: { backgroundColor: colors.brand[500] },
-  dayChipLabel: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400], marginBottom: 4 },
-  dayChipType: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.ink[900] },
-  dayChipTextActive: { color: colors.surface },
+  dayChip: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, paddingVertical: spacing[3], paddingHorizontal: spacing[3], alignItems: 'flex-start', minWidth: 86, gap: 4 },
+  dayChipActiveRun: { backgroundColor: colors.brand[50] },
+  dayChipActiveRest: { backgroundColor: colors.surfaceMuted },
+  dayChipLabel: { fontFamily: 'PlusJakartaSans', fontSize: 11, color: colors.ink[500] },
+  dayChipLabelActive: { color: '#134A37' },
+  dayChipType: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 15, color: colors.ink[500] },
+  dayChipTypeActiveRun: { color: colors.ink[900] },
+  dayChipTypeActiveRest: { color: colors.ink[500] },
   goalCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4] },
   goalText: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 16, color: colors.ink[900] },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 60, gap: spacing[3] },

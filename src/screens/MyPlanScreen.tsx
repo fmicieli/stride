@@ -123,7 +123,11 @@ export function MyPlanScreen() {
         </View>
 
         <View style={styles.chipsRow}>
-          {[`${plan.totalWeeks} semanas`, `${plan.daysPerWeek} días/sem`, plan.method].map((c) => (
+          {[
+            `${plan.totalWeeks} semanas`,
+            `Semana ${getCurrentWeek(plan, sessions)} actual`,
+            `${Math.round((getCurrentWeek(plan, sessions) - 1) / plan.totalWeeks * 100)}% avance`,
+          ].map((c) => (
             <View key={c} style={styles.chip}><Text style={styles.chipText}>{c}</Text></View>
           ))}
         </View>
@@ -140,6 +144,12 @@ export function MyPlanScreen() {
           ))}
         </View>
       </ScrollView>
+
+      <View style={styles.planFooter}>
+        <Text style={styles.planFooterText}>
+          + {plan.totalWeeks - getCurrentWeek(plan, sessions)} semanas más hasta tu meta
+        </Text>
+      </View>
     </SafeAreaView>
   );
 }
@@ -152,7 +162,9 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[10] },
   goalCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], marginBottom: spacing[4] },
   goalLabel: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400], marginBottom: 6 },
-  goalTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900], marginBottom: 6 },
+  goalTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: colors.ink[900], marginBottom: 6 },
+  planFooter: { paddingHorizontal: spacing[4], paddingVertical: spacing[6], alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.surfaceMuted },
+  planFooterText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[500] },
   goalDate: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500] },
   chipsRow: { flexDirection: 'row', gap: 8, marginBottom: spacing[6], flexWrap: 'wrap' },
   chip: { backgroundColor: colors.surfaceMuted, borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14 },
