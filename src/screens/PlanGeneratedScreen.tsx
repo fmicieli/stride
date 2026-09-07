@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -21,13 +21,26 @@ function Chip({ label }: { label: string }) {
   );
 }
 
+function ChevronIcon({ expanded }: { expanded: boolean }) {
+  if (Platform.OS === 'web') {
+    return (
+      // @ts-ignore
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+        {/* @ts-ignore */}
+        <path d="M 6.5 3.5 L 11.5 9 L 6.5 14.5" stroke="#777777" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+  }
+  return <Text style={{ fontSize: 14, color: '#777777' }}>{expanded ? '∧' : '›'}</Text>;
+}
+
 function WeekCard({ week, defaultExpanded = false }: { week: WeekPlan; defaultExpanded?: boolean }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   return (
     <View style={styles.weekCard}>
       <TouchableOpacity style={styles.weekHeader} onPress={() => setExpanded((v) => !v)} activeOpacity={0.8}>
         <Text style={styles.weekTitle}>Semana {week.week}</Text>
-        <Text style={styles.chevron}>{expanded ? '∧' : '∨'}</Text>
+        <ChevronIcon expanded={expanded} />
       </TouchableOpacity>
       {expanded && (
         <View style={styles.weekDays}>
@@ -110,7 +123,7 @@ export function PlanGeneratedScreen() {
         <View style={styles.actionButtons}>
           {user ? (
             <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => navigation.replace('MainTabs')}>
-              <Text style={styles.primaryButtonText}>Activar mi plan</Text>
+              <Text style={styles.primaryButtonText}>Empezar con este plan</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => setShowSaveModal(true)}>

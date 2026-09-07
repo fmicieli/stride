@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, TextInput, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, TextInput, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -12,11 +12,24 @@ import { colors, spacing, radius, controlSize } from '../../theme';
 type Nav = StackNavigationProp<RootStackParamList>;
 type ModalType = 'logout' | 'changeGoal' | 'deleteAccount' | null;
 
+function ChevronRight() {
+  if (Platform.OS === 'web') {
+    return (
+      // @ts-ignore
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* @ts-ignore */}
+        <path d="M 7.5 4 L 13 10 L 7.5 16" stroke="#BBBBBB" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+  }
+  return <Text style={styles.chevron}>›</Text>;
+}
+
 function SettingsRow({ label, onPress, destructive = false }: { label: string; onPress: () => void; destructive?: boolean }) {
   return (
     <TouchableOpacity style={styles.settingsRow} onPress={onPress} activeOpacity={0.7}>
       <Text style={[styles.settingsLabel, destructive && styles.destructiveText]}>{label}</Text>
-      {!destructive && <Text style={styles.chevron}>›</Text>}
+      {!destructive && <ChevronRight />}
     </TouchableOpacity>
   );
 }
@@ -76,14 +89,16 @@ export function ProfileScreen() {
           <Text style={styles.displayName}>{displayName}</Text>
           <Text style={styles.email}>{profile?.email || user?.email || ''}</Text>
           <TouchableOpacity style={styles.editBtn} activeOpacity={0.7} onPress={() => navigation.navigate('EditProfile')}>
-            <Text style={styles.editBtnText}>Editar perfil</Text>
+            <Text style={styles.editBtnText}>Editar</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.settingsList}>
-          <SettingsRow label="Cambiar contraseña" onPress={() => navigation.navigate('ChangePassword')} />
-          <SettingsRow label="Historial de Entrenamientos" onPress={() => navigation.navigate('Historial')} />
+          <SettingsRow label="Mi plan" onPress={() => navigation.navigate('PlanGenerated')} />
+          <SettingsRow label="Historial de entrenamientos" onPress={() => navigation.navigate('Historial')} />
           <SettingsRow label="Cambiar objetivo" onPress={() => setActiveModal('changeGoal')} />
+          <SettingsRow label="Permisos" onPress={() => navigation.navigate('GPSPermission')} />
+          <SettingsRow label="Cambiar contraseña" onPress={() => navigation.navigate('ChangePassword')} />
           <SettingsRow label="Cerrar sesión" onPress={() => setActiveModal('logout')} />
           <SettingsRow label="Eliminar cuenta" onPress={() => setActiveModal('deleteAccount')} destructive />
         </View>
@@ -160,8 +175,8 @@ const styles = StyleSheet.create({
   headerSpacer: { width: 40 },
   content: { paddingBottom: spacing[10] },
   avatarSection: { alignItems: 'center', paddingTop: spacing[8], paddingBottom: spacing[6], gap: 8 },
-  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.brand[50], alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  avatarText: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 32, color: colors.brand[600] },
+  avatar: { width: 88, height: 88, borderRadius: 44, backgroundColor: colors.brand[50], alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  avatarText: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 36, color: colors.brand[600] },
   displayName: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
   email: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[400] },
   editBtn: { marginTop: 8, borderWidth: 1.5, borderColor: colors.borderDefault, borderRadius: radius.full, paddingVertical: 8, paddingHorizontal: spacing[5] },
