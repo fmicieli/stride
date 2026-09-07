@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "RunApp",
-    "slug": "RunApp",
+    "name": "Stride",
+    "slug": "Stride",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,7 +13,12 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Stride usa tu ubicación para rastrear tus entrenamientos y calcular distancia y pace.",
+        "NSLocationAlwaysUsageDescription": "Stride usa tu ubicación para rastrear tus entrenamientos."
+      },
+      "bundleIdentifier": "com.anonymous.Stride"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,10 +26,23 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "output": "static",
+      "bundler": "metro"
+    },
+    "experiments": {
+      "baseUrl": "/stride"
+    },
+    "plugins": [
+      "@react-native-community/datetimepicker",
+      "expo-web-browser"
+    ]
   }
 }
