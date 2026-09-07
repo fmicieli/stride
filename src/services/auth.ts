@@ -7,6 +7,8 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   deleteUser,
+  GoogleAuthProvider,
+  signInWithPopup,
   User,
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -43,6 +45,11 @@ export async function deleteAccount(currentPassword: string) {
   await reauthenticateWithCredential(user, credential);
   await deleteUserData(user.uid);
   return deleteUser(user);
+}
+
+export async function signInWithGoogle() {
+  const provider = new GoogleAuthProvider();
+  return signInWithPopup(auth, provider);
 }
 
 export function getCurrentUser(): User | null {

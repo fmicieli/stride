@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import * as Location from 'expo-location';
 import { RootStackParamList } from '../../navigation';
 import { colors, spacing, radius, controlSize } from '../../theme';
 
@@ -17,10 +16,21 @@ export function GPSPermissionScreen() {
   const handleAllow = async () => {
     setRequesting(true);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') { navigation.replace('ActiveTraining'); }
-      else { setDenied(true); }
-    } finally { setRequesting(false); }
+      if (Platform.OS === 'web') {
+        if (!navigator.geolocation) { setDenied(true); return; }
+        navigator.geolocation.getCurrentPosition(
+          () => navigation.replace('ActiveTraining'),
+          () => setDenied(true),
+          { enableHighAccuracy: true, timeout: 10000 },
+        );
+      } else {
+        const Location = require('expo-location');
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') navigation.replace('ActiveTraining');
+        else setDenied(true);
+      }
+    } catch { setDenied(true); }
+    finally { setRequesting(false); }
   };
 
   if (denied) {
