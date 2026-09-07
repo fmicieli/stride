@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
+import { StrideLogo } from '../../components/StrideLogo';
 import { colors, spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Welcome'>;
@@ -13,29 +14,32 @@ export function WelcomeScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={styles.container}>
-        <View style={styles.logoSection}>
-          <Text style={styles.logo}>Stride</Text>
-          <Text style={styles.tagline}>Tu entrenamiento, a tu ritmo</Text>
+      <View style={styles.content}>
+        <StrideLogo width={120} />
+        <View style={styles.placeholder} />
+        <View style={styles.textBlock}>
+          <Text style={styles.headline}>De tu primer trote a cruzar la meta</Text>
+          <Text style={styles.subtitle}>
+            Un plan hecho a tu medida, paso a paso, sin que tengas que saber nada de running.
+          </Text>
         </View>
+      </View>
 
-        <View style={styles.actionsSection}>
-          <TouchableOpacity
-            style={styles.primaryButton}
-            activeOpacity={0.85}
-            onPress={() => navigation.navigate('OnboardingGoal')}
-          >
-            <Text style={styles.primaryButtonText}>Empezar</Text>
-          </TouchableOpacity>
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('OnboardingGoal')}
+        >
+          <Text style={styles.primaryButtonText}>Empezar</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('Login')}
-          >
-            <Text style={styles.secondaryButtonText}>Ya tengo cuenta</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('Login')}
+        >
+          <Text style={styles.loginLink}>Ya tengo cuenta</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -46,38 +50,47 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.surface,
   },
-  container: {
+  content: {
     flex: 1,
     paddingHorizontal: spacing[4],
-    justifyContent: 'space-between',
-    paddingTop: spacing[10],
-    paddingBottom: spacing[6],
+    paddingTop: spacing[5],
+    gap: 24,
   },
-  logoSection: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
+  placeholder: {
+    width: 200,
+    height: 200,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    alignSelf: 'center',
   },
-  logo: {
-    fontFamily: 'PlusJakartaSans-ExtraBold',
-    fontSize: 40,
+  textBlock: {
+    gap: 8,
+    maxWidth: 300,
+  },
+  headline: {
+    fontFamily: 'PlusJakartaSans-Bold',
+    fontSize: 24,
+    lineHeight: 32,
     color: colors.ink[900],
-    letterSpacing: -1,
-    marginBottom: spacing[2],
   },
-  tagline: {
+  subtitle: {
     fontFamily: 'PlusJakartaSans',
     fontSize: 16,
     lineHeight: 24,
-    color: colors.ink[500],
+    color: colors.ink[600],
   },
-  actionsSection: {
+  footer: {
+    paddingHorizontal: spacing[4],
+    paddingBottom: spacing[4],
+    paddingTop: spacing[4],
     gap: spacing[3],
+    alignItems: 'center',
   },
   primaryButton: {
     backgroundColor: colors.brand[500],
-    borderRadius: radius.md,
+    borderRadius: radius.full,
     height: controlSize.lg,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -86,17 +99,9 @@ const styles = StyleSheet.create({
     color: colors.surface,
     fontSize: 16,
   },
-  secondaryButton: {
-    height: controlSize.lg,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.borderDefault,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryButtonText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    color: colors.ink[900],
-    fontSize: 16,
+  loginLink: {
+    fontFamily: 'PlusJakartaSans',
+    fontSize: 15,
+    color: colors.ink[500],
   },
 });

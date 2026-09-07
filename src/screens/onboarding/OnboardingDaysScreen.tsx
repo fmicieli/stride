@@ -32,7 +32,7 @@ export function OnboardingDaysScreen() {
   return (
     <OnboardingLayout
       step={3}
-      totalSteps={4}
+      totalSteps={6}
       title="¿Qué días podés entrenar?"
       subtitle="Podés elegir más de uno"
       canContinue={selected.length > 0}

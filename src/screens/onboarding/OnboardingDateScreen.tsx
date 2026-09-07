@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
-import { ProgressBar } from '../../components/ProgressBar';
+import { ProgressSteps } from '../../components/ProgressSteps';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { useOnboarding } from '../../utils/onboardingContext';
 import { weeksUntil } from '../../utils/planGenerator';
+import { colors, spacing } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'OnboardingDate'>;
 
@@ -68,8 +69,13 @@ export function OnboardingDateScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <Text style={styles.backIcon}>←</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.progressContainer}>
-        <ProgressBar progress={4 / 4} height={4} />
+        <ProgressSteps step={4} totalSteps={6} />
       </View>
 
       <View style={styles.content}>
@@ -145,22 +151,25 @@ export function OnboardingDateScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
-  progressContainer: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
-  content: { flex: 1, paddingHorizontal: 16, paddingTop: 32 },
-  title: { fontSize: 24, fontWeight: '500', color: '#111111', marginBottom: 8 },
-  subtitle: { fontSize: 16, color: '#888888', marginBottom: 32 },
-  pickerContainer: { width: '100%', marginVertical: 16 },
+  safe: { flex: 1, backgroundColor: colors.surface },
+  header: { height: 60, paddingHorizontal: spacing[4], justifyContent: 'center' },
+  backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
+  backIcon: { fontSize: 22, color: colors.ink[900], lineHeight: 26 },
+  progressContainer: { paddingHorizontal: spacing[4], paddingBottom: spacing[1] },
+  content: { flex: 1, paddingHorizontal: spacing[4], paddingTop: spacing[5] },
+  title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, lineHeight: 30, color: colors.ink[900], marginBottom: spacing[2] },
+  subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500], marginBottom: spacing[7] },
+  pickerContainer: { width: '100%', marginVertical: spacing[4] },
   picker: { width: '100%' },
   dateDisplay: {
+    fontFamily: 'PlusJakartaSans-SemiBold',
     fontSize: 20,
-    fontWeight: '600',
-    color: '#111111',
+    color: colors.ink[900],
     textAlign: 'center',
-    marginTop: 12,
-    marginBottom: 4,
+    marginTop: spacing[3],
+    marginBottom: spacing[1],
   },
-  weeksInfo: { fontSize: 15, color: '#888888', textAlign: 'center', marginTop: 4 },
-  weeksWarning: { color: '#E53935' },
-  footer: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 12 },
+  weeksInfo: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[500], textAlign: 'center', marginTop: spacing[1] },
+  weeksWarning: { color: colors.error.text },
+  footer: { paddingHorizontal: spacing[4], paddingBottom: spacing[4], paddingTop: spacing[3] },
 });

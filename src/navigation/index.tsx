@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Animated, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import { StrideLogo } from '../components/StrideLogo';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { TrainingPlan } from '../types';
@@ -71,9 +72,9 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
 function TabIcon({ name, focused }: { name: string; focused: boolean }) {
-  const icons: Record<string, string> = { Inicio: '⊙', 'Mi plan': '≡', Progreso: '◎' };
+  const icons: Record<string, string> = { Hoy: '⊙', Progreso: '◎', Perfil: '○' };
   return (
-    <Text style={{ fontSize: 20, color: focused ? '#111111' : '#BBBBBB' }}>
+    <Text style={{ fontSize: 20, color: focused ? '#1B6E52' : '#8A8A8A' }}>
       {icons[name] ?? '•'}
     </Text>
   );
@@ -85,57 +86,51 @@ function MainTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ focused }) => <TabIcon name={route.name} focused={focused} />,
-        tabBarActiveTintColor: '#111111',
-        tabBarInactiveTintColor: '#BBBBBB',
-        tabBarLabelStyle: { fontSize: 12 },
+        tabBarActiveTintColor: '#1B6E52',
+        tabBarInactiveTintColor: '#8A8A8A',
+        tabBarLabelStyle: { fontFamily: 'PlusJakartaSans', fontSize: 11 },
         tabBarStyle: {
           borderTopWidth: 1,
           borderTopColor: '#F0F0F0',
           backgroundColor: '#FFFFFF',
-          height: 60,
-          paddingBottom: 8,
+          height: 68,
+          paddingTop: 12,
+          paddingBottom: 16,
+          paddingHorizontal: 16,
         },
       })}
     >
-      <Tab.Screen name="Inicio" component={HomeScreen} />
-      <Tab.Screen name="Mi plan" component={MyPlanScreen} />
+      <Tab.Screen name="Hoy" component={HomeScreen} />
       <Tab.Screen name="Progreso" component={ProgressScreen} />
+      <Tab.Screen name="Perfil" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
 
 function SplashView() {
-  const sOpacity = useRef(new Animated.Value(0)).current;
-  const sRotation = useRef(new Animated.Value(0)).current;
-  const restOpacity = useRef(new Animated.Value(0)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const logoScale = useRef(new Animated.Value(0.88)).current;
+  const taglineOpacity = useRef(new Animated.Value(0)).current;
   const splashOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.sequence([
-      Animated.timing(sOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-      Animated.timing(sRotation, { toValue: 1, duration: 550, useNativeDriver: true }),
-      Animated.timing(restOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
-      Animated.delay(800),
-      Animated.timing(splashOpacity, { toValue: 0, duration: 550, useNativeDriver: true }),
+      Animated.parallel([
+        Animated.timing(logoOpacity, { toValue: 1, duration: 450, useNativeDriver: true }),
+        Animated.timing(logoScale, { toValue: 1, duration: 450, useNativeDriver: true }),
+      ]),
+      Animated.timing(taglineOpacity, { toValue: 1, duration: 350, useNativeDriver: true }),
+      Animated.delay(900),
+      Animated.timing(splashOpacity, { toValue: 0, duration: 500, useNativeDriver: true }),
     ]).start();
   }, []);
 
-  const rotate = sRotation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
   return (
     <Animated.View style={[styles.splash, { opacity: splashOpacity }]}>
-      <View style={styles.logoRow}>
-        <Animated.Text style={[styles.logoS, { opacity: sOpacity, transform: [{ rotate }] }]}>
-          S
-        </Animated.Text>
-        <Animated.Text style={[styles.logoRest, { opacity: restOpacity }]}>
-          tride
-        </Animated.Text>
-      </View>
-      <Animated.Text style={[styles.splashTagline, { opacity: restOpacity }]}>
+      <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }] }}>
+        <StrideLogo width={220} />
+      </Animated.View>
+      <Animated.Text style={[styles.splashTagline, { opacity: taglineOpacity }]}>
         Tu entrenamiento, a tu ritmo
       </Animated.Text>
     </Animated.View>
@@ -200,24 +195,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  logoS: {
-    fontSize: 40,
-    fontWeight: '700',
-    color: '#111111',
-  },
-  logoRest: {
-    fontSize: 40,
-    fontWeight: '700',
-    color: '#111111',
-  },
   splashTagline: {
-    fontSize: 16,
+    fontSize: 15,
+    fontFamily: 'PlusJakartaSans',
     color: '#888888',
     textAlign: 'center',
+    marginTop: 12,
   },
 });

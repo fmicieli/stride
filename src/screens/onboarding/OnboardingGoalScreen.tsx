@@ -34,7 +34,7 @@ export function OnboardingGoalScreen() {
   return (
     <OnboardingLayout
       step={1}
-      totalSteps={4}
+      totalSteps={6}
       title="¿Cuál es tu meta?"
       subtitle="Elegí el objetivo que querés lograr"
       canContinue={selected !== null}

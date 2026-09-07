@@ -6,9 +6,11 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ProgressBar } from './ProgressBar';
+import { useNavigation } from '@react-navigation/native';
+import { ProgressSteps } from './ProgressSteps';
 import { PrimaryButton } from './PrimaryButton';
 import { colors, spacing } from '../theme';
 
@@ -33,14 +35,26 @@ export function OnboardingLayout({
   continueLabel = 'Continuar',
   children,
 }: Props) {
+  const navigation = useNavigation();
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.backIcon}>←</Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.progressContainer}>
-          <ProgressBar progress={step / totalSteps} height={3} />
+          <ProgressSteps step={step} totalSteps={totalSteps} />
         </View>
 
         <ScrollView
@@ -49,7 +63,6 @@ export function OnboardingLayout({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.stepLabel}>Paso {step} de {totalSteps}</Text>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.subtitle}>{subtitle}</Text>
           <View style={styles.options}>{children}</View>
@@ -75,26 +88,33 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
+  header: {
+    height: 60,
+    paddingHorizontal: spacing[4],
+    justifyContent: 'center',
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backIcon: {
+    fontSize: 22,
+    color: colors.ink[900],
+    lineHeight: 26,
+  },
   progressContainer: {
     paddingHorizontal: spacing[4],
-    paddingTop: spacing[4],
-    paddingBottom: spacing[2],
+    paddingBottom: spacing[1],
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: spacing[4],
-    paddingTop: spacing[7],
-    paddingBottom: spacing[6],
-  },
-  stepLabel: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 11,
-    letterSpacing: 0.9,
-    color: colors.brand[500],
-    textTransform: 'uppercase',
-    marginBottom: spacing[2],
+    paddingTop: spacing[5],
+    paddingBottom: spacing[4],
   },
   title: {
     fontFamily: 'PlusJakartaSans-Bold',
@@ -108,7 +128,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     color: colors.ink[500],
-    marginBottom: spacing[7],
+    marginBottom: spacing[5],
   },
   options: {
     gap: spacing[3],
@@ -116,7 +136,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: spacing[4],
     paddingBottom: spacing[4],
-    paddingTop: spacing[3],
+    paddingTop: spacing[4],
     backgroundColor: colors.surface,
   },
 });

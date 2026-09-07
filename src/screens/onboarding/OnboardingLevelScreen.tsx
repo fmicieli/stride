@@ -43,7 +43,7 @@ export function OnboardingLevelScreen() {
   return (
     <OnboardingLayout
       step={2}
-      totalSteps={4}
+      totalSteps={6}
       title="¿Cuánto corrés actualmente?"
       subtitle="Esto nos ayuda a armar un plan realista para vos"
       canContinue={selected !== null}
