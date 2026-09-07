@@ -8,6 +8,7 @@ import { useOnboarding } from '../utils/onboardingContext';
 import { useAuth } from '../context/AuthContext';
 import { generatePlan } from '../utils/planGenerator';
 import { savePlan, saveUserProfile } from '../services/firestore';
+import { colors, spacing } from '../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'PlanLoading'>;
 
@@ -30,7 +31,6 @@ export function PlanLoadingScreen() {
           Animated.delay(600 - delay),
         ]),
       );
-
     Animated.parallel([anim(dot1, 0), anim(dot2, 200), anim(dot3, 400)]).start();
   }, []);
 
@@ -43,9 +43,7 @@ export function PlanLoadingScreen() {
             try {
               await savePlan(user.uid, plan);
               await saveUserProfile(user.uid, { onboardingDone: true } as any);
-            } catch {
-              // Firestore unavailable — keep plan in memory
-            }
+            } catch { /* Firestore unavailable */ }
           }
           setPendingPlan(plan);
         }
@@ -79,35 +77,10 @@ export function PlanLoadingScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-  },
-  dotsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 32,
-  },
-  dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#111111',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#111111',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#888888',
-  },
+  safe: { flex: 1, backgroundColor: colors.surface },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[4] },
+  dotsRow: { flexDirection: 'row', gap: 10, marginBottom: spacing[7] },
+  dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.brand[500] },
+  title: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 18, color: colors.ink[900], marginBottom: spacing[2] },
+  subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[400] },
 });

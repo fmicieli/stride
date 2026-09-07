@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ProgressBar } from './ProgressBar';
 import { PrimaryButton } from './PrimaryButton';
+import { colors, spacing } from '../theme';
 
 interface Props {
   step: number;
@@ -38,9 +39,8 @@ export function OnboardingLayout({
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Progress bar */}
         <View style={styles.progressContainer}>
-          <ProgressBar progress={step / totalSteps} height={4} />
+          <ProgressBar progress={step / totalSteps} height={3} />
         </View>
 
         <ScrollView
@@ -49,6 +49,7 @@ export function OnboardingLayout({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          <Text style={styles.stepLabel}>Paso {step} de {totalSteps}</Text>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.subtitle}>{subtitle}</Text>
           <View style={styles.options}>{children}</View>
@@ -69,42 +70,53 @@ export function OnboardingLayout({
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   flex: {
     flex: 1,
   },
   progressContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[4],
+    paddingBottom: spacing[2],
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 32,
-    paddingBottom: 24,
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[7],
+    paddingBottom: spacing[6],
+  },
+  stepLabel: {
+    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontSize: 11,
+    letterSpacing: 0.9,
+    color: colors.brand[500],
+    textTransform: 'uppercase',
+    marginBottom: spacing[2],
   },
   title: {
+    fontFamily: 'PlusJakartaSans-Bold',
     fontSize: 24,
-    fontWeight: '500',
-    color: '#111111',
-    marginBottom: 8,
+    lineHeight: 30,
+    color: colors.ink[900],
+    marginBottom: spacing[2],
   },
   subtitle: {
-    fontSize: 16,
-    color: '#888888',
-    marginBottom: 32,
+    fontFamily: 'PlusJakartaSans',
+    fontSize: 15,
+    lineHeight: 22,
+    color: colors.ink[500],
+    marginBottom: spacing[7],
   },
   options: {
-    gap: 12,
+    gap: spacing[3],
   },
   footer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    paddingTop: 12,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: spacing[4],
+    paddingBottom: spacing[4],
+    paddingTop: spacing[3],
+    backgroundColor: colors.surface,
   },
 });

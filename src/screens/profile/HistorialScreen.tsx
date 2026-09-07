@@ -1,29 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { TouchableOpacity } from 'react-native';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
 import { getSessions } from '../../services/firestore';
 import { TrainingSession } from '../../types';
 import { formatDuration, formatPace } from '../../utils/planGenerator';
+import { colors, spacing, radius } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Historial'>;
 
 function formatDate(isoDate: string): string {
   const date = new Date(isoDate);
-  const months = [
-    'ene', 'feb', 'mar', 'abr', 'may', 'jun',
-    'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
-  ];
+  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 }
 
@@ -51,9 +42,7 @@ export function HistorialScreen() {
 
   useEffect(() => {
     if (!user) return;
-    getSessions(user.uid)
-      .then(setSessions)
-      .finally(() => setLoading(false));
+    getSessions(user.uid).then(setSessions).finally(() => setLoading(false));
   }, [user]);
 
   return (
@@ -67,15 +56,11 @@ export function HistorialScreen() {
       </View>
 
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator color="#111111" />
-        </View>
+        <View style={styles.center}><ActivityIndicator color={colors.brand[500]} /></View>
       ) : sessions.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>Sin sesiones aún</Text>
-          <Text style={styles.emptyText}>
-            Tus entrenamientos completados aparecerán aquí
-          </Text>
+          <Text style={styles.emptyText}>Tus entrenamientos completados aparecerán aquí</Text>
         </View>
       ) : (
         <FlatList
@@ -91,93 +76,21 @@ export function HistorialScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 28,
-    color: '#111111',
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#111111',
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 32,
-    gap: 12,
-  },
-  sessionCard: {
-    backgroundColor: '#F2F2F2',
-    borderRadius: 12,
-    padding: 16,
-    gap: 6,
-  },
-  sessionDate: {
-    fontSize: 12,
-    color: '#888888',
-  },
-  sessionType: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#111111',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statText: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  statDot: {
-    fontSize: 14,
-    color: '#AAAAAA',
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-    gap: 12,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#111111',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#666666',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
+  safe: { flex: 1, backgroundColor: colors.surface },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing[4], paddingVertical: spacing[3], borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
+  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  backIcon: { fontSize: 28, color: colors.ink[900] },
+  headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: colors.ink[900] },
+  headerSpacer: { width: 40 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  listContent: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[8], gap: spacing[3] },
+  sessionCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], gap: 6 },
+  sessionDate: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400] },
+  sessionType: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 16, color: colors.ink[900] },
+  statsRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  statText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500] },
+  statDot: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[300] },
+  emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: spacing[3] },
+  emptyTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
+  emptyText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], textAlign: 'center', lineHeight: 20 },
 });

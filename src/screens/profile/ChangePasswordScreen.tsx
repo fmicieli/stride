@@ -1,50 +1,21 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
 import { changePassword } from '../../services/auth';
+import { colors, spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'ChangePassword'>;
 
-function PasswordField({
-  label,
-  value,
-  onChangeText,
-  onBlur,
-  error,
-}: {
-  label: string;
-  value: string;
-  onChangeText: (t: string) => void;
-  onBlur?: () => void;
-  error?: string | null;
-}) {
+function PasswordField({ label, value, onChangeText, onBlur, error }: { label: string; value: string; onChangeText: (t: string) => void; onBlur?: () => void; error?: string | null }) {
   const [show, setShow] = useState(false);
   return (
     <View style={styles.inputGroup}>
       <Text style={styles.inputLabel}>{label}</Text>
       <View style={[styles.passwordRow, error ? styles.inputError : null]}>
-        <TextInput
-          style={styles.passwordInput}
-          value={value}
-          onChangeText={onChangeText}
-          onBlur={onBlur}
-          secureTextEntry={!show}
-          autoCapitalize="none"
-          placeholderTextColor="#AAAAAA"
-        />
+        <TextInput style={styles.passwordInput} value={value} onChangeText={onChangeText} onBlur={onBlur} secureTextEntry={!show} autoCapitalize="none" placeholderTextColor={colors.ink[300]} />
         <TouchableOpacity onPress={() => setShow((v) => !v)} style={styles.eyeButton}>
           <Text style={styles.eyeIcon}>{show ? '🙈' : '👁'}</Text>
         </TouchableOpacity>
@@ -62,16 +33,8 @@ export function ChangePasswordScreen() {
   const [touched, setTouched] = useState({ current: false, newPass: false, confirm: false });
   const [saving, setSaving] = useState(false);
 
-  const newPassError =
-    touched.newPass && newPass.length > 0 && newPass.length < 8
-      ? 'La contraseña debe tener al menos 8 caracteres'
-      : null;
-
-  const confirmError =
-    touched.confirm && confirmPass.length > 0 && newPass !== confirmPass
-      ? 'Las contraseñas no coinciden'
-      : null;
-
+  const newPassError = touched.newPass && newPass.length > 0 && newPass.length < 8 ? 'La contraseña debe tener al menos 8 caracteres' : null;
+  const confirmError = touched.confirm && confirmPass.length > 0 && newPass !== confirmPass ? 'Las contraseñas no coinciden' : null;
   const hasErrors = !current || newPass.length < 8 || newPass !== confirmPass;
 
   const handleSave = async () => {
@@ -80,18 +43,11 @@ export function ChangePasswordScreen() {
     setSaving(true);
     try {
       await changePassword(current, newPass);
-      Alert.alert('Listo', 'Tu contraseña fue actualizada', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      Alert.alert('Listo', 'Tu contraseña fue actualizada', [{ text: 'OK', onPress: () => navigation.goBack() }]);
     } catch (e: any) {
-      const msg =
-        e.code === 'auth/wrong-password'
-          ? 'La contraseña actual es incorrecta'
-          : 'Ocurrió un error. Intentá de nuevo';
+      const msg = e.code === 'auth/wrong-password' ? 'La contraseña actual es incorrecta' : 'Ocurrió un error. Intentá de nuevo';
       Alert.alert('Error', msg);
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   return (
@@ -104,47 +60,14 @@ export function ChangePasswordScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <PasswordField
-            label="Contraseña actual"
-            value={current}
-            onChangeText={setCurrent}
-            onBlur={() => setTouched((t) => ({ ...t, current: true }))}
-          />
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <PasswordField label="Contraseña actual" value={current} onChangeText={setCurrent} onBlur={() => setTouched((t) => ({ ...t, current: true }))} />
+          <PasswordField label="Nueva contraseña" value={newPass} onChangeText={setNewPass} onBlur={() => setTouched((t) => ({ ...t, newPass: true }))} error={newPassError} />
+          <PasswordField label="Confirmar nueva contraseña" value={confirmPass} onChangeText={setConfirmPass} onBlur={() => setTouched((t) => ({ ...t, confirm: true }))} error={confirmError} />
 
-          <PasswordField
-            label="Nueva contraseña"
-            value={newPass}
-            onChangeText={setNewPass}
-            onBlur={() => setTouched((t) => ({ ...t, newPass: true }))}
-            error={newPassError}
-          />
-
-          <PasswordField
-            label="Confirmar nueva contraseña"
-            value={confirmPass}
-            onChangeText={setConfirmPass}
-            onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
-            error={confirmError}
-          />
-
-          <TouchableOpacity
-            style={[styles.primaryButton, (hasErrors || saving) && styles.buttonDisabled]}
-            activeOpacity={0.8}
-            onPress={handleSave}
-            disabled={saving}
-          >
-            <Text style={styles.primaryButtonText}>
-              {saving ? 'Guardando...' : 'Guardar'}
-            </Text>
+          <TouchableOpacity style={[styles.primaryButton, (hasErrors || saving) && styles.disabled]} activeOpacity={0.8} onPress={handleSave} disabled={saving}>
+            <Text style={styles.primaryButtonText}>{saving ? 'Guardando...' : 'Guardar'}</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -153,97 +76,23 @@ export function ChangePasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  flex: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 28,
-    color: '#111111',
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#111111',
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 24,
-    paddingBottom: 40,
-    gap: 20,
-  },
-  inputGroup: {
-    gap: 6,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#111111',
-  },
-  passwordRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    height: 44,
-    paddingHorizontal: 12,
-    backgroundColor: '#FFFFFF',
-  },
-  inputError: {
-    borderColor: '#E53935',
-  },
-  passwordInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#111111',
-  },
-  eyeButton: {
-    padding: 4,
-  },
-  eyeIcon: {
-    fontSize: 16,
-  },
-  errorText: {
-    color: '#E53935',
-    fontSize: 12,
-  },
-  primaryButton: {
-    backgroundColor: '#111111',
-    borderRadius: 12,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
+  safe: { flex: 1, backgroundColor: colors.surface },
+  flex: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing[4], paddingVertical: spacing[3], borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
+  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  backIcon: { fontSize: 28, color: colors.ink[900] },
+  headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: colors.ink[900] },
+  headerSpacer: { width: 40 },
+  content: { paddingHorizontal: spacing[4], paddingTop: spacing[6], paddingBottom: spacing[10], gap: spacing[5] },
+  inputGroup: { gap: spacing[2] },
+  inputLabel: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 13, color: colors.ink[700] },
+  passwordRow: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: colors.borderDefault, borderRadius: radius.sm, height: controlSize.md, paddingHorizontal: spacing[3], backgroundColor: colors.surface },
+  inputError: { borderColor: colors.error.solid },
+  passwordInput: { flex: 1, fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900] },
+  eyeButton: { padding: 4 },
+  eyeIcon: { fontSize: 16 },
+  errorText: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.error.text },
+  primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
+  disabled: { opacity: 0.5 },
 });

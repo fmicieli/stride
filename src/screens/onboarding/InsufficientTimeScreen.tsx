@@ -6,23 +6,17 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
 import { useOnboarding } from '../../utils/onboardingContext';
 import { getGoalShortLabel } from '../../utils/planGenerator';
+import { colors, spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'InsufficientTime'>;
 
 const MIN_WEEKS: Record<string, number> = {
-  '20min': 4,
-  '5K': 4,
-  '30min': 6,
-  '10K': 8,
-  '1hour': 8,
-  '21K': 12,
-  '42K': 16,
+  '20min': 4, '5K': 4, '30min': 6, '10K': 8, '1hour': 8, '21K': 12, '42K': 16,
 };
 
 export function InsufficientTimeScreen() {
   const navigation = useNavigation<Nav>();
   const { data } = useOnboarding();
-
   const goal = data.goal;
   const minWeeks = goal ? MIN_WEEKS[goal] : 4;
   const goalLabel = goal ? getGoalShortLabel(goal) : '';
@@ -37,23 +31,18 @@ export function InsufficientTimeScreen() {
         <View style={styles.iconCircle}>
           <Text style={styles.iconText}>!</Text>
         </View>
-
         <Text style={styles.title}>El tiempo no es suficiente</Text>
         <Text style={styles.body}>
-          Para lograr tu meta de{' '}
-          <Text style={styles.bold}>{goalLabel}</Text>{' '}
-          necesitás al menos{' '}
-          <Text style={styles.bold}>{minWeeks} semanas</Text>.{'\n'}
-          Elegí una fecha más lejana para armar un plan realista.
+          {'Para lograr tu meta de '}
+          <Text style={styles.bold}>{goalLabel}</Text>
+          {' necesitás al menos '}
+          <Text style={styles.bold}>{minWeeks} semanas</Text>
+          {'.\nElegí una fecha más lejana para armar un plan realista.'}
         </Text>
       </View>
 
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.primaryButton}
-          activeOpacity={0.8}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => navigation.goBack()}>
           <Text style={styles.primaryButtonText}>Cambiar fecha</Text>
         </TouchableOpacity>
       </View>
@@ -62,71 +51,16 @@ export function InsufficientTimeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  backBtn: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    width: 48,
-  },
-  backIcon: {
-    fontSize: 28,
-    color: '#111111',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 20,
-  },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#F2F2F2',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  iconText: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#111111',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#111111',
-    textAlign: 'center',
-  },
-  body: {
-    fontSize: 16,
-    color: '#666666',
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  bold: {
-    fontWeight: '600',
-    color: '#111111',
-  },
-  footer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    paddingTop: 12,
-  },
-  primaryButton: {
-    backgroundColor: '#111111',
-    borderRadius: 12,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
+  safe: { flex: 1, backgroundColor: colors.surface },
+  backBtn: { paddingHorizontal: spacing[4], paddingTop: spacing[2], width: 48 },
+  backIcon: { fontSize: 28, color: colors.ink[900] },
+  content: { flex: 1, paddingHorizontal: spacing[4], alignItems: 'center', justifyContent: 'center', gap: spacing[5] },
+  iconCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.warning.bg, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  iconText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 28, color: colors.warning.text },
+  title: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 24, color: colors.ink[900], textAlign: 'center' },
+  body: { fontFamily: 'PlusJakartaSans', fontSize: 16, color: colors.ink[500], textAlign: 'center', lineHeight: 24 },
+  bold: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.ink[900] },
+  footer: { paddingHorizontal: spacing[4], paddingBottom: spacing[4], paddingTop: spacing[3] },
+  primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
+  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
 });

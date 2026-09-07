@@ -17,6 +17,7 @@ import { RootStackParamList } from '../../navigation';
 import { loginWithEmail } from '../../services/auth';
 import { savePlan, saveUserProfile, getPlan } from '../../services/firestore';
 import { useOnboarding } from '../../utils/onboardingContext';
+import { colors, spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -43,11 +44,7 @@ export function LoginScreen() {
         navigation.replace('MainTabs');
       } else {
         const existingPlan = await getPlan(loggedUser.uid);
-        if (existingPlan) {
-          navigation.replace('MainTabs');
-        } else {
-          navigation.replace('OnboardingGoal');
-        }
+        navigation.replace(existingPlan ? 'MainTabs' : 'OnboardingGoal');
       }
     } catch (e: any) {
       const msg =
@@ -64,39 +61,16 @@ export function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Text style={styles.backIcon}>‹</Text>
           </TouchableOpacity>
         </View>
 
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text style={styles.logo}>Stride</Text>
-          <Text style={styles.tagline}>Tu entrenamiento, a tu ritmo</Text>
-
-          <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-            <Text style={styles.socialIcon}>G</Text>
-            <Text style={styles.socialButtonText}>Continuar con Google</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-            <Text style={styles.socialIcon}></Text>
-            <Text style={styles.socialButtonText}>Continuar con Apple</Text>
-          </TouchableOpacity>
-
-          <View style={styles.separatorRow}>
-            <View style={styles.separatorLine} />
-            <Text style={styles.separatorText}>o</Text>
-            <View style={styles.separatorLine} />
-          </View>
+        <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>Bienvenido de vuelta</Text>
+          <Text style={styles.subtitle}>Iniciá sesión para continuar</Text>
 
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Email</Text>
@@ -105,7 +79,7 @@ export function LoginScreen() {
               value={email}
               onChangeText={setEmail}
               placeholder="tu@email.com"
-              placeholderTextColor="#AAAAAA"
+              placeholderTextColor={colors.ink[300]}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -120,53 +94,33 @@ export function LoginScreen() {
                 value={password}
                 onChangeText={setPassword}
                 placeholder="••••••••"
-                placeholderTextColor="#AAAAAA"
+                placeholderTextColor={colors.ink[300]}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
               />
-              <TouchableOpacity
-                onPress={() => setShowPassword((v) => !v)}
-                style={styles.eyeButton}
-              >
+              <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.eyeButton}>
                 <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁'}</Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          <TouchableOpacity
-            style={styles.forgotLink}
-            onPress={() => navigation.navigate('ForgotPassword')}
-          >
+          <TouchableOpacity style={styles.forgotLink} onPress={() => navigation.navigate('ForgotPassword')}>
             <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
-            activeOpacity={0.8}
+            style={[styles.primaryButton, loading && styles.disabled]}
+            activeOpacity={0.85}
             onPress={handleLogin}
             disabled={loading}
           >
-            <Text style={styles.primaryButtonText}>
-              {loading ? 'Ingresando...' : 'Ingresar'}
-            </Text>
+            <Text style={styles.primaryButtonText}>{loading ? 'Ingresando...' : 'Ingresar'}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.linkButton}
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('Register')}
-          >
+          <TouchableOpacity style={styles.linkButton} activeOpacity={0.7} onPress={() => navigation.navigate('Register')}>
             <Text style={styles.linkText}>
               {'¿No tenés cuenta? '}<Text style={styles.linkBold}>Registrate</Text>
             </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.skipButton}
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('PlanGenerated')}
-          >
-            <Text style={styles.skipText}>⚡ Modo prueba — saltear login</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -175,164 +129,89 @@ export function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
+  safe: { flex: 1, backgroundColor: colors.surface },
+  flex: { flex: 1 },
+  header: { paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: spacing[1] },
+  backButton: { width: 40, height: 40, justifyContent: 'center' },
+  backIcon: { fontSize: 28, color: colors.ink[900] },
+  scrollContent: { paddingHorizontal: spacing[4], paddingBottom: spacing[8], gap: spacing[4] },
+  title: {
+    fontFamily: 'PlusJakartaSans-Bold',
+    fontSize: 24,
+    lineHeight: 30,
+    color: colors.ink[900],
+    marginTop: spacing[2],
   },
-  flex: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 28,
-    color: '#111111',
-    fontWeight: '400',
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 32,
-    gap: 12,
-  },
-  logo: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#111111',
-    marginBottom: 2,
-    marginTop: 8,
-  },
-  tagline: {
-    fontSize: 14,
-    color: '#888888',
-    marginBottom: 8,
-  },
-  socialButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    gap: 10,
-  },
-  socialIcon: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111111',
-  },
-  socialButtonText: {
+  subtitle: {
+    fontFamily: 'PlusJakartaSans',
     fontSize: 15,
-    fontWeight: '500',
-    color: '#111111',
+    lineHeight: 22,
+    color: colors.ink[500],
+    marginBottom: spacing[2],
   },
-  separatorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 4,
-  },
-  separatorLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E0E0E0',
-  },
-  separatorText: {
-    fontSize: 13,
-    color: '#999999',
-    marginHorizontal: 12,
-  },
-  inputGroup: {
-    gap: 6,
-  },
+  inputGroup: { gap: spacing[2] },
   inputLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#111111',
+    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontSize: 13,
+    color: colors.ink[700],
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    height: 44,
-    paddingHorizontal: 12,
+    borderWidth: 1.5,
+    borderColor: colors.borderDefault,
+    borderRadius: radius.sm,
+    height: controlSize.md,
+    paddingHorizontal: spacing[3],
+    fontFamily: 'PlusJakartaSans',
     fontSize: 15,
-    color: '#111111',
-    backgroundColor: '#FFFFFF',
+    color: colors.ink[900],
+    backgroundColor: colors.surface,
   },
   passwordRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    height: 44,
-    paddingHorizontal: 12,
-    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: colors.borderDefault,
+    borderRadius: radius.sm,
+    height: controlSize.md,
+    paddingHorizontal: spacing[3],
+    backgroundColor: colors.surface,
   },
   passwordInput: {
     flex: 1,
+    fontFamily: 'PlusJakartaSans',
     fontSize: 15,
-    color: '#111111',
+    color: colors.ink[900],
   },
-  eyeButton: {
-    padding: 4,
-  },
-  eyeIcon: {
-    fontSize: 16,
-  },
-  forgotLink: {
-    alignSelf: 'flex-start',
-    paddingVertical: 4,
-  },
+  eyeButton: { padding: 4 },
+  eyeIcon: { fontSize: 16 },
+  forgotLink: { alignSelf: 'flex-start', paddingVertical: 4 },
   forgotText: {
+    fontFamily: 'PlusJakartaSans',
     fontSize: 14,
-    color: '#666666',
-    textDecorationLine: 'underline',
+    color: colors.brand[500],
   },
   primaryButton: {
-    backgroundColor: '#111111',
-    borderRadius: 12,
-    height: 52,
+    backgroundColor: colors.brand[500],
+    borderRadius: radius.md,
+    height: controlSize.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
+    marginTop: spacing[2],
   },
-  primaryButtonDisabled: {
-    opacity: 0.6,
-  },
+  disabled: { opacity: 0.5 },
   primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'PlusJakartaSans-SemiBold',
+    color: colors.surface,
+    fontSize: 16,
   },
-  linkButton: {
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
+  linkButton: { alignItems: 'center', paddingVertical: spacing[2] },
   linkText: {
+    fontFamily: 'PlusJakartaSans',
     fontSize: 14,
-    color: '#666666',
+    color: colors.ink[500],
   },
   linkBold: {
-    color: '#111111',
-    fontWeight: '600',
-  },
-  skipButton: {
-    alignItems: 'center',
-    paddingVertical: 12,
-    marginTop: 8,
-  },
-  skipText: {
-    fontSize: 12,
-    color: '#BBBBBB',
+    fontFamily: 'PlusJakartaSans-SemiBold',
+    color: colors.ink[900],
   },
 });

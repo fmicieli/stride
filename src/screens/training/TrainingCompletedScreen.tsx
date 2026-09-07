@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -15,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getSessions, getPlan, deletePlan } from '../../services/firestore';
 import { TrainingSession, TrainingPlan } from '../../types';
 import { formatDuration, formatPace, getGoalShortLabel } from '../../utils/planGenerator';
+import { colors, spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'TrainingCompleted'>;
 type Route = RouteProp<RootStackParamList, 'TrainingCompleted'>;
@@ -38,7 +32,6 @@ export function TrainingCompletedScreen() {
   const route = useRoute<Route>();
   const { sessionId } = route.params;
   const { user } = useAuth();
-
   const [session, setSession] = useState<TrainingSession | null>(null);
   const [plan, setPlan] = useState<TrainingPlan | null>(null);
   const [sessions, setSessions] = useState<TrainingSession[]>([]);
@@ -47,14 +40,12 @@ export function TrainingCompletedScreen() {
 
   useEffect(() => {
     if (!user) return;
-    Promise.all([getSessions(user.uid), getPlan(user.uid)])
-      .then(([allSessions, p]) => {
-        const found = allSessions.find((s) => s.id === sessionId) ?? allSessions[0];
-        setSession(found ?? null);
-        setSessions(allSessions);
-        setPlan(p);
-      })
-      .finally(() => setLoading(false));
+    Promise.all([getSessions(user.uid), getPlan(user.uid)]).then(([allSessions, p]) => {
+      const found = allSessions.find((s) => s.id === sessionId) ?? allSessions[0];
+      setSession(found ?? null);
+      setSessions(allSessions);
+      setPlan(p);
+    }).finally(() => setLoading(false));
   }, [user, sessionId]);
 
   const totalKm = sessions.reduce((acc, s) => acc + s.distance, 0);
@@ -64,20 +55,14 @@ export function TrainingCompletedScreen() {
   const handleNewGoal = async () => {
     if (!user) return;
     setRestarting(true);
-    try {
-      await deletePlan(user.uid);
-      navigation.navigate('OnboardingGoal');
-    } finally {
-      setRestarting(false);
-    }
+    try { await deletePlan(user.uid); navigation.navigate('OnboardingGoal'); }
+    finally { setRestarting(false); }
   };
 
   if (loading) {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator color="#111111" />
-        </View>
+        <View style={styles.center}><ActivityIndicator color={colors.brand[500]} /></View>
       </SafeAreaView>
     );
   }
@@ -132,22 +117,10 @@ export function TrainingCompletedScreen() {
         </View>
 
         <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[styles.primaryButton, restarting && styles.buttonDisabled]}
-            activeOpacity={0.8}
-            onPress={handleNewGoal}
-            disabled={restarting}
-          >
-            <Text style={styles.primaryButtonText}>
-              {restarting ? 'Procesando...' : 'Elegir nuevo objetivo'}
-            </Text>
+          <TouchableOpacity style={[styles.primaryButton, restarting && styles.disabled]} activeOpacity={0.8} onPress={handleNewGoal} disabled={restarting}>
+            <Text style={styles.primaryButtonText}>{restarting ? 'Procesando...' : 'Elegir nuevo objetivo'}</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('MainTabs')}
-          >
+          <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.7} onPress={() => navigation.navigate('MainTabs')}>
             <Text style={styles.secondaryButtonText}>Ver mi progreso</Text>
           </TouchableOpacity>
         </View>
@@ -157,104 +130,23 @@ export function TrainingCompletedScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 40,
-    paddingBottom: 40,
-    alignItems: 'center',
-    gap: 20,
-  },
-  trophy: {
-    fontSize: 64,
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#111111',
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666666',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 8,
-  },
-  sessionCard: {
-    backgroundColor: '#F2F2F2',
-    borderRadius: 12,
-    padding: 16,
-    alignSelf: 'stretch',
-    gap: 16,
-  },
-  cardTitle: {
-    fontSize: 14,
-    color: '#888888',
-    fontWeight: '500',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111111',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#888888',
-  },
-  statDivider: {
-    width: 1,
-    height: 36,
-    backgroundColor: '#E0E0E0',
-  },
-  actionButtons: {
-    alignSelf: 'stretch',
-    gap: 12,
-    marginTop: 8,
-  },
-  primaryButton: {
-    backgroundColor: '#111111',
-    borderRadius: 12,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  secondaryButton: {
-    height: 52,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryButtonText: {
-    fontSize: 15,
-    color: '#666666',
-  },
+  safe: { flex: 1, backgroundColor: colors.surface },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  content: { paddingHorizontal: spacing[4], paddingTop: spacing[10], paddingBottom: spacing[10], alignItems: 'center', gap: spacing[5] },
+  trophy: { fontSize: 64, marginBottom: 8 },
+  title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 32, color: colors.ink[900], textAlign: 'center' },
+  subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 16, color: colors.ink[500], textAlign: 'center', lineHeight: 22, marginBottom: 8 },
+  sessionCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], alignSelf: 'stretch', gap: spacing[4] },
+  cardTitle: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 14, color: colors.ink[400] },
+  statsRow: { flexDirection: 'row', alignItems: 'center' },
+  statItem: { flex: 1, alignItems: 'center' },
+  statValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900], marginBottom: 4 },
+  statLabel: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400] },
+  statDivider: { width: 1, height: 36, backgroundColor: colors.borderDefault },
+  actionButtons: { alignSelf: 'stretch', gap: spacing[3], marginTop: 8 },
+  primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
+  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
+  disabled: { opacity: 0.6 },
+  secondaryButton: { height: controlSize.lg, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.borderDefault, alignItems: 'center', justifyContent: 'center' },
+  secondaryButtonText: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[500] },
 });

@@ -1,14 +1,10 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
+import { colors, spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'ForgotPasswordConfirm'>;
 type Route = RouteProp<RootStackParamList, 'ForgotPasswordConfirm'>;
@@ -24,18 +20,11 @@ export function ForgotPasswordConfirmScreen() {
         <View style={styles.iconContainer}>
           <Text style={styles.icon}>✉</Text>
         </View>
-
         <Text style={styles.title}>Revisá tu email</Text>
         <Text style={styles.description}>
-          {'Te enviamos un link para resetear tu contraseña a '}
-          <Text style={styles.emailHighlight}>{email}</Text>
+          {'Te enviamos un link a '}<Text style={styles.emailHighlight}>{email}</Text>
         </Text>
-
-        <TouchableOpacity
-          style={styles.primaryButton}
-          activeOpacity={0.8}
-          onPress={() => navigation.navigate('Welcome')}
-        >
+        <TouchableOpacity style={styles.primaryButton} activeOpacity={0.85} onPress={() => navigation.navigate('Welcome')}>
           <Text style={styles.primaryButtonText}>Volver al inicio</Text>
         </TouchableOpacity>
       </View>
@@ -44,59 +33,13 @@ export function ForgotPasswordConfirmScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 20,
-    paddingBottom: 40,
-  },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#F2F2F2',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  icon: {
-    fontSize: 36,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111111',
-    textAlign: 'center',
-  },
-  description: {
-    fontSize: 15,
-    color: '#666666',
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 16,
-  },
-  emailHighlight: {
-    color: '#111111',
-    fontWeight: '600',
-  },
-  primaryButton: {
-    backgroundColor: '#111111',
-    borderRadius: 12,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'stretch',
-    marginTop: 12,
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
+  safe: { flex: 1, backgroundColor: colors.surface },
+  container: { flex: 1, paddingHorizontal: spacing[4], alignItems: 'center', justifyContent: 'center', gap: spacing[5], paddingBottom: spacing[10] },
+  iconContainer: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.brand[50], alignItems: 'center', justifyContent: 'center', marginBottom: spacing[2] },
+  icon: { fontSize: 36 },
+  title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, lineHeight: 30, color: colors.ink[900], textAlign: 'center' },
+  description: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500], textAlign: 'center', paddingHorizontal: spacing[4] },
+  emailHighlight: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.ink[900] },
+  primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch', marginTop: spacing[3] },
+  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
 });

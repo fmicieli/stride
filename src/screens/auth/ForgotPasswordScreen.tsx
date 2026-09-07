@@ -1,19 +1,11 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
 import { sendPasswordReset } from '../../services/auth';
+import { colors, spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'ForgotPassword'>;
 
@@ -23,46 +15,33 @@ export function ForgotPasswordScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleSend = async () => {
-    if (!email.trim()) {
-      Alert.alert('Error', 'Ingresá tu email');
-      return;
-    }
+    if (!email.trim()) { Alert.alert('Error', 'Ingresá tu email'); return; }
     setLoading(true);
     try {
       await sendPasswordReset(email.trim());
       navigation.navigate('ForgotPasswordConfirm', { email: email.trim() });
     } catch (e: any) {
-      const msg =
-        e.code === 'auth/user-not-found'
-          ? 'No encontramos una cuenta con ese email'
-          : e.code === 'auth/invalid-email'
-          ? 'Email inválido'
-          : 'Ocurrió un error. Intentá de nuevo';
+      const msg = e.code === 'auth/user-not-found' ? 'No encontramos una cuenta con ese email'
+        : e.code === 'auth/invalid-email' ? 'Email inválido'
+        : 'Ocurrió un error. Intentá de nuevo';
       Alert.alert('Error', msg);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Text style={styles.backIcon}>‹</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>¿Olvidaste tu contraseña?</Text>
-          <View style={styles.headerSpacer} />
+          <Text style={styles.headerTitle}>Recuperar contraseña</Text>
+          <View style={{ width: 40 }} />
         </View>
-
         <View style={styles.content}>
           <Text style={styles.description}>
-            Ingresá tu email y te enviamos un link para que puedas restablecer tu contraseña.
+            Ingresá tu email y te enviamos un link para restablecer tu contraseña.
           </Text>
-
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Email</Text>
             <TextInput
@@ -70,22 +49,19 @@ export function ForgotPasswordScreen() {
               value={email}
               onChangeText={setEmail}
               placeholder="tu@email.com"
-              placeholderTextColor="#AAAAAA"
+              placeholderTextColor={colors.ink[300]}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
             />
           </View>
-
           <TouchableOpacity
-            style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
-            activeOpacity={0.8}
+            style={[styles.primaryButton, loading && styles.disabled]}
+            activeOpacity={0.85}
             onPress={handleSend}
             disabled={loading}
           >
-            <Text style={styles.primaryButtonText}>
-              {loading ? 'Enviando...' : 'Enviar link'}
-            </Text>
+            <Text style={styles.primaryButtonText}>{loading ? 'Enviando...' : 'Enviar link'}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -94,82 +70,22 @@ export function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  flex: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 28,
-    color: '#111111',
-    fontWeight: '400',
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#111111',
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    gap: 20,
-  },
-  description: {
-    fontSize: 15,
-    color: '#666666',
-    lineHeight: 22,
-  },
-  inputGroup: {
-    gap: 6,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#111111',
-  },
+  safe: { flex: 1, backgroundColor: colors.surface },
+  flex: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing[4], paddingVertical: spacing[2] },
+  backButton: { width: 40, height: 40, justifyContent: 'center' },
+  backIcon: { fontSize: 28, color: colors.ink[900] },
+  headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: colors.ink[900] },
+  content: { flex: 1, paddingHorizontal: spacing[4], paddingTop: spacing[4], gap: spacing[5] },
+  description: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500] },
+  inputGroup: { gap: spacing[2] },
+  inputLabel: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 13, color: colors.ink[700] },
   input: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    height: 44,
-    paddingHorizontal: 12,
-    fontSize: 15,
-    color: '#111111',
-    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5, borderColor: colors.borderDefault, borderRadius: radius.sm,
+    height: controlSize.md, paddingHorizontal: spacing[3],
+    fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900], backgroundColor: colors.surface,
   },
-  primaryButton: {
-    backgroundColor: '#111111',
-    borderRadius: 12,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButtonDisabled: {
-    opacity: 0.6,
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
+  primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
+  disabled: { opacity: 0.5 },
+  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
 });

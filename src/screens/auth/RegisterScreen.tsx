@@ -17,6 +17,7 @@ import { RootStackParamList } from '../../navigation';
 import { registerWithEmail } from '../../services/auth';
 import { saveUserProfile, savePlan } from '../../services/firestore';
 import { useOnboarding } from '../../utils/onboardingContext';
+import { colors, spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Register'>;
 
@@ -33,35 +34,13 @@ export function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [touched, setTouched] = useState({
-    name: false,
-    email: false,
-    password: false,
-    confirmPassword: false,
-  });
+  const [touched, setTouched] = useState({ name: false, email: false, password: false, confirmPassword: false });
   const [loading, setLoading] = useState(false);
 
-  const emailError =
-    touched.email && email.length > 0 && !isValidEmail(email)
-      ? 'Ingresá un email válido'
-      : null;
-
-  const passwordError =
-    touched.password && password.length > 0 && password.length < 8
-      ? 'La contraseña debe tener al menos 8 caracteres'
-      : null;
-
-  const confirmError =
-    touched.confirmPassword && confirmPassword.length > 0 && password !== confirmPassword
-      ? 'Las contraseñas no coinciden'
-      : null;
-
-  const hasErrors =
-    !name.trim() ||
-    !email.trim() ||
-    !isValidEmail(email) ||
-    password.length < 8 ||
-    password !== confirmPassword;
+  const emailError = touched.email && email.length > 0 && !isValidEmail(email) ? 'Ingresá un email válido' : null;
+  const passwordError = touched.password && password.length > 0 && password.length < 8 ? 'Mínimo 8 caracteres' : null;
+  const confirmError = touched.confirmPassword && confirmPassword.length > 0 && password !== confirmPassword ? 'Las contraseñas no coinciden' : null;
+  const hasErrors = !name.trim() || !email.trim() || !isValidEmail(email) || password.length < 8 || password !== confirmPassword;
 
   const handleRegister = async () => {
     setTouched({ name: true, email: true, password: true, confirmPassword: true });
@@ -78,11 +57,9 @@ export function RegisterScreen() {
       navigation.replace('MainTabs');
     } catch (e: any) {
       const msg =
-        e.code === 'auth/email-already-in-use'
-          ? 'Ese email ya está registrado'
-          : e.code === 'auth/invalid-email'
-          ? 'Email inválido'
-          : 'Ocurrió un error. Intentá de nuevo';
+        e.code === 'auth/email-already-in-use' ? 'Ese email ya está registrado'
+        : e.code === 'auth/invalid-email' ? 'Email inválido'
+        : 'Ocurrió un error. Intentá de nuevo';
       Alert.alert('Error', msg);
     } finally {
       setLoading(false);
@@ -91,51 +68,32 @@ export function RegisterScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Text style={styles.backIcon}>‹</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Crear cuenta</Text>
-          <View style={styles.headerSpacer} />
+          <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-            <Text style={styles.socialIcon}>G</Text>
-            <Text style={styles.socialButtonText}>Continuar con Google</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-            <Text style={styles.socialIcon}></Text>
-            <Text style={styles.socialButtonText}>Continuar con Apple</Text>
-          </TouchableOpacity>
-
-          <View style={styles.separatorRow}>
-            <View style={styles.separatorLine} />
-            <Text style={styles.separatorText}>o</Text>
-            <View style={styles.separatorLine} />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Nombre</Text>
-            <TextInput
-              style={styles.input}
-              value={name}
-              onChangeText={setName}
-              placeholder="Tu nombre"
-              placeholderTextColor="#AAAAAA"
-              autoCapitalize="words"
-              onBlur={() => setTouched((t) => ({ ...t, name: true }))}
-            />
-          </View>
+        <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          {[
+            { label: 'Nombre', value: name, setter: setName, placeholder: 'Tu nombre', field: 'name' as const, capitalize: 'words' as const },
+          ].map(({ label, value, setter, placeholder, field, capitalize }) => (
+            <View key={field} style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>{label}</Text>
+              <TextInput
+                style={styles.input}
+                value={value}
+                onChangeText={setter}
+                placeholder={placeholder}
+                placeholderTextColor={colors.ink[300]}
+                autoCapitalize={capitalize}
+                onBlur={() => setTouched((t) => ({ ...t, [field]: true }))}
+              />
+            </View>
+          ))}
 
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Email</Text>
@@ -144,7 +102,7 @@ export function RegisterScreen() {
               value={email}
               onChangeText={setEmail}
               placeholder="tu@email.com"
-              placeholderTextColor="#AAAAAA"
+              placeholderTextColor={colors.ink[300]}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -161,15 +119,12 @@ export function RegisterScreen() {
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Mínimo 8 caracteres"
-                placeholderTextColor="#AAAAAA"
+                placeholderTextColor={colors.ink[300]}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 onBlur={() => setTouched((t) => ({ ...t, password: true }))}
               />
-              <TouchableOpacity
-                onPress={() => setShowPassword((v) => !v)}
-                style={styles.eyeButton}
-              >
+              <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.eyeButton}>
                 <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁'}</Text>
               </TouchableOpacity>
             </View>
@@ -184,15 +139,12 @@ export function RegisterScreen() {
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 placeholder="Repetí tu contraseña"
-                placeholderTextColor="#AAAAAA"
+                placeholderTextColor={colors.ink[300]}
                 secureTextEntry={!showConfirm}
                 autoCapitalize="none"
                 onBlur={() => setTouched((t) => ({ ...t, confirmPassword: true }))}
               />
-              <TouchableOpacity
-                onPress={() => setShowConfirm((v) => !v)}
-                style={styles.eyeButton}
-              >
+              <TouchableOpacity onPress={() => setShowConfirm((v) => !v)} style={styles.eyeButton}>
                 <Text style={styles.eyeIcon}>{showConfirm ? '🙈' : '👁'}</Text>
               </TouchableOpacity>
             </View>
@@ -200,35 +152,18 @@ export function RegisterScreen() {
           </View>
 
           <TouchableOpacity
-            style={[
-              styles.primaryButton,
-              (hasErrors || loading) && styles.primaryButtonDisabled,
-            ]}
-            activeOpacity={0.8}
+            style={[styles.primaryButton, (hasErrors || loading) && styles.disabled]}
+            activeOpacity={0.85}
             onPress={handleRegister}
             disabled={loading}
           >
-            <Text style={styles.primaryButtonText}>
-              {loading ? 'Creando cuenta...' : 'Crear cuenta'}
-            </Text>
+            <Text style={styles.primaryButtonText}>{loading ? 'Creando cuenta...' : 'Crear cuenta'}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.linkButton}
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('Login')}
-          >
+          <TouchableOpacity style={styles.linkButton} activeOpacity={0.7} onPress={() => navigation.navigate('Login')}>
             <Text style={styles.linkText}>
               {'¿Ya tenés cuenta? '}<Text style={styles.linkBold}>Iniciá sesión</Text>
             </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.skipButton}
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('PlanGenerated')}
-          >
-            <Text style={styles.skipText}>⚡ Modo prueba — saltear registro</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -237,162 +172,76 @@ export function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  flex: {
-    flex: 1,
-  },
+  safe: { flex: 1, backgroundColor: colors.surface },
+  flex: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[2],
+    paddingBottom: spacing[2],
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 28,
-    color: '#111111',
-    fontWeight: '400',
-  },
+  backButton: { width: 40, height: 40, justifyContent: 'center' },
+  backIcon: { fontSize: 28, color: colors.ink[900] },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
+    fontFamily: 'PlusJakartaSans-SemiBold',
     fontSize: 17,
-    fontWeight: '600',
-    color: '#111111',
+    color: colors.ink[900],
   },
-  headerSpacer: {
-    width: 40,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 32,
-    gap: 16,
-    paddingTop: 8,
-  },
-  socialButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    gap: 10,
-  },
-  socialIcon: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111111',
-  },
-  socialButtonText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#111111',
-  },
-  separatorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  separatorLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E0E0E0',
-  },
-  separatorText: {
-    fontSize: 13,
-    color: '#999999',
-    marginHorizontal: 12,
-  },
-  inputGroup: {
-    gap: 6,
-  },
+  scrollContent: { paddingHorizontal: spacing[4], paddingBottom: spacing[8], gap: spacing[4], paddingTop: spacing[2] },
+  inputGroup: { gap: spacing[2] },
   inputLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#111111',
+    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontSize: 13,
+    color: colors.ink[700],
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    height: 44,
-    paddingHorizontal: 12,
+    borderWidth: 1.5,
+    borderColor: colors.borderDefault,
+    borderRadius: radius.sm,
+    height: controlSize.md,
+    paddingHorizontal: spacing[3],
+    fontFamily: 'PlusJakartaSans',
     fontSize: 15,
-    color: '#111111',
-    backgroundColor: '#FFFFFF',
+    color: colors.ink[900],
+    backgroundColor: colors.surface,
   },
-  inputError: {
-    borderColor: '#E53935',
-  },
+  inputError: { borderColor: colors.error.solid },
   passwordRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    height: 44,
-    paddingHorizontal: 12,
-    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: colors.borderDefault,
+    borderRadius: radius.sm,
+    height: controlSize.md,
+    paddingHorizontal: spacing[3],
+    backgroundColor: colors.surface,
   },
-  passwordInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#111111',
-  },
-  eyeButton: {
-    padding: 4,
-  },
-  eyeIcon: {
-    fontSize: 16,
-  },
+  passwordInput: { flex: 1, fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900] },
+  eyeButton: { padding: 4 },
+  eyeIcon: { fontSize: 16 },
   errorText: {
-    color: '#E53935',
+    fontFamily: 'PlusJakartaSans',
     fontSize: 12,
+    color: colors.error.text,
   },
   primaryButton: {
-    backgroundColor: '#111111',
-    borderRadius: 12,
-    height: 52,
+    backgroundColor: colors.brand[500],
+    borderRadius: radius.md,
+    height: controlSize.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
+    marginTop: spacing[2],
   },
-  primaryButtonDisabled: {
-    opacity: 0.5,
-  },
+  disabled: { opacity: 0.5 },
   primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'PlusJakartaSans-SemiBold',
+    color: colors.surface,
+    fontSize: 16,
   },
-  linkButton: {
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  linkText: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  linkBold: {
-    color: '#111111',
-    fontWeight: '600',
-  },
-  skipButton: {
-    alignItems: 'center',
-    paddingVertical: 12,
-    marginTop: 8,
-  },
-  skipText: {
-    fontSize: 12,
-    color: '#BBBBBB',
-  },
+  linkButton: { alignItems: 'center', paddingVertical: spacing[2] },
+  linkText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500] },
+  linkBold: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.ink[900] },
 });
