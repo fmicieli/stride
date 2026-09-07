@@ -105,21 +105,40 @@ function MainTabs() {
 }
 
 function SplashView() {
-  const opacity = useRef(new Animated.Value(0)).current;
+  const sOpacity = useRef(new Animated.Value(0)).current;
+  const sRotation = useRef(new Animated.Value(0)).current;
+  const restOpacity = useRef(new Animated.Value(0)).current;
+  const splashOpacity = useRef(new Animated.Value(1)).current;
+
   useEffect(() => {
     Animated.sequence([
-      Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: false }),
-      Animated.delay(1000),
-      Animated.timing(opacity, { toValue: 0, duration: 700, useNativeDriver: false }),
+      Animated.timing(sOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.timing(sRotation, { toValue: 1, duration: 550, useNativeDriver: true }),
+      Animated.timing(restOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.delay(800),
+      Animated.timing(splashOpacity, { toValue: 0, duration: 550, useNativeDriver: true }),
     ]).start();
   }, []);
+
+  const rotate = sRotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
   return (
-    <View style={styles.splash}>
-      <Animated.View style={{ opacity }}>
-        <Text style={styles.splashLogo}>Stride</Text>
-        <Text style={styles.splashTagline}>Tu entrenamiento, a tu ritmo</Text>
-      </Animated.View>
-    </View>
+    <Animated.View style={[styles.splash, { opacity: splashOpacity }]}>
+      <View style={styles.logoRow}>
+        <Animated.Text style={[styles.logoS, { opacity: sOpacity, transform: [{ rotate }] }]}>
+          S
+        </Animated.Text>
+        <Animated.Text style={[styles.logoRest, { opacity: restOpacity }]}>
+          tride
+        </Animated.Text>
+      </View>
+      <Animated.Text style={[styles.splashTagline, { opacity: restOpacity }]}>
+        Tu entrenamiento, a tu ritmo
+      </Animated.Text>
+    </Animated.View>
   );
 }
 
@@ -128,7 +147,7 @@ export function AppNavigator() {
   const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setSplashDone(true), 2400);
+    const t = setTimeout(() => setSplashDone(true), 2650);
     return () => clearTimeout(t);
   }, []);
 
@@ -181,12 +200,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  splashLogo: {
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  logoS: {
     fontSize: 40,
     fontWeight: '700',
     color: '#111111',
-    textAlign: 'center',
-    marginBottom: 10,
+  },
+  logoRest: {
+    fontSize: 40,
+    fontWeight: '700',
+    color: '#111111',
   },
   splashTagline: {
     fontSize: 16,
