@@ -5,7 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
 import { StrideLogo } from '../../components/StrideLogo';
-import { colors, spacing, radius, controlSize } from '../../theme';
+import { Button } from '../../components/Button';
+import { colors, spacing, radius } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Welcome'>;
 
@@ -26,18 +27,8 @@ export function WelcomeScreen() {
       </View>
 
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.primaryButton}
-          activeOpacity={0.85}
-          onPress={() => navigation.navigate('OnboardingGoal')}
-        >
-          <Text style={styles.primaryButtonText}>Empezar</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => navigation.navigate('Login')}
-        >
+        <Button label="Empezar" onPress={() => navigation.navigate('OnboardingGoal')} />
+        <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Login')}>
           <Text style={styles.loginLink}>Ya tengo cuenta</Text>
         </TouchableOpacity>
       </View>
@@ -85,19 +76,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing[4],
     gap: spacing[3],
     alignItems: 'center',
-  },
-  primaryButton: {
-    backgroundColor: colors.brand[500],
-    borderRadius: radius.full,
-    height: controlSize.lg,
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButtonText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    color: colors.surface,
-    fontSize: 16,
   },
   loginLink: {
     fontFamily: 'PlusJakartaSans',

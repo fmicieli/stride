@@ -40,7 +40,8 @@ export interface DayActivity {
   day: DayKey;
   dayShort: string;
   type: ActivityType;
-  duration?: number; // minutes
+  duration?: number; // minutes — full session (warm-up + intervals + cool-down)
+  runTargetMin?: number; // minutes — pure running target, drives the live intervals
   distance?: number; // km
 }
 

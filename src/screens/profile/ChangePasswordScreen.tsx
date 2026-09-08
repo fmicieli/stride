@@ -5,6 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
 import { changePassword } from '../../services/auth';
+import { Button } from '../../components/Button';
+import { Icon } from '../../components/Icon';
 import { colors, spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'ChangePassword'>;
@@ -17,7 +19,7 @@ function PasswordField({ label, value, onChangeText, onBlur, error }: { label: s
       <View style={[styles.passwordRow, error ? styles.inputError : null]}>
         <TextInput style={styles.passwordInput} value={value} onChangeText={onChangeText} onBlur={onBlur} secureTextEntry={!show} autoCapitalize="none" placeholderTextColor={colors.ink[300]} />
         <TouchableOpacity onPress={() => setShow((v) => !v)} style={styles.eyeButton}>
-          <Text style={styles.eyeIcon}>{show ? '🙈' : '👁'}</Text>
+          <Icon name={show ? 'eye-off' : 'eye'} size={18} color={colors.ink[400]} />
         </TouchableOpacity>
       </View>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -54,7 +56,7 @@ export function ChangePasswordScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>‹</Text>
+          <Icon name="chevron-left" size={22} color={colors.ink[900]} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Cambiar contraseña</Text>
         <View style={styles.headerSpacer} />
@@ -65,11 +67,15 @@ export function ChangePasswordScreen() {
           <PasswordField label="Contraseña actual" value={current} onChangeText={setCurrent} onBlur={() => setTouched((t) => ({ ...t, current: true }))} />
           <PasswordField label="Nueva contraseña" value={newPass} onChangeText={setNewPass} onBlur={() => setTouched((t) => ({ ...t, newPass: true }))} error={newPassError} />
           <PasswordField label="Confirmar nueva contraseña" value={confirmPass} onChangeText={setConfirmPass} onBlur={() => setTouched((t) => ({ ...t, confirm: true }))} error={confirmError} />
-
-          <TouchableOpacity style={[styles.primaryButton, (hasErrors || saving) && styles.disabled]} activeOpacity={0.8} onPress={handleSave} disabled={saving}>
-            <Text style={styles.primaryButtonText}>{saving ? 'Guardando...' : 'Guardar'}</Text>
-          </TouchableOpacity>
         </ScrollView>
+        <View style={styles.footer}>
+          <Button
+            label={saving ? 'Guardando...' : 'Guardar'}
+            onPress={handleSave}
+            disabled={hasErrors || saving}
+            loading={saving}
+          />
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -80,19 +86,15 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing[4], paddingVertical: spacing[3], borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 28, color: colors.ink[900] },
   headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: colors.ink[900] },
   headerSpacer: { width: 40 },
-  content: { paddingHorizontal: spacing[4], paddingTop: spacing[6], paddingBottom: spacing[10], gap: spacing[5] },
+  content: { paddingHorizontal: spacing[4], paddingTop: spacing[6], paddingBottom: spacing[6], gap: spacing[5] },
+  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], borderTopWidth: 1, borderTopColor: colors.surfaceMuted, backgroundColor: colors.surface },
   inputGroup: { gap: spacing[2] },
   inputLabel: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 13, color: colors.ink[700] },
   passwordRow: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: colors.borderDefault, borderRadius: radius.sm, height: controlSize.md, paddingHorizontal: spacing[3], backgroundColor: colors.surface },
   inputError: { borderColor: colors.error.solid },
   passwordInput: { flex: 1, fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900] },
   eyeButton: { padding: 4 },
-  eyeIcon: { fontSize: 16 },
   errorText: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.error.text },
-  primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
-  disabled: { opacity: 0.5 },
 });

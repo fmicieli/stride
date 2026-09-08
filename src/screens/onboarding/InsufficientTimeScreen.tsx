@@ -1,12 +1,14 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
 import { useOnboarding } from '../../utils/onboardingContext';
 import { getGoalShortLabel } from '../../utils/planGenerator';
-import { colors, spacing, radius, controlSize } from '../../theme';
+import { Button } from '../../components/Button';
+import { Icon } from '../../components/Icon';
+import { colors, spacing } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'InsufficientTime'>;
 
@@ -24,10 +26,10 @@ export function InsufficientTimeScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-        <Text style={styles.backIcon}>‹</Text>
+        <Icon name="chevron-left" size={24} color={colors.ink[900]} />
       </TouchableOpacity>
 
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.iconCircle}>
           <Text style={styles.iconText}>!</Text>
         </View>
@@ -39,12 +41,10 @@ export function InsufficientTimeScreen() {
           <Text style={styles.bold}>{minWeeks} semanas</Text>
           {'.\nElegí una fecha más lejana para armar un plan realista.'}
         </Text>
-      </View>
+      </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => navigation.goBack()}>
-          <Text style={styles.primaryButtonText}>Cambiar fecha</Text>
-        </TouchableOpacity>
+        <Button label="Cambiar fecha" onPress={() => navigation.goBack()} />
       </View>
     </SafeAreaView>
   );
@@ -53,14 +53,11 @@ export function InsufficientTimeScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   backBtn: { paddingHorizontal: spacing[4], paddingTop: spacing[2], width: 48 },
-  backIcon: { fontSize: 28, color: colors.ink[900] },
-  content: { flex: 1, paddingHorizontal: spacing[4], alignItems: 'center', justifyContent: 'center', gap: spacing[5] },
+  content: { flexGrow: 1, paddingHorizontal: spacing[4], paddingBottom: spacing[4], alignItems: 'center', justifyContent: 'center', gap: spacing[5] },
   iconCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.warning.bg, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   iconText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 28, color: colors.warning.text },
   title: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 24, color: colors.ink[900], textAlign: 'center' },
   body: { fontFamily: 'PlusJakartaSans', fontSize: 16, color: colors.ink[500], textAlign: 'center', lineHeight: 24 },
   bold: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.ink[900] },
   footer: { paddingHorizontal: spacing[4], paddingBottom: spacing[4], paddingTop: spacing[3] },
-  primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
-  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
 });

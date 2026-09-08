@@ -5,6 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
 import { sendPasswordReset } from '../../services/auth';
+import { Button } from '../../components/Button';
+import { Icon } from '../../components/Icon';
 import { colors, spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'ForgotPassword'>;
@@ -33,7 +35,7 @@ export function ForgotPasswordScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={styles.backIcon}>‹</Text>
+            <Icon name="chevron-left" size={22} color={colors.ink[900]} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Recuperar contraseña</Text>
           <View style={{ width: 40 }} />
@@ -55,14 +57,7 @@ export function ForgotPasswordScreen() {
               autoCorrect={false}
             />
           </View>
-          <TouchableOpacity
-            style={[styles.primaryButton, loading && styles.disabled]}
-            activeOpacity={0.85}
-            onPress={handleSend}
-            disabled={loading}
-          >
-            <Text style={styles.primaryButtonText}>{loading ? 'Enviando...' : 'Enviar link'}</Text>
-          </TouchableOpacity>
+          <Button label={loading ? 'Enviando...' : 'Enviar link'} onPress={handleSend} loading={loading} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -74,7 +69,6 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing[4], paddingVertical: spacing[2] },
   backButton: { width: 40, height: 40, justifyContent: 'center' },
-  backIcon: { fontSize: 28, color: colors.ink[900] },
   headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: colors.ink[900] },
   content: { flex: 1, paddingHorizontal: spacing[4], paddingTop: spacing[4], gap: spacing[5] },
   description: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500] },
@@ -85,7 +79,4 @@ const styles = StyleSheet.create({
     height: controlSize.md, paddingHorizontal: spacing[3],
     fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900], backgroundColor: colors.surface,
   },
-  primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
-  disabled: { opacity: 0.5 },
-  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
 });

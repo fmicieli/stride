@@ -109,28 +109,20 @@ function MainTabs() {
 }
 
 function SplashView() {
-  const logoOpacity = useRef(new Animated.Value(0)).current;
-  const logoScale = useRef(new Animated.Value(0.88)).current;
   const taglineOpacity = useRef(new Animated.Value(0)).current;
   const splashOpacity = useRef(new Animated.Value(1)).current;
 
-  useEffect(() => {
+  const handleLogoDone = () => {
     Animated.sequence([
-      Animated.parallel([
-        Animated.timing(logoOpacity, { toValue: 1, duration: 450, useNativeDriver: true }),
-        Animated.timing(logoScale, { toValue: 1, duration: 450, useNativeDriver: true }),
-      ]),
-      Animated.timing(taglineOpacity, { toValue: 1, duration: 350, useNativeDriver: true }),
-      Animated.delay(900),
-      Animated.timing(splashOpacity, { toValue: 0, duration: 500, useNativeDriver: true }),
+      Animated.timing(taglineOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.delay(500),
+      Animated.timing(splashOpacity, { toValue: 0, duration: 450, useNativeDriver: true }),
     ]).start();
-  }, []);
+  };
 
   return (
     <Animated.View style={[styles.splash, { opacity: splashOpacity }]}>
-      <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }] }}>
-        <StrideLogo width={220} />
-      </Animated.View>
+      <StrideLogo width={220} animated onDone={handleLogoDone} />
       <Animated.Text style={[styles.splashTagline, { opacity: taglineOpacity }]}>
         Tu entrenamiento, a tu ritmo
       </Animated.Text>
@@ -143,7 +135,7 @@ export function AppNavigator() {
   const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setSplashDone(true), 2650);
+    const t = setTimeout(() => setSplashDone(true), 3300);
     return () => clearTimeout(t);
   }, []);
 

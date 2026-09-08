@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -18,6 +17,9 @@ import { RootStackParamList } from '../../navigation';
 import { loginWithEmail, signInWithGoogle } from '../../services/auth';
 import { savePlan, saveUserProfile, getPlan } from '../../services/firestore';
 import { useOnboarding } from '../../utils/onboardingContext';
+import { Button } from '../../components/Button';
+import { Icon } from '../../components/Icon';
+import { GoogleGlyph } from '../../components/GoogleGlyph';
 import { colors, spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Login'>;
@@ -123,7 +125,7 @@ export function LoginScreen() {
                 autoCapitalize="none"
               />
               <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.eyeButton}>
-                <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁'}</Text>
+                <Icon name={showPassword ? 'eye-off' : 'eye'} size={18} color={colors.ink[400]} />
               </TouchableOpacity>
             </View>
           </View>
@@ -132,14 +134,12 @@ export function LoginScreen() {
             <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.primaryButton, loading && styles.disabled]}
-            activeOpacity={0.85}
+          <Button
+            label={loading ? 'Ingresando...' : 'Ingresar'}
             onPress={handleLogin}
-            disabled={loading}
-          >
-            <Text style={styles.primaryButtonText}>{loading ? 'Ingresando...' : 'Ingresar'}</Text>
-          </TouchableOpacity>
+            loading={loading}
+            style={styles.ctaSpacing}
+          />
 
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
@@ -148,31 +148,13 @@ export function LoginScreen() {
           </View>
 
           {Platform.OS === 'web' && (
-            <TouchableOpacity
-              style={[styles.googleButton, googleLoading && styles.disabled]}
-              activeOpacity={0.85}
+            <Button
+              variant="secondary"
+              label="Continuar con Google"
+              iconLeft={<GoogleGlyph />}
+              loading={googleLoading}
               onPress={handleGoogleLogin}
-              disabled={googleLoading}
-            >
-              {googleLoading ? (
-                <ActivityIndicator color={colors.ink[900]} size="small" />
-              ) : (
-                <>
-                  {/* @ts-ignore */}
-                  <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-                    {/* @ts-ignore */}
-                    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
-                    {/* @ts-ignore */}
-                    <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
-                    {/* @ts-ignore */}
-                    <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-                    {/* @ts-ignore */}
-                    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-                  </svg>
-                  <Text style={styles.googleButtonText}>Continuar con Google</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            />
           )}
 
           <TouchableOpacity style={styles.linkButton} activeOpacity={0.7} onPress={() => navigation.navigate('Register')}>
@@ -241,42 +223,16 @@ const styles = StyleSheet.create({
     color: colors.ink[900],
   },
   eyeButton: { padding: 4 },
-  eyeIcon: { fontSize: 16 },
   forgotLink: { alignSelf: 'flex-start', paddingVertical: 4 },
   forgotText: {
     fontFamily: 'PlusJakartaSans',
     fontSize: 14,
     color: colors.brand[500],
   },
-  primaryButton: {
-    backgroundColor: colors.brand[500],
-    borderRadius: radius.md,
-    height: controlSize.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: spacing[2],
-  },
-  disabled: { opacity: 0.5 },
-  primaryButtonText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    color: colors.surface,
-    fontSize: 16,
-  },
+  ctaSpacing: { marginTop: spacing[2] },
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
   dividerLine: { flex: 1, height: 1, backgroundColor: colors.borderDefault },
   dividerText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[400] },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing[3],
-    height: controlSize.lg,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.borderDefault,
-    backgroundColor: colors.surface,
-  },
-  googleButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: colors.ink[900] },
   linkButton: { alignItems: 'center', paddingVertical: spacing[2] },
   linkText: {
     fontFamily: 'PlusJakartaSans',

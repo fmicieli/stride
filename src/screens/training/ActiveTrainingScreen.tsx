@@ -8,7 +8,13 @@ import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
 import { getPlan, saveSession, saveStreak, getSessions } from '../../services/firestore';
 import { TrainingPlan, TrainingSession, DayKey } from '../../types';
-import { formatDuration, formatPace } from '../../utils/planGenerator';
+import {
+  formatDuration,
+  formatPace,
+  buildSessionIntervals,
+  SessionInterval,
+} from '../../utils/planGenerator';
+import { Button } from '../../components/Button';
 import { colors, spacing, radius, controlSize } from '../../theme';
 
 function PauseIcon() {
@@ -43,32 +49,7 @@ type Nav = StackNavigationProp<RootStackParamList, 'ActiveTraining'>;
 
 const DAY_NAMES: DayKey[] = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-interface Interval { type: 'run' | 'walk'; label: string; duration: number }
-
-function generateIntervals(durationMinutes: number, week: number, method: string): Interval[] {
-  const total = Math.max(durationMinutes, 10) * 60;
-  if (method !== 'Método Caco') {
-    return [{ type: 'run', label: 'Trotar', duration: total }];
-  }
-  let runSecs = 60, walkSecs = 90;
-  if (week >= 9)      { runSecs = 300; walkSecs = 60; }
-  else if (week >= 7) { runSecs = 240; walkSecs = 60; }
-  else if (week >= 5) { runSecs = 180; walkSecs = 90; }
-  else if (week >= 3) { runSecs = 120; walkSecs = 90; }
-  const warmup = 90, cooldown = 90;
-  const body = total - warmup - cooldown;
-  const cycle = runSecs + walkSecs;
-  const reps = Math.max(1, Math.floor(body / cycle));
-  const result: Interval[] = [{ type: 'walk', label: 'Calentamiento', duration: warmup }];
-  for (let i = 0; i < reps; i++) {
-    result.push({ type: 'run', label: 'Trotar', duration: runSecs });
-    if (i < reps - 1) result.push({ type: 'walk', label: 'Descanso', duration: walkSecs });
-  }
-  result.push({ type: 'walk', label: 'Enfriamiento', duration: cooldown });
-  return result;
-}
-
-function getIntervalState(elapsed: number, intervals: Interval[]): { idx: number; countdown: number; progress: number } {
+function getIntervalState(elapsed: number, intervals: SessionInterval[]): { idx: number; countdown: number; progress: number } {
   let t = elapsed;
   for (let i = 0; i < intervals.length; i++) {
     if (t < intervals[i].duration) {
@@ -115,7 +96,7 @@ export function ActiveTrainingScreen() {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
   const [plan, setPlan] = useState<TrainingPlan | null>(null);
-  const [intervals, setIntervals] = useState<Interval[]>([]);
+  const [intervals, setIntervals] = useState<SessionInterval[]>([]);
   const [elapsed, setElapsed] = useState(0);
   const [distance, setDistance] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -136,8 +117,8 @@ export function ActiveTrainingScreen() {
         if (p) {
           const todayName = DAY_NAMES[new Date().getDay()];
           const todayDay = p.weeks[0]?.days.find((d) => d.day === todayName);
-          const duration = todayDay?.duration ?? 20;
-          setIntervals(generateIntervals(duration, p.weeks[0]?.week ?? 1, p.method));
+          const runTarget = todayDay?.runTargetMin ?? todayDay?.duration ?? 20;
+          setIntervals(buildSessionIntervals(runTarget, p.weeks[0]?.week ?? 1, p.method));
         }
       });
     }, [user]),
@@ -338,12 +319,8 @@ export function ActiveTrainingScreen() {
                 <Text style={styles.modalStatLabel}>Distancia (km)</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.modalPrimary} onPress={handleResume}>
-              <Text style={styles.modalPrimaryText}>Reanudar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.modalSecondary} onPress={confirmStop}>
-              <Text style={styles.modalSecondaryText}>Finalizar entrenamiento</Text>
-            </TouchableOpacity>
+            <Button label="Reanudar" onPress={handleResume} />
+            <Button label="Finalizar entrenamiento" variant="tertiaryDanger" onPress={confirmStop} />
           </View>
         </View>
       </Modal>
@@ -392,8 +369,4 @@ const styles = StyleSheet.create({
   modalStatBox: { flex: 1, gap: 4 },
   modalStatValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900] },
   modalStatLabel: { fontFamily: 'PlusJakartaSans', fontSize: 10, color: colors.ink[500] },
-  modalPrimary: { backgroundColor: colors.ink[900], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
-  modalPrimaryText: { fontFamily: 'PlusJakartaSans-Bold', color: colors.surface, fontSize: 15 },
-  modalSecondary: { height: controlSize.lg, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.borderDefault, alignItems: 'center', justifyContent: 'center' },
-  modalSecondaryText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 15, color: colors.ink[900] },
 });

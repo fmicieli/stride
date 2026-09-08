@@ -9,8 +9,9 @@ import { getPlan, getSessions } from '../services/firestore';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { TrainingPlan, TrainingSession } from '../types';
 import { ProgressBar } from '../components/ProgressBar';
-import { getGoalShortLabel } from '../utils/planGenerator';
-import { colors, spacing, radius, controlSize } from '../theme';
+import { Button } from '../components/Button';
+import { getGoalShortLabel, greetingReady } from '../utils/planGenerator';
+import { colors, spacing, radius } from '../theme';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
@@ -104,7 +105,7 @@ export function HomeScreen() {
         </TouchableOpacity>
         <View style={styles.headerText}>
           <Text style={styles.headerHola}>Hola, {displayName}</Text>
-          <Text style={styles.headerSub}>¿Lista para hoy?</Text>
+          <Text style={styles.headerSub}>¿{greetingReady(profile?.name)} para hoy?</Text>
         </View>
       </View>
 
@@ -168,18 +169,14 @@ export function HomeScreen() {
       <View style={styles.footer}>
         {plan ? (
           isRunDay ? (
-            <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => navigation.navigate('GPSPermission')}>
-              <Text style={styles.primaryButtonText}>Empezar</Text>
-            </TouchableOpacity>
+            <Button label="Empezar" onPress={() => navigation.navigate('GPSPermission')} />
           ) : (
             <View style={styles.restFooter}>
               <Text style={styles.restFooterText}>Hoy es día de descanso — ¡aprovechá para recuperarte!</Text>
             </View>
           )
         ) : (
-          <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => navigation.navigate('OnboardingGoal')}>
-            <Text style={styles.primaryButtonText}>Activar mi plan</Text>
-          </TouchableOpacity>
+          <Button label="Activar mi plan" onPress={() => navigation.navigate('OnboardingGoal')} />
         )}
       </View>
     </SafeAreaView>
@@ -209,10 +206,9 @@ const styles = StyleSheet.create({
   separator: { height: 1, backgroundColor: colors.borderDefault, marginVertical: 8 },
   progressLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
   progressLabel: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400] },
-  primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
-  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
   section: { gap: spacing[3] },
   sectionLabel: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[900] },
+  sectionTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: colors.ink[900] },
   daysList: { gap: 8 },
   dayChip: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, paddingVertical: spacing[3], paddingHorizontal: spacing[3], alignItems: 'flex-start', minWidth: 86, gap: 4 },
   dayChipActiveRun: { backgroundColor: colors.brand[50] },

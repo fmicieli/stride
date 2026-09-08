@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -8,7 +8,8 @@ import { useAuth } from '../../context/AuthContext';
 import { getSessions, getPlan } from '../../services/firestore';
 import { TrainingSession, TrainingPlan } from '../../types';
 import { formatDuration, formatPace, getGoalShortLabel } from '../../utils/planGenerator';
-import { colors, spacing, radius, controlSize } from '../../theme';
+import { Button } from '../../components/Button';
+import { colors, spacing, radius } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'TrainingCompleted'>;
 type Route = RouteProp<RootStackParamList, 'TrainingCompleted'>;
@@ -91,10 +92,10 @@ export function TrainingCompletedScreen() {
           </View>
         )}
 
-        <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => navigation.navigate('MainTabs')}>
-          <Text style={styles.primaryButtonText}>Volver a Hoy</Text>
-        </TouchableOpacity>
       </ScrollView>
+      <View style={styles.footer}>
+        <Button label="Volver a Hoy" onPress={() => navigation.navigate('MainTabs')} />
+      </View>
     </SafeAreaView>
   );
 }
@@ -102,7 +103,8 @@ export function TrainingCompletedScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { paddingHorizontal: spacing[4], paddingTop: spacing[10], paddingBottom: spacing[10], alignItems: 'center', gap: spacing[5] },
+  content: { flexGrow: 1, paddingHorizontal: spacing[4], paddingTop: spacing[10], paddingBottom: spacing[6], alignItems: 'center', justifyContent: 'center', gap: spacing[5] },
+  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], backgroundColor: colors.surface },
   iconCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.brand[50], alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.ink[900], textAlign: 'center' },
   subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 16, color: colors.ink[500], textAlign: 'center', lineHeight: 22 },
@@ -110,7 +112,4 @@ const styles = StyleSheet.create({
   statBox: { flex: 1, backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], alignItems: 'center', gap: 4 },
   statValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900] },
   statLabel: { fontFamily: 'PlusJakartaSans', fontSize: 11, color: colors.ink[400], textAlign: 'center' },
-  primaryButton: { alignSelf: 'stretch', backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
-  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
-  disabled: { opacity: 0.6 },
 });
