@@ -8,7 +8,9 @@ export type IconName =
   | 'chevron'
   | 'chevron-left'
   | 'check'
-  | 'bell';
+  | 'bell'
+  | 'pin'
+  | 'trophy';
 
 interface Props {
   name: IconName;
@@ -62,6 +64,24 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M10 18.5a2 2 0 0 0 4 0" />
     </>
   ),
+  pin: (
+    <>
+      {/* @ts-ignore */}
+      <path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z" />
+      {/* @ts-ignore */}
+      <circle cx="12" cy="9.5" r="2.4" />
+    </>
+  ),
+  trophy: (
+    <>
+      {/* @ts-ignore */}
+      <path d="M7 4h10v4a5 5 0 0 1-10 0V4Z" />
+      {/* @ts-ignore */}
+      <path d="M10 13v3h4v-3M9 20h6" />
+      {/* @ts-ignore */}
+      <path d="M7 5H4v2a4 4 0 0 0 3.5 4M17 5h3v2a4 4 0 0 1-3.5 4" />
+    </>
+  ),
 };
 
 const FALLBACK: Record<IconName, string> = {
@@ -71,6 +91,8 @@ const FALLBACK: Record<IconName, string> = {
   'chevron-left': '‹',
   check: '✓',
   bell: '🔔',
+  pin: '📍',
+  trophy: '🏆',
 };
 
 export function Icon({ name, size = 20, color = colors.ink[700] }: Props) {

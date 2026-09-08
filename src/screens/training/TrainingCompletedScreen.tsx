@@ -7,12 +7,23 @@ import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
 import { getSessions, getPlan } from '../../services/firestore';
 import { TrainingSession, TrainingPlan } from '../../types';
-import { formatDuration, formatPace, getGoalShortLabel } from '../../utils/planGenerator';
+import { formatDuration, buildSessionIntervals } from '../../utils/planGenerator';
+import { DayKey } from '../../types';
 import { Button } from '../../components/Button';
 import { colors, spacing, radius } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'TrainingCompleted'>;
 type Route = RouteProp<RootStackParamList, 'TrainingCompleted'>;
+
+const DAY_NAMES: DayKey[] = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+function countIntervals(plan: TrainingPlan | null): number {
+  if (!plan) return 0;
+  const todayName = DAY_NAMES[new Date().getDay()];
+  const day = plan.weeks[0]?.days.find((d) => d.day === todayName);
+  const runTarget = day?.runTargetMin ?? day?.duration ?? 20;
+  return buildSessionIntervals(runTarget, plan.weeks[0]?.week ?? 1, plan.method).length;
+}
 
 function getSubtitle(plan: TrainingPlan | null): string {
   if (!plan) return '¡Gran trabajo!';
@@ -70,6 +81,9 @@ export function TrainingCompletedScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Resumen</Text>
+      </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <CheckCircle />
         <Text style={styles.title}>¡Entrenamiento completo!</Text>
@@ -82,12 +96,8 @@ export function TrainingCompletedScreen() {
               <Text style={styles.statLabel}>Tiempo total</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{session.distance.toFixed(2)}</Text>
-              <Text style={styles.statLabel}>Distancia (km)</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{formatPace(session.pace)}</Text>
-              <Text style={styles.statLabel}>Ritmo prom.</Text>
+              <Text style={styles.statValue}>{countIntervals(plan)}</Text>
+              <Text style={styles.statLabel}>Tramos completados</Text>
             </View>
           </View>
         )}
@@ -103,13 +113,15 @@ export function TrainingCompletedScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { flexGrow: 1, paddingHorizontal: spacing[4], paddingTop: spacing[10], paddingBottom: spacing[6], alignItems: 'center', justifyContent: 'center', gap: spacing[5] },
+  header: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[3], alignItems: 'center' },
+  headerTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 18, color: colors.ink[900] },
+  content: { flexGrow: 1, paddingHorizontal: spacing[4], paddingTop: spacing[6], paddingBottom: spacing[6], alignItems: 'center', justifyContent: 'center', gap: spacing[5] },
   footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], backgroundColor: colors.surface },
   iconCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.brand[50], alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.ink[900], textAlign: 'center' },
   subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 16, color: colors.ink[500], textAlign: 'center', lineHeight: 22 },
   statGrid: { flexDirection: 'row', alignSelf: 'stretch', gap: spacing[3] },
-  statBox: { flex: 1, backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], alignItems: 'center', gap: 4 },
+  statBox: { flex: 1, backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], alignItems: 'center', gap: 6 },
   statValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900] },
-  statLabel: { fontFamily: 'PlusJakartaSans', fontSize: 11, color: colors.ink[400], textAlign: 'center' },
+  statLabel: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 10.5, color: colors.ink[500], textAlign: 'center', textTransform: 'uppercase', letterSpacing: 0.5 },
 });

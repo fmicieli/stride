@@ -14,11 +14,11 @@ import { colors, spacing, radius, controlSize } from '../../theme';
 type Nav = StackNavigationProp<RootStackParamList>;
 type ModalType = 'logout' | 'changeGoal' | 'deleteAccount' | null;
 
-function SettingsRow({ label, onPress, destructive = false }: { label: string; onPress: () => void; destructive?: boolean }) {
+function SettingsRow({ label, onPress, destructive = false, chevron = true }: { label: string; onPress: () => void; destructive?: boolean; chevron?: boolean }) {
   return (
     <TouchableOpacity style={styles.settingsRow} onPress={onPress} activeOpacity={0.7}>
       <Text style={[styles.settingsLabel, destructive && styles.destructiveText]}>{label}</Text>
-      {!destructive && <Icon name="chevron" size={20} color={colors.ink[300]} />}
+      {chevron && !destructive && <Icon name="chevron" size={20} color={colors.ink[300]} />}
     </TouchableOpacity>
   );
 }
@@ -63,11 +63,7 @@ export function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Icon name="chevron-left" size={22} color={colors.ink[900]} />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>Perfil</Text>
-        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -77,19 +73,22 @@ export function ProfileScreen() {
           </View>
           <Text style={styles.displayName}>{displayName}</Text>
           <Text style={styles.email}>{profile?.email || user?.email || ''}</Text>
-          <TouchableOpacity style={styles.editBtn} activeOpacity={0.7} onPress={() => navigation.navigate('EditProfile')}>
-            <Text style={styles.editBtnText}>Editar</Text>
-          </TouchableOpacity>
+          <Button
+            label="Editar perfil"
+            variant="secondary"
+            size="sm"
+            fullWidth={false}
+            onPress={() => navigation.navigate('EditProfile')}
+            style={styles.editBtn}
+          />
         </View>
 
         <View style={styles.settingsList}>
-          <SettingsRow label="Mi plan" onPress={() => navigation.navigate('PlanGenerated')} />
+          <SettingsRow label="Mi plan" onPress={() => navigation.navigate('MyPlan')} />
           <SettingsRow label="Historial de entrenamientos" onPress={() => navigation.navigate('Historial')} />
-          <SettingsRow label="Logros" onPress={() => navigation.navigate('Logros')} />
           <SettingsRow label="Cambiar objetivo" onPress={() => setActiveModal('changeGoal')} />
-          <SettingsRow label="Permisos" onPress={() => navigation.navigate('GPSPermission')} />
           <SettingsRow label="Cambiar contraseña" onPress={() => navigation.navigate('ChangePassword')} />
-          <SettingsRow label="Cerrar sesión" onPress={() => setActiveModal('logout')} />
+          <SettingsRow label="Cerrar sesión" onPress={() => setActiveModal('logout')} chevron={false} />
           <SettingsRow label="Eliminar cuenta" onPress={() => setActiveModal('deleteAccount')} destructive />
         </View>
       </ScrollView>
@@ -148,18 +147,15 @@ export function ProfileScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], paddingVertical: spacing[3], borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
-  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: colors.ink[900] },
-  headerSpacer: { width: 40 },
+  header: { alignItems: 'center', paddingHorizontal: spacing[4], paddingVertical: spacing[3] },
+  headerTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 18, color: colors.ink[900] },
   content: { paddingBottom: spacing[10] },
-  avatarSection: { alignItems: 'center', paddingTop: spacing[8], paddingBottom: spacing[6], gap: 8 },
-  avatar: { width: 88, height: 88, borderRadius: 44, backgroundColor: colors.brand[50], alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  avatarText: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 36, color: colors.brand[600] },
-  displayName: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
+  avatarSection: { alignItems: 'center', paddingTop: spacing[6], paddingBottom: spacing[6], gap: 8 },
+  avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: colors.surfaceMuted, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  avatarText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 34, color: colors.ink[900] },
+  displayName: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.ink[900] },
   email: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[400] },
-  editBtn: { marginTop: 8, borderWidth: 1.5, borderColor: colors.borderDefault, borderRadius: radius.full, paddingVertical: 8, paddingHorizontal: spacing[5] },
-  editBtnText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[600] },
+  editBtn: { marginTop: 8 },
   settingsList: { borderTopWidth: 1, borderTopColor: colors.surfaceMuted },
   settingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
   settingsLabel: { fontFamily: 'PlusJakartaSans', fontSize: 16, color: colors.ink[900] },

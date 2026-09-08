@@ -7,29 +7,27 @@ import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
 import { getSessions } from '../../services/firestore';
 import { TrainingSession } from '../../types';
-import { formatDuration, formatPace } from '../../utils/planGenerator';
+import { formatPace } from '../../utils/planGenerator';
+import { Icon } from '../../components/Icon';
 import { colors, spacing, radius } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Historial'>;
 
 function formatDate(isoDate: string): string {
   const date = new Date(isoDate);
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-  return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  return `${d}/${m}/${date.getFullYear()}`;
 }
 
 function SessionCard({ session }: { session: TrainingSession }) {
   return (
     <View style={styles.sessionCard}>
       <Text style={styles.sessionDate}>{formatDate(session.date)}</Text>
-      <Text style={styles.sessionType}>{session.type || 'Trote'}</Text>
-      <View style={styles.statsRow}>
-        <Text style={styles.statText}>{session.distance.toFixed(2)} km</Text>
-        <Text style={styles.statDot}>·</Text>
-        <Text style={styles.statText}>{formatDuration(session.duration)}</Text>
-        <Text style={styles.statDot}>·</Text>
-        <Text style={styles.statText}>{formatPace(session.pace)}/km</Text>
-      </View>
+      <Text style={styles.sessionType}>{session.type || 'Trote con intervalos'}</Text>
+      <Text style={styles.statText}>
+        {session.distance.toFixed(1)} km   {Math.round(session.duration / 60)} min   {formatPace(session.pace)} /km
+      </Text>
     </View>
   );
 }
@@ -49,7 +47,7 @@ export function HistorialScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>‹</Text>
+          <Icon name="chevron-left" size={22} color={colors.ink[900]} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Historial</Text>
         <View style={styles.headerSpacer} />
@@ -79,17 +77,14 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing[4], paddingVertical: spacing[3], borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 28, color: colors.ink[900] },
-  headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: colors.ink[900] },
+  headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-Bold', fontSize: 18, color: colors.ink[900] },
   headerSpacer: { width: 40 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[8], gap: spacing[3] },
   sessionCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], gap: 6 },
-  sessionDate: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400] },
-  sessionType: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 16, color: colors.ink[900] },
-  statsRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  statText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500] },
-  statDot: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[300] },
+  sessionDate: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400], letterSpacing: 0.3 },
+  sessionType: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 16, color: colors.ink[900] },
+  statText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[400], letterSpacing: 0.3, fontVariant: ['tabular-nums'] },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: spacing[3] },
   emptyTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
   emptyText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], textAlign: 'center', lineHeight: 20 },

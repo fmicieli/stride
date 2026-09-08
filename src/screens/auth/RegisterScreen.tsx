@@ -97,14 +97,14 @@ export function RegisterScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={styles.backIcon}>‹</Text>
+            <Icon name="chevron-left" size={22} color={colors.ink[900]} />
           </TouchableOpacity>
           <View style={{ width: 40 }} />
         </View>
 
         <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Creá tu cuenta</Text>
-          <Text style={styles.subtitle}>Solo para guardar tu progreso. No pedimos tarjeta.</Text>
+          <Text style={styles.subtitle}>Solo para guardar tu progreso. No pedimos tarjeta de crédito.</Text>
           {[
             { label: 'Nombre', value: name, setter: setName, placeholder: 'Tu nombre', field: 'name' as const, capitalize: 'words' as const },
           ].map(({ label, value, setter, placeholder, field, capitalize }) => (
@@ -188,7 +188,7 @@ export function RegisterScreen() {
 
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>o</Text>
+            <Text style={styles.dividerText}>o continuar con</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -226,8 +226,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing[2],
     paddingBottom: spacing[2],
   },
-  backButton: { width: 40, height: 40, justifyContent: 'center' },
-  backIcon: { fontSize: 28, color: colors.ink[900] },
+  backButton: { width: 40, height: 40, alignItems: 'flex-start', justifyContent: 'center' },
   scrollContent: { paddingHorizontal: spacing[4], paddingBottom: spacing[8], gap: spacing[4], paddingTop: spacing[2] },
   title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.ink[900] },
   subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[500], lineHeight: 22, marginTop: -spacing[2] },

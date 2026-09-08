@@ -1,11 +1,12 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { getPlan, getSessions } from '../services/firestore';
 import { TrainingPlan, TrainingSession, WeekPlan } from '../types';
 import { getGoalShortLabel, formatTargetDate } from '../utils/planGenerator';
+import { Icon } from '../components/Icon';
 import { colors, spacing, radius } from '../theme';
 
 function isWeekCompleted(week: WeekPlan, sessions: TrainingSession[]): boolean {
@@ -46,9 +47,11 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
   return <Text style={{ fontSize: 14, color: '#777777' }}>{expanded ? '∧' : '›'}</Text>;
 }
 
-function WeekCard({ week, expanded, onToggle, completed }: { week: WeekPlan; expanded: boolean; onToggle: () => void; completed: boolean }) {
+const TODAY_KEY = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][new Date().getDay()];
+
+function WeekCard({ week, expanded, onToggle, completed, isCurrentWeek }: { week: WeekPlan; expanded: boolean; onToggle: () => void; completed: boolean; isCurrentWeek: boolean }) {
   return (
-    <View style={styles.weekCard}>
+    <View style={[styles.weekCard, isCurrentWeek && styles.weekCardCurrent]}>
       <TouchableOpacity style={styles.weekHeader} onPress={onToggle} activeOpacity={0.8}>
         <View style={styles.weekTitleRow}>
           <Text style={styles.weekTitle}>Semana {week.week}</Text>
@@ -58,13 +61,20 @@ function WeekCard({ week, expanded, onToggle, completed }: { week: WeekPlan; exp
       </TouchableOpacity>
       {expanded && (
         <View style={styles.weekDays}>
-          {week.days.map((day) => (
-            <View key={day.day} style={styles.dayRow}>
-              <Text style={[styles.dayName, day.type === 'rest' && styles.restText]}>{day.dayShort}</Text>
-              <Text style={[styles.dayActivity, day.type === 'rest' && styles.restText]}>{day.type === 'run' ? 'Trote' : 'Descanso'}</Text>
-              <Text style={[styles.dayDuration, day.type === 'rest' && styles.restText]}>{day.type === 'run' && day.duration ? `${day.duration} min` : ''}</Text>
-            </View>
-          ))}
+          {week.days.map((day) => {
+            const isToday = isCurrentWeek && day.day === TODAY_KEY;
+            const activity =
+              day.type === 'run'
+                ? `Trote con intervalos${isToday ? ' · hoy' : ''}`
+                : 'Descanso';
+            return (
+              <View key={day.day} style={styles.dayRow}>
+                <Text style={[styles.dayName, day.type === 'rest' && styles.restText]}>{day.dayShort}</Text>
+                <Text style={[styles.dayActivity, day.type === 'rest' && styles.restText, isToday && styles.todayText]}>{activity}</Text>
+                <Text style={[styles.dayDuration, day.type === 'rest' && styles.restText]}>{day.type === 'run' && day.duration ? `${day.duration} min` : ''}</Text>
+              </View>
+            );
+          })}
         </View>
       )}
     </View>
@@ -72,6 +82,7 @@ function WeekCard({ week, expanded, onToggle, completed }: { week: WeekPlan; exp
 }
 
 export function MyPlanScreen() {
+  const navigation = useNavigation();
   const { user } = useAuth();
   const [plan, setPlan] = useState<TrainingPlan | null>(null);
   const [sessions, setSessions] = useState<TrainingSession[]>([]);
@@ -103,7 +114,11 @@ export function MyPlanScreen() {
   if (!plan) {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={styles.header}><Text style={styles.headerTitle}>Mi plan</Text></View>
+        <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}><Icon name="chevron-left" size={22} color={colors.ink[900]} /></TouchableOpacity>
+        <Text style={styles.headerTitle}>Mi plan</Text>
+        <View style={styles.backBtn} />
+      </View>
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>Sin plan activo</Text>
           <Text style={styles.emptyText}>Tu plan aparecerá aquí una vez que lo configures</Text>
@@ -114,7 +129,11 @@ export function MyPlanScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.header}><Text style={styles.headerTitle}>Mi plan</Text></View>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}><Icon name="chevron-left" size={22} color={colors.ink[900]} /></TouchableOpacity>
+        <Text style={styles.headerTitle}>Mi plan</Text>
+        <View style={styles.backBtn} />
+      </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.goalCard}>
           <Text style={styles.goalLabel}>Tu meta</Text>
@@ -140,6 +159,7 @@ export function MyPlanScreen() {
               expanded={expandedWeek === week.week}
               onToggle={() => setExpandedWeek(expandedWeek === week.week ? null : week.week)}
               completed={isWeekCompleted(week, sessions)}
+              isCurrentWeek={week.week === getCurrentWeek(plan, sessions)}
             />
           ))}
         </View>
@@ -157,8 +177,9 @@ export function MyPlanScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[3], borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
-  headerTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.ink[900] },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[3], borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
+  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-Bold', fontSize: 18, color: colors.ink[900] },
   content: { paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[10] },
   goalCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], marginBottom: spacing[4] },
   goalLabel: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400], marginBottom: 6 },
@@ -171,6 +192,7 @@ const styles = StyleSheet.create({
   chipText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[700] },
   weeks: { gap: spacing[3] },
   weekCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, overflow: 'hidden' },
+  weekCardCurrent: { backgroundColor: colors.brand[50] },
   weekHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing[4] },
   weekTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   weekTitle: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 16, color: colors.ink[900] },
@@ -181,6 +203,7 @@ const styles = StyleSheet.create({
   dayActivity: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[900], flex: 1 },
   dayDuration: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[900], textAlign: 'right', width: 60 },
   restText: { color: colors.ink[300] },
+  todayText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.ink[900] },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: spacing[3] },
   emptyTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
   emptyText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], textAlign: 'center', lineHeight: 20 },

@@ -31,7 +31,6 @@ import { MyPlanScreen } from '../screens/MyPlanScreen';
 import { ProgressScreen } from '../screens/progress/ProgressScreen';
 
 // Training
-import { GPSPermissionScreen } from '../screens/training/GPSPermissionScreen';
 import { ActiveTrainingScreen } from '../screens/training/ActiveTrainingScreen';
 import { TrainingCompletedScreen } from '../screens/training/TrainingCompletedScreen';
 
@@ -59,8 +58,8 @@ export type RootStackParamList = {
   PlanGenerated: { plan?: TrainingPlan } | undefined;
   // Main
   MainTabs: undefined;
+  MyPlan: undefined;
   // Training
-  GPSPermission: undefined;
   ActiveTraining: undefined;
   TrainingCompleted: { sessionId: string };
   // Profile
@@ -169,7 +168,7 @@ export function AppNavigator() {
 
         {/* App */}
         <Stack.Screen name="MainTabs" component={MainTabs} />
-        <Stack.Screen name="GPSPermission" component={GPSPermissionScreen} />
+        <Stack.Screen name="MyPlan" component={MyPlanScreen} />
         <Stack.Screen name="ActiveTraining" component={ActiveTrainingScreen} />
         <Stack.Screen name="TrainingCompleted" component={TrainingCompletedScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />

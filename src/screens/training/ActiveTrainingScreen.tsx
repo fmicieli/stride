@@ -8,58 +8,71 @@ import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
 import { getPlan, saveSession, saveStreak, getSessions } from '../../services/firestore';
 import { TrainingPlan, TrainingSession, DayKey } from '../../types';
-import {
-  formatDuration,
-  formatPace,
-  buildSessionIntervals,
-  SessionInterval,
-} from '../../utils/planGenerator';
+import { formatDuration, buildSessionIntervals, SessionInterval } from '../../utils/planGenerator';
 import { Button } from '../../components/Button';
-import { colors, spacing, radius, controlSize } from '../../theme';
+import { colors, spacing, radius } from '../../theme';
 
-function PauseIcon() {
+const TRACK_BG = '#0D1210';
+const TRACK_SUBTLE = 'rgba(255,255,255,0.10)';
+const TRACK_MUTED = '#B9BFBC';
+
+function ControlIcon({ name }: { name: 'stop' | 'pause' | 'play' | 'flag' }) {
+  const stroke = name === 'pause' || name === 'play' ? '#FFFFFF' : '#FFFFFF';
   if (Platform.OS === 'web') {
+    if (name === 'stop') {
+      return (
+        // @ts-ignore
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* @ts-ignore */}
+          <rect x="5" y="5" width="10" height="10" rx="2" fill="#FFFFFF" />
+        </svg>
+      );
+    }
+    if (name === 'play') {
+      return (
+        // @ts-ignore
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* @ts-ignore */}
+          <path d="M 7 4 L 18 11 L 7 18 Z" fill="#FFFFFF" />
+        </svg>
+      );
+    }
+    if (name === 'pause') {
+      return (
+        // @ts-ignore
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* @ts-ignore */}
+          <path d="M 8 4 L 8 18" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+          {/* @ts-ignore */}
+          <path d="M 14 4 L 14 18" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      );
+    }
     return (
       // @ts-ignore
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* @ts-ignore */}
-        <path d="M 8 4 L 8 18" stroke="#1E8563" strokeWidth="2.5" strokeLinecap="round"/>
-        {/* @ts-ignore */}
-        <path d="M 14 4 L 14 18" stroke="#1E8563" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M5 3v14M5 4h9l-2 3 2 3H5" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
   }
-  return <Text style={{ fontSize: 22, color: colors.brand[500] }}>⏸</Text>;
-}
-
-function PlayIcon() {
-  if (Platform.OS === 'web') {
-    return (
-      // @ts-ignore
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* @ts-ignore */}
-        <path d="M 7 3 L 19 11 L 7 19 Z" fill="#1E8563"/>
-      </svg>
-    );
-  }
-  return <Text style={{ fontSize: 22, color: colors.brand[500] }}>▶</Text>;
+  const glyph = name === 'stop' ? '■' : name === 'play' ? '▶' : name === 'pause' ? '⏸' : '⚑';
+  return <Text style={{ fontSize: 20, color: '#FFFFFF' }}>{glyph}</Text>;
 }
 
 type Nav = StackNavigationProp<RootStackParamList, 'ActiveTraining'>;
 
 const DAY_NAMES: DayKey[] = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-function getIntervalState(elapsed: number, intervals: SessionInterval[]): { idx: number; countdown: number; progress: number } {
+function getIntervalState(elapsed: number, intervals: SessionInterval[]): { idx: number; countdown: number } {
   let t = elapsed;
   for (let i = 0; i < intervals.length; i++) {
     if (t < intervals[i].duration) {
-      const countdown = intervals[i].duration - t;
-      const progress = t / intervals[i].duration;
-      return { idx: i, countdown, progress };
+      return { idx: i, countdown: intervals[i].duration - t };
     }
     t -= intervals[i].duration;
   }
-  return { idx: intervals.length - 1, countdown: 0, progress: 1 };
+  return { idx: intervals.length - 1, countdown: 0 };
 }
 
 function formatCountdown(secs: number): string {
@@ -68,28 +81,9 @@ function formatCountdown(secs: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-function getDistance(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }): number {
-  const R = 6371;
-  const dLat = ((b.latitude - a.latitude) * Math.PI) / 180;
-  const dLon = ((b.longitude - a.longitude) * Math.PI) / 180;
-  const lat1 = (a.latitude * Math.PI) / 180;
-  const lat2 = (b.latitude * Math.PI) / 180;
-  const x = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
-}
-
-function getGoalValue(plan: TrainingPlan): number {
-  if (plan.goalMode === 'time') {
-    const map: Record<string, number> = { '20min': 1200, '30min': 1800, '1hour': 3600 };
-    return map[plan.goal] ?? 1200;
-  }
-  const map: Record<string, number> = { '5K': 5, '10K': 10, '21K': 21, '42K': 42 };
-  return map[plan.goal] ?? 5;
-}
-
-function getGoalLabel(plan: TrainingPlan): string {
-  const map: Record<string, string> = { '20min': '20 min', '30min': '30 min', '1hour': '1 hora', '5K': '5K', '10K': '10K', '21K': '21K', '42K': '42K' };
-  return map[plan.goal] ?? plan.goal;
+function momentLabel(type?: 'run' | 'walk'): string {
+  if (type === 'walk') return 'Momento de caminar';
+  return 'Momento de trotar';
 }
 
 export function ActiveTrainingScreen() {
@@ -98,15 +92,11 @@ export function ActiveTrainingScreen() {
   const [plan, setPlan] = useState<TrainingPlan | null>(null);
   const [intervals, setIntervals] = useState<SessionInterval[]>([]);
   const [elapsed, setElapsed] = useState(0);
-  const [distance, setDistance] = useState(0);
   const [paused, setPaused] = useState(false);
   const [goalReached, setGoalReached] = useState(false);
-  const [gpsLost, setGpsLost] = useState(false);
   const prevIntervalIdxRef = useRef(-1);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const locationSub = useRef<{ remove: () => void } | null>(null);
-  const lastPos = useRef<{ latitude: number; longitude: number } | null>(null);
   const pausedRef = useRef(false);
   const toastAnim = useRef(new Animated.Value(-120)).current;
 
@@ -129,57 +119,17 @@ export function ActiveTrainingScreen() {
     timerRef.current = setInterval(() => {
       if (!pausedRef.current) setElapsed((e) => e + 1);
     }, 1000);
-
-    (async () => {
-      if (Platform.OS === 'web') {
-        if (!navigator.geolocation) { setGpsLost(true); return; }
-        const watchId = navigator.geolocation.watchPosition(
-          (pos) => {
-            setGpsLost(false);
-            const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-            if (lastPos.current && !pausedRef.current) {
-              const d = getDistance(lastPos.current, coords);
-              setDistance((prev) => prev + d);
-            }
-            lastPos.current = coords;
-          },
-          () => setGpsLost(true),
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-        );
-        locationSub.current = { remove: () => navigator.geolocation.clearWatch(watchId) };
-      } else {
-        const Location = require('expo-location');
-        const { status } = await Location.getForegroundPermissionsAsync();
-        if (status === 'granted') {
-          locationSub.current = await Location.watchPositionAsync(
-            { accuracy: Location.Accuracy.BestForNavigation, distanceInterval: 5, timeInterval: 2000 },
-            (loc: any) => {
-              setGpsLost(false);
-              if (lastPos.current && !pausedRef.current) {
-                const d = getDistance(lastPos.current, loc.coords);
-                setDistance((prev) => prev + d);
-              }
-              lastPos.current = loc.coords;
-            },
-          );
-        }
-      }
-    })();
-
-    const gpsTimeout = setTimeout(() => setGpsLost(true), 15000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      locationSub.current?.remove();
-      clearTimeout(gpsTimeout);
     };
   }, [plan]);
 
-  const pace = elapsed > 0 && distance > 0 ? Math.round(elapsed / distance) : 0;
   const totalDuration = intervals.reduce((s, i) => s + i.duration, 0);
   const overallProgress = totalDuration > 0 ? Math.min(1, elapsed / totalDuration) : 0;
-  const { idx: intervalIdx, countdown, progress: intervalProgress } =
-    intervals.length > 0 ? getIntervalState(elapsed, intervals) : { idx: 0, countdown: 0, progress: 0 };
+  const { idx: intervalIdx, countdown } =
+    intervals.length > 0 ? getIntervalState(elapsed, intervals) : { idx: 0, countdown: 0 };
   const currentInterval = intervals[intervalIdx];
+  const nextInterval = intervals[intervalIdx + 1];
 
   // Haptic on interval advance
   useEffect(() => {
@@ -193,7 +143,7 @@ export function ActiveTrainingScreen() {
 
   // Toast on session complete
   useEffect(() => {
-    if (!goalReached && overallProgress >= 1) {
+    if (!goalReached && overallProgress >= 1 && totalDuration > 0) {
       setGoalReached(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Animated.sequence([
@@ -216,7 +166,6 @@ export function ActiveTrainingScreen() {
   const confirmStop = async () => {
     setPaused(false);
     if (timerRef.current) clearInterval(timerRef.current);
-    locationSub.current?.remove();
 
     const sessionId = Date.now().toString();
     if (user) {
@@ -224,10 +173,10 @@ export function ActiveTrainingScreen() {
         const today = new Date();
         const todayKey = DAY_NAMES[today.getDay()];
         const session: TrainingSession = {
-          id: sessionId, date: today.toISOString(), type: 'Trote',
-          duration: elapsed, distance, pace,
+          id: sessionId, date: today.toISOString(), type: 'Trote con intervalos',
+          duration: elapsed, distance: 0, pace: 0,
           week: plan?.weeks[0]?.week ?? 1, day: todayKey,
-          completed: elapsed > 60 || distance > 0.1,
+          completed: elapsed > 60,
         };
         await saveSession(user.uid, session);
         const allSessions = await getSessions(user.uid);
@@ -237,86 +186,59 @@ export function ActiveTrainingScreen() {
     navigation.navigate('TrainingCompleted', { sessionId });
   };
 
+  const nextHint = nextInterval
+    ? `Después · ${nextInterval.label} ${formatCountdown(nextInterval.duration)}`
+    : 'Último tramo';
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      {gpsLost && (
-        <View style={styles.gpsBanner}>
-          <Text style={styles.gpsBannerText}>Señal GPS perdida — recuperando...</Text>
-        </View>
-      )}
-
       <Animated.View style={[styles.toast, { transform: [{ translateY: toastAnim }] }]}>
-        <Text style={styles.toastTitle}>¡Meta lograda!</Text>
-        <Text style={styles.toastSub}>Podés seguir corriendo o pausar para finalizar</Text>
+        <Text style={styles.toastTitle}>¡Entrenamiento completo!</Text>
+        <Text style={styles.toastSub}>Pausá para finalizar y ver el resumen</Text>
       </Animated.View>
 
-      <View style={styles.header}>
-        <View style={styles.headerSpacer} />
-        <Text style={styles.headerTitle}>
-          {currentInterval
-            ? `${currentInterval.label} · ${intervalIdx + 1} de ${intervals.length}`
-            : 'Entrenamiento'}
-        </Text>
-        <View style={styles.headerSpacer} />
-      </View>
-
       <View style={styles.content}>
-        <View style={[styles.intervalCard, currentInterval?.type === 'run' ? styles.intervalCardRun : styles.intervalCardWalk]}>
-          <Text style={[styles.intervalLabel, currentInterval?.type === 'run' ? styles.intervalLabelRun : styles.intervalLabelWalk]}>
-            {currentInterval?.label ?? '—'}
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>
+            Intervalo {Math.min(intervalIdx + 1, intervals.length || 1)} de {intervals.length || 1}
           </Text>
-          <Text style={[styles.intervalCountdown, currentInterval?.type === 'run' ? styles.intervalCountdownRun : styles.intervalCountdownWalk]}>
-            {formatCountdown(countdown)}
-          </Text>
-          <View style={styles.intervalTrack}>
-            <View style={[
-              styles.intervalFill,
-              currentInterval?.type === 'run' ? styles.intervalFillRun : styles.intervalFillWalk,
-              { width: `${Math.round(intervalProgress * 100)}%` as any },
-            ]} />
-          </View>
-          <Text style={styles.overallProgress}>{Math.round(overallProgress * 100)}% del entrenamiento</Text>
         </View>
 
-        <View style={styles.statGrid}>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{formatDuration(elapsed)}</Text>
-            <Text style={styles.statLabel}>Tiempo</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{distance.toFixed(2)}</Text>
-            <Text style={styles.statLabel}>Distancia (km)</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{pace > 0 ? formatPace(pace) : '--:--'}</Text>
-            <Text style={styles.statLabel}>Ritmo</Text>
-          </View>
-        </View>
+        <Text style={styles.segLabel}>{momentLabel(currentInterval?.type)}</Text>
+
+        <Text style={styles.timer}>{formatCountdown(countdown)}</Text>
+
+        <Text style={styles.hint}>{nextHint}</Text>
       </View>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.pauseBtn} onPress={handlePause} activeOpacity={0.8}>
-          {paused ? <PlayIcon /> : <PauseIcon />}
-        </TouchableOpacity>
+        <View style={styles.controlBar}>
+          <TouchableOpacity style={styles.ctrl} onPress={confirmStop} activeOpacity={0.8}>
+            <ControlIcon name="stop" />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.ctrl, styles.ctrlPrimary]} onPress={handlePause} activeOpacity={0.85}>
+            <ControlIcon name={paused ? 'play' : 'pause'} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.ctrl} onPress={confirmStop} activeOpacity={0.8}>
+            <ControlIcon name="flag" />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <Modal visible={paused} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Entrenamiento en pausa</Text>
-              <TouchableOpacity onPress={handleResume} style={styles.modalClose}>
-                <Text style={styles.modalCloseText}>✕</Text>
-              </TouchableOpacity>
-            </View>
+      <Modal visible={paused} transparent animationType="slide" onRequestClose={handleResume}>
+        <View style={styles.sheetOverlay}>
+          <View style={styles.sheet}>
+            <Text style={styles.modalTitle}>Entrenamiento en pausa</Text>
             <View style={styles.modalStats}>
               <View style={styles.modalStatBox}>
                 <Text style={styles.modalStatValue}>{formatDuration(elapsed)}</Text>
-                <Text style={styles.modalStatLabel}>Tiempo</Text>
+                <Text style={styles.modalStatLabel}>Tiempo total</Text>
               </View>
               <View style={styles.modalStatBox}>
-                <Text style={styles.modalStatValue}>{distance.toFixed(2)}</Text>
-                <Text style={styles.modalStatLabel}>Distancia (km)</Text>
+                <Text style={styles.modalStatValue}>
+                  {Math.min(intervalIdx + 1, intervals.length || 1)} de {intervals.length || 1}
+                </Text>
+                <Text style={styles.modalStatLabel}>Intervalo</Text>
               </View>
             </View>
             <Button label="Reanudar" onPress={handleResume} />
@@ -329,44 +251,37 @@ export function ActiveTrainingScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.surface },
-  gpsBanner: { backgroundColor: colors.warning.bg, paddingVertical: 8, paddingHorizontal: spacing[4], alignItems: 'center' },
-  gpsBannerText: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.warning.text },
-  toast: { position: 'absolute', top: 80, left: spacing[4], right: spacing[4], backgroundColor: colors.brand[50], borderRadius: radius.sm, padding: spacing[4], zIndex: 100 },
-  toastTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: colors.brand[700] ?? colors.brand[600], marginBottom: 2 },
-  toastSub: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.brand[600] },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], height: 56, borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
-  headerTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 15, color: colors.ink[900] },
-  headerSpacer: { width: 28 },
-  content: { flex: 1, paddingHorizontal: spacing[5], paddingTop: spacing[5], gap: spacing[5] },
-  intervalCard: { borderRadius: radius.md, padding: spacing[6], alignItems: 'center', gap: spacing[3] },
-  intervalCardRun: { backgroundColor: colors.brand[50] },
-  intervalCardWalk: { backgroundColor: colors.surfaceMuted },
-  intervalLabel: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, letterSpacing: 1.5, textTransform: 'uppercase' as const },
-  intervalLabelRun: { color: colors.brand[600] },
-  intervalLabelWalk: { color: colors.ink[500] },
-  intervalCountdown: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 56, letterSpacing: -2 },
-  intervalCountdownRun: { color: colors.brand[600] },
-  intervalCountdownWalk: { color: colors.ink[700] },
-  intervalTrack: { height: 6, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 3, overflow: 'hidden', alignSelf: 'stretch' },
-  intervalFill: { height: '100%', borderRadius: 3 },
-  intervalFillRun: { backgroundColor: colors.brand[500] },
-  intervalFillWalk: { backgroundColor: colors.ink[300] },
-  overallProgress: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400] },
-  statGrid: { flexDirection: 'row', gap: spacing[3] },
-  statBox: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: spacing[3], backgroundColor: colors.surfaceMuted, borderRadius: radius.sm },
-  statValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900] },
-  statLabel: { fontFamily: 'PlusJakartaSans', fontSize: 10, color: colors.ink[500], textAlign: 'center' },
-  footer: { paddingBottom: spacing[8], alignItems: 'center', paddingTop: spacing[4] },
-  pauseBtn: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.borderDefault, alignItems: 'center', justifyContent: 'center' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[4] },
-  modalBox: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing[6], width: '100%', gap: spacing[4], borderWidth: 1, borderColor: colors.borderDefault },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  modalTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 17, color: colors.ink[900] },
-  modalClose: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  modalCloseText: { fontSize: 16, color: colors.ink[400] },
+  safe: { flex: 1, backgroundColor: TRACK_BG },
+  toast: { position: 'absolute', top: 72, left: spacing[4], right: spacing[4], backgroundColor: colors.brand[500], borderRadius: radius.md, padding: spacing[4], zIndex: 100 },
+  toastTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: colors.surface, marginBottom: 2 },
+  toastSub: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: 'rgba(255,255,255,0.85)' },
+
+  content: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[5], gap: spacing[4] },
+  badge: { backgroundColor: TRACK_SUBTLE, borderRadius: radius.full, paddingVertical: 5, paddingHorizontal: spacing[3] },
+  badgeText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, color: colors.surface },
+  segLabel: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 26, lineHeight: 32, color: colors.surface, textAlign: 'center' },
+  timer: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 64, lineHeight: 72, color: colors.surface, letterSpacing: 2, fontVariant: ['tabular-nums'] },
+  hint: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: TRACK_MUTED, textAlign: 'center' },
+
+  footer: { paddingBottom: spacing[8], paddingTop: spacing[4], paddingHorizontal: spacing[4], alignItems: 'center' },
+  controlBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#000000',
+    borderRadius: radius.full,
+    paddingVertical: spacing[4],
+    paddingHorizontal: spacing[7],
+    alignSelf: 'stretch',
+  },
+  ctrl: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
+  ctrlPrimary: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.brand[500] },
+
+  sheetOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.scrim },
+  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, padding: spacing[6], paddingBottom: spacing[10], gap: spacing[4], alignItems: 'stretch' },
+  modalTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 18, color: colors.ink[900], textAlign: 'center' },
   modalStats: { flexDirection: 'row', gap: spacing[3] },
-  modalStatBox: { flex: 1, gap: 4 },
-  modalStatValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900] },
-  modalStatLabel: { fontFamily: 'PlusJakartaSans', fontSize: 10, color: colors.ink[500] },
+  modalStatBox: { flex: 1, gap: 6, backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4] },
+  modalStatValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.ink[900] },
+  modalStatLabel: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 10.5, color: colors.ink[500], textTransform: 'uppercase', letterSpacing: 0.5 },
 });

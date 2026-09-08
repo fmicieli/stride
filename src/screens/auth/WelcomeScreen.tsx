@@ -16,7 +16,7 @@ export function WelcomeScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.content}>
-        <StrideLogo width={120} />
+        <StrideLogo width={168} />
         <View style={styles.placeholder} />
         <View style={styles.textBlock}>
           <Text style={styles.headline}>De tu primer trote a cruzar la meta</Text>
@@ -44,31 +44,35 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: spacing[4],
-    paddingTop: spacing[5],
-    gap: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 32,
   },
   placeholder: {
     width: 200,
     height: 200,
     backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     alignSelf: 'center',
   },
   textBlock: {
-    gap: 8,
-    maxWidth: 300,
+    gap: 12,
+    maxWidth: 320,
+    alignItems: 'center',
   },
   headline: {
     fontFamily: 'PlusJakartaSans-Bold',
     fontSize: 24,
     lineHeight: 32,
     color: colors.ink[900],
+    textAlign: 'center',
   },
   subtitle: {
     fontFamily: 'PlusJakartaSans',
     fontSize: 16,
     lineHeight: 24,
-    color: colors.ink[600],
+    color: colors.ink[500],
+    textAlign: 'center',
   },
   footer: {
     paddingHorizontal: spacing[4],

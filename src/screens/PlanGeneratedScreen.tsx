@@ -100,8 +100,10 @@ export function PlanGeneratedScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerEyebrow}>Tu plan está listo</Text>
-        <Text style={styles.headerTitle}>¡Empecemos!</Text>
+        <Text style={styles.headerTitle}>Tu plan semanal, listo</Text>
+        <Text style={styles.headerSubtitle}>
+          Lo generamos automáticamente según tus respuestas. No hay otras opciones para elegir, podés ajustarlo más adelante.
+        </Text>
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -172,9 +174,9 @@ export function PlanGeneratedScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[3], borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
-  headerEyebrow: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[400], marginBottom: 4 },
+  header: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[4], gap: spacing[2] },
   headerTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 28, color: colors.ink[900] },
+  headerSubtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500] },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[6] },
   footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], gap: spacing[2], backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.surfaceMuted },
