@@ -136,19 +136,16 @@ export function PlanGeneratedScreen() {
         </View>
       </ScrollView>
 
-      <Modal visible={showSaveModal} transparent animationType="slide">
+      <Modal visible={showSaveModal} transparent animationType="slide" onRequestClose={() => {}}>
         <View style={styles.sheetOverlay}>
           <View style={styles.sheet}>
             <Text style={styles.modalTitle}>Guardá tu plan</Text>
-            <Text style={styles.modalText}>Creá una cuenta para no perder tu progreso</Text>
+            <Text style={styles.modalText}>Necesitás una cuenta para empezar a entrenar y guardar tu progreso.</Text>
             <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => { setShowSaveModal(false); navigation.navigate('Register'); }}>
-              <Text style={styles.primaryButtonText}>Crear Cuenta</Text>
+              <Text style={styles.primaryButtonText}>Crear cuenta</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.ghostButton} activeOpacity={0.7} onPress={() => { setShowSaveModal(false); navigation.navigate('Login'); }}>
               <Text style={styles.ghostButtonText}>Ya tengo cuenta. Iniciar sesión</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.skipBtn} activeOpacity={0.7} onPress={() => setShowSaveModal(false)}>
-              <Text style={styles.skipText}>Continuar sin guardar</Text>
             </TouchableOpacity>
           </View>
         </View>

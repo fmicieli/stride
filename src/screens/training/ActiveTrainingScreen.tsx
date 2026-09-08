@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated, Modal, Platform } f
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
@@ -44,7 +43,7 @@ type Nav = StackNavigationProp<RootStackParamList, 'ActiveTraining'>;
 
 const DAY_NAMES: DayKey[] = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-function getDistance(a: Location.LocationObjectCoords, b: Location.LocationObjectCoords): number {
+function getDistance(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }): number {
   const R = 6371;
   const dLat = ((b.latitude - a.latitude) * Math.PI) / 180;
   const dLon = ((b.longitude - a.longitude) * Math.PI) / 180;
@@ -79,8 +78,8 @@ export function ActiveTrainingScreen() {
   const [gpsLost, setGpsLost] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const locationSub = useRef<Location.LocationSubscription | null>(null);
-  const lastPos = useRef<Location.LocationObjectCoords | null>(null);
+  const locationSub = useRef<{ remove: () => void } | null>(null);
+  const lastPos = useRef<{ latitude: number; longitude: number } | null>(null);
   const pausedRef = useRef(false);
   const toastAnim = useRef(new Animated.Value(-120)).current;
 
@@ -97,23 +96,42 @@ export function ActiveTrainingScreen() {
     }, 1000);
 
     (async () => {
-      const { status } = await Location.getForegroundPermissionsAsync();
-      if (status === 'granted') {
-        locationSub.current = await Location.watchPositionAsync(
-          { accuracy: Location.Accuracy.BestForNavigation, distanceInterval: 5, timeInterval: 2000 },
-          (loc) => {
+      if (Platform.OS === 'web') {
+        if (!navigator.geolocation) { setGpsLost(true); return; }
+        const watchId = navigator.geolocation.watchPosition(
+          (pos) => {
             setGpsLost(false);
+            const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
             if (lastPos.current && !pausedRef.current) {
-              const d = getDistance(lastPos.current, loc.coords);
+              const d = getDistance(lastPos.current, coords);
               setDistance((prev) => prev + d);
             }
-            lastPos.current = loc.coords;
+            lastPos.current = coords;
           },
+          () => setGpsLost(true),
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
         );
+        locationSub.current = { remove: () => navigator.geolocation.clearWatch(watchId) };
+      } else {
+        const Location = require('expo-location');
+        const { status } = await Location.getForegroundPermissionsAsync();
+        if (status === 'granted') {
+          locationSub.current = await Location.watchPositionAsync(
+            { accuracy: Location.Accuracy.BestForNavigation, distanceInterval: 5, timeInterval: 2000 },
+            (loc: any) => {
+              setGpsLost(false);
+              if (lastPos.current && !pausedRef.current) {
+                const d = getDistance(lastPos.current, loc.coords);
+                setDistance((prev) => prev + d);
+              }
+              lastPos.current = loc.coords;
+            },
+          );
+        }
       }
     })();
 
-    const gpsTimeout = setTimeout(() => setGpsLost(true), 10000);
+    const gpsTimeout = setTimeout(() => setGpsLost(true), 15000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       locationSub.current?.remove();
