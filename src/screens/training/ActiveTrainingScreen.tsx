@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Modal, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -9,9 +9,36 @@ import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
 import { getPlan, saveSession, saveStreak, getSessions } from '../../services/firestore';
 import { TrainingPlan, TrainingSession, DayKey } from '../../types';
-import { ProgressBar } from '../../components/ProgressBar';
 import { formatDuration, formatPace } from '../../utils/planGenerator';
 import { colors, spacing, radius, controlSize } from '../../theme';
+
+function PauseIcon() {
+  if (Platform.OS === 'web') {
+    return (
+      // @ts-ignore
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* @ts-ignore */}
+        <path d="M 8 4 L 8 18" stroke="#1E8563" strokeWidth="2.5" strokeLinecap="round"/>
+        {/* @ts-ignore */}
+        <path d="M 14 4 L 14 18" stroke="#1E8563" strokeWidth="2.5" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+  return <Text style={{ fontSize: 22, color: colors.brand[500] }}>⏸</Text>;
+}
+
+function PlayIcon() {
+  if (Platform.OS === 'web') {
+    return (
+      // @ts-ignore
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* @ts-ignore */}
+        <path d="M 7 3 L 19 11 L 7 19 Z" fill="#1E8563"/>
+      </svg>
+    );
+  }
+  return <Text style={{ fontSize: 22, color: colors.brand[500] }}>▶</Text>;
+}
 
 type Nav = StackNavigationProp<RootStackParamList, 'ActiveTraining'>;
 
@@ -50,7 +77,6 @@ export function ActiveTrainingScreen() {
   const [paused, setPaused] = useState(false);
   const [goalReached, setGoalReached] = useState(false);
   const [gpsLost, setGpsLost] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const locationSub = useRef<Location.LocationSubscription | null>(null);
@@ -117,8 +143,13 @@ export function ActiveTrainingScreen() {
     setPaused((p) => { pausedRef.current = !p; return !p; });
   };
 
+  const handleResume = () => {
+    setPaused(false);
+    pausedRef.current = false;
+  };
+
   const confirmStop = async () => {
-    setShowConfirm(false);
+    setPaused(false);
     if (timerRef.current) clearInterval(timerRef.current);
     locationSub.current?.remove();
 
@@ -150,61 +181,67 @@ export function ActiveTrainingScreen() {
       )}
 
       <Animated.View style={[styles.toast, { transform: [{ translateY: toastAnim }] }]}>
-        <Text style={styles.toastTitle}>¡Meta lograda! 🎉</Text>
-        <Text style={styles.toastSub}>Podés seguir corriendo o detener el entrenamiento</Text>
+        <Text style={styles.toastTitle}>¡Meta lograda!</Text>
+        <Text style={styles.toastSub}>Podés seguir corriendo o pausar para finalizar</Text>
       </Animated.View>
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => setShowConfirm(true)} style={styles.closeBtn}>
-          <Text style={styles.closeBtnText}>✕</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerGoal}>Meta: {plan ? getGoalLabel(plan) : '—'}</Text>
+        <View style={styles.headerSpacer} />
+        <Text style={styles.headerTitle}>Entrenamiento · Trote</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.mainValue}>{isTimeMode ? formatDuration(elapsed) : distance.toFixed(2)}</Text>
-        <Text style={styles.mainLabel}>{isTimeMode ? 'tiempo' : 'distancia (km)'}</Text>
-
-        <View style={styles.chipsRow}>
-          <View style={styles.chip}>
-            <Text style={styles.chipValue}>{pace > 0 ? formatPace(pace) : '--:--'}</Text>
-            <Text style={styles.chipLabel}>pace /km</Text>
-          </View>
-          <View style={styles.chip}>
-            {isTimeMode ? (
-              <><Text style={styles.chipValue}>{distance.toFixed(2)}</Text><Text style={styles.chipLabel}>km</Text></>
-            ) : (
-              <><Text style={styles.chipValue}>{formatDuration(elapsed)}</Text><Text style={styles.chipLabel}>tiempo</Text></>
-            )}
-          </View>
+        <View style={styles.mapPlaceholder}>
+          <Text style={styles.mapLabel}>mapa GPS en vivo</Text>
         </View>
 
-        <View style={styles.progressContainer}>
-          <ProgressBar progress={progress} height={6} />
-          <Text style={styles.progressText}>{Math.round(progress * 100)}% completado</Text>
+        <View style={styles.statGrid}>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{formatDuration(elapsed)}</Text>
+            <Text style={styles.statLabel}>Tiempo</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{distance.toFixed(2)}</Text>
+            <Text style={styles.statLabel}>Distancia (km)</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{pace > 0 ? formatPace(pace) : '--:--'}</Text>
+            <Text style={styles.statLabel}>Ritmo</Text>
+          </View>
         </View>
       </View>
 
-      <View style={styles.controls}>
-        <TouchableOpacity style={styles.controlBtn} onPress={handlePause}>
-          <Text style={styles.controlIcon}>{paused ? '▶' : '⏸'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.controlBtn} onPress={() => setShowConfirm(true)}>
-          <Text style={styles.controlIcon}>⏹</Text>
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.pauseBtn} onPress={handlePause} activeOpacity={0.8}>
+          {paused ? <PlayIcon /> : <PauseIcon />}
         </TouchableOpacity>
       </View>
 
-      <Modal visible={showConfirm} transparent animationType="fade">
+      <Modal visible={paused} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>¿Terminar entrenamiento?</Text>
-            <Text style={styles.modalText}>Se guardará tu progreso de hoy.</Text>
-            <TouchableOpacity style={styles.modalPrimary} onPress={confirmStop}>
-              <Text style={styles.modalPrimaryText}>Terminar</Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Entrenamiento en pausa</Text>
+              <TouchableOpacity onPress={handleResume} style={styles.modalClose}>
+                <Text style={styles.modalCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.modalStats}>
+              <View style={styles.modalStatBox}>
+                <Text style={styles.modalStatValue}>{formatDuration(elapsed)}</Text>
+                <Text style={styles.modalStatLabel}>Tiempo</Text>
+              </View>
+              <View style={styles.modalStatBox}>
+                <Text style={styles.modalStatValue}>{distance.toFixed(2)}</Text>
+                <Text style={styles.modalStatLabel}>Distancia (km)</Text>
+              </View>
+            </View>
+            <TouchableOpacity style={styles.modalPrimary} onPress={handleResume}>
+              <Text style={styles.modalPrimaryText}>Reanudar</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.modalCancel} onPress={() => setShowConfirm(false)}>
-              <Text style={styles.modalCancelText}>Cancelar</Text>
+            <TouchableOpacity style={styles.modalSecondary} onPress={confirmStop}>
+              <Text style={styles.modalSecondaryText}>Finalizar entrenamiento</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -214,35 +251,36 @@ export function ActiveTrainingScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#000000' },
+  safe: { flex: 1, backgroundColor: colors.surface },
   gpsBanner: { backgroundColor: colors.warning.bg, paddingVertical: 8, paddingHorizontal: spacing[4], alignItems: 'center' },
   gpsBannerText: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.warning.text },
-  toast: { position: 'absolute', top: 80, left: spacing[4], right: spacing[4], backgroundColor: colors.surface, borderRadius: radius.sm, padding: spacing[4], zIndex: 100 },
-  toastTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 16, color: colors.ink[900], marginBottom: 4 },
-  toastSub: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500] },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], paddingVertical: spacing[4] },
-  closeBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  closeBtnText: { fontSize: 20, color: '#FFFFFF' },
-  headerGoal: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: '#AAAAAA' },
-  headerSpacer: { width: 40 },
-  content: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[4], gap: spacing[6] },
-  mainValue: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 72, color: '#FFFFFF', letterSpacing: -2 },
-  mainLabel: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: '#AAAAAA', marginTop: -16 },
-  chipsRow: { flexDirection: 'row', gap: spacing[4] },
-  chip: { backgroundColor: '#1A1A1A', borderRadius: radius.sm, paddingVertical: spacing[3], paddingHorizontal: spacing[5], alignItems: 'center', minWidth: 120 },
-  chipValue: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 20, color: '#FFFFFF' },
-  chipLabel: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: '#AAAAAA', marginTop: 4 },
-  progressContainer: { width: '100%', gap: 8 },
-  progressText: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: '#AAAAAA', textAlign: 'center' },
-  controls: { flexDirection: 'row', justifyContent: 'center', gap: spacing[6], paddingBottom: spacing[8] },
-  controlBtn: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#1A1A1A', alignItems: 'center', justifyContent: 'center' },
-  controlIcon: { fontSize: 24, color: '#FFFFFF' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[4] },
-  modalBox: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing[6], width: '100%', gap: spacing[3] },
-  modalTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 18, color: colors.ink[900] },
-  modalText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500] },
-  modalPrimary: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  modalPrimaryText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 15 },
-  modalCancel: { height: controlSize.lg, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.borderDefault, alignItems: 'center', justifyContent: 'center' },
-  modalCancelText: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[500] },
+  toast: { position: 'absolute', top: 80, left: spacing[4], right: spacing[4], backgroundColor: colors.brand[50], borderRadius: radius.sm, padding: spacing[4], zIndex: 100 },
+  toastTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: colors.brand[700] ?? colors.brand[600], marginBottom: 2 },
+  toastSub: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.brand[600] },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], height: 56, borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
+  headerTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 15, color: colors.ink[900] },
+  headerSpacer: { width: 28 },
+  content: { flex: 1, paddingHorizontal: spacing[5], paddingTop: spacing[5], gap: spacing[5] },
+  mapPlaceholder: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, height: 260, alignItems: 'center', justifyContent: 'center' },
+  mapLabel: { fontFamily: 'PlusJakartaSans', fontSize: 11, color: colors.ink[400] },
+  statGrid: { flexDirection: 'row', gap: spacing[3] },
+  statBox: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: spacing[3] },
+  statValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900] },
+  statLabel: { fontFamily: 'PlusJakartaSans', fontSize: 10, color: colors.ink[500], textAlign: 'center' },
+  footer: { paddingBottom: spacing[8], alignItems: 'center', paddingTop: spacing[4] },
+  pauseBtn: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.borderDefault, alignItems: 'center', justifyContent: 'center' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[4] },
+  modalBox: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing[6], width: '100%', gap: spacing[4], borderWidth: 1, borderColor: colors.borderDefault },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  modalTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 17, color: colors.ink[900] },
+  modalClose: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  modalCloseText: { fontSize: 16, color: colors.ink[400] },
+  modalStats: { flexDirection: 'row', gap: spacing[3] },
+  modalStatBox: { flex: 1, gap: 4 },
+  modalStatValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900] },
+  modalStatLabel: { fontFamily: 'PlusJakartaSans', fontSize: 10, color: colors.ink[500] },
+  modalPrimary: { backgroundColor: colors.ink[900], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
+  modalPrimaryText: { fontFamily: 'PlusJakartaSans-Bold', color: colors.surface, fontSize: 15 },
+  modalSecondary: { height: controlSize.lg, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.borderDefault, alignItems: 'center', justifyContent: 'center' },
+  modalSecondaryText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 15, color: colors.ink[900] },
 });

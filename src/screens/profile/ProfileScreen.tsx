@@ -96,6 +96,7 @@ export function ProfileScreen() {
         <View style={styles.settingsList}>
           <SettingsRow label="Mi plan" onPress={() => navigation.navigate('PlanGenerated')} />
           <SettingsRow label="Historial de entrenamientos" onPress={() => navigation.navigate('Historial')} />
+          <SettingsRow label="Logros" onPress={() => navigation.navigate('Logros')} />
           <SettingsRow label="Cambiar objetivo" onPress={() => setActiveModal('changeGoal')} />
           <SettingsRow label="Permisos" onPress={() => navigation.navigate('GPSPermission')} />
           <SettingsRow label="Cambiar contraseña" onPress={() => navigation.navigate('ChangePassword')} />

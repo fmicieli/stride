@@ -40,6 +40,7 @@ import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { ChangePasswordScreen } from '../screens/profile/ChangePasswordScreen';
 import { HistorialScreen } from '../screens/profile/HistorialScreen';
+import { LogrosScreen } from '../screens/profile/LogrosScreen';
 
 export type RootStackParamList = {
   // Auth
@@ -67,6 +68,7 @@ export type RootStackParamList = {
   EditProfile: undefined;
   ChangePassword: undefined;
   Historial: undefined;
+  Logros: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -182,6 +184,7 @@ export function AppNavigator() {
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
         <Stack.Screen name="Historial" component={HistorialScreen} />
+        <Stack.Screen name="Logros" component={LogrosScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
