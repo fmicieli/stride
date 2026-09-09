@@ -29,6 +29,7 @@ export function ProfileScreen() {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [loading, setLoading] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
+  const [pwFocused, setPwFocused] = useState(false);
 
   const displayName = profile ? [profile.name, profile.lastName].filter(Boolean).join(' ') : 'Runner';
   const initial = (profile?.name || 'R').charAt(0).toUpperCase();
@@ -74,7 +75,7 @@ export function ProfileScreen() {
           <Text style={styles.displayName}>{displayName}</Text>
           <Text style={styles.email}>{profile?.email || user?.email || ''}</Text>
           <Button
-            label="Editar perfil"
+            label="Editar Perfil"
             variant="secondary"
             size="sm"
             fullWidth={false}
@@ -100,7 +101,7 @@ export function ProfileScreen() {
             <Text style={styles.modalText}>Tu historial se mantiene, pero tu plan actual se va a reemplazar.</Text>
             <View style={styles.modalButtons}>
               <Button label={loading ? 'Procesando...' : 'Sí, cambiar objetivo'} onPress={handleChangeGoal} disabled={loading} loading={loading} />
-              <Button label="Cancelar" variant="secondary" onPress={() => setActiveModal(null)} disabled={loading} />
+              <Button label="Cancelar" variant="ghost" onPress={() => setActiveModal(null)} disabled={loading} />
             </View>
           </View>
         </View>
@@ -112,7 +113,7 @@ export function ProfileScreen() {
             <Text style={styles.modalTitle}>¿Querés cerrar sesión?</Text>
             <View style={styles.modalButtons}>
               <Button label={loading ? 'Saliendo...' : 'Cerrar sesión'} onPress={handleLogout} disabled={loading} loading={loading} />
-              <Button label="Cancelar" variant="secondary" onPress={() => setActiveModal(null)} disabled={loading} />
+              <Button label="Cancelar" variant="ghost" onPress={() => setActiveModal(null)} disabled={loading} />
             </View>
           </View>
         </View>
@@ -124,19 +125,25 @@ export function ProfileScreen() {
             <Text style={styles.modalTitle}>¿Querés eliminar tu cuenta?</Text>
             <Text style={styles.modalText}>Esta acción es permanente. Perderás tu plan, historial y todos tus datos.</Text>
             <TextInput
-              style={styles.passwordInput}
+              style={[
+                styles.passwordInput,
+                pwFocused && styles.passwordInputFocused,
+                Platform.OS === 'web' ? ({ outlineStyle: 'none' } as any) : null,
+              ]}
               placeholder="Ingresá tu contraseña"
               placeholderTextColor={colors.ink[300]}
               secureTextEntry
               value={deletePassword}
               onChangeText={setDeletePassword}
+              onFocus={() => setPwFocused(true)}
+              onBlur={() => setPwFocused(false)}
               autoCapitalize="none"
             />
             <View style={styles.modalButtons}>
               <TouchableOpacity style={[styles.destructiveButton, loading && styles.disabled]} activeOpacity={0.8} onPress={handleDeleteAccount} disabled={loading}>
                 <Text style={styles.destructiveButtonText}>{loading ? 'Eliminando...' : 'Eliminar cuenta'}</Text>
               </TouchableOpacity>
-              <Button label="Cancelar" variant="secondary" onPress={() => { setActiveModal(null); setDeletePassword(''); }} disabled={loading} />
+              <Button label="Cancelar" variant="ghost" onPress={() => { setActiveModal(null); setDeletePassword(''); }} disabled={loading} />
             </View>
           </View>
         </View>
@@ -162,10 +169,11 @@ const styles = StyleSheet.create({
   destructiveText: { color: colors.error.text },
   modalOverlay: { flex: 1, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[4] },
   modalBox: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing[6], width: '100%' },
-  modalTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 18, color: colors.ink[900], marginBottom: 8 },
-  modalText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], marginBottom: spacing[6], lineHeight: 20 },
-  passwordInput: { borderWidth: 1.5, borderColor: colors.borderDefault, borderRadius: radius.sm, height: controlSize.md, paddingHorizontal: spacing[3], fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900], marginBottom: spacing[4] },
-  modalButtons: { gap: spacing[3] },
+  modalTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 18, color: colors.ink[900], marginBottom: 8, textAlign: 'center' },
+  modalText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], marginBottom: spacing[2], lineHeight: 20, textAlign: 'center' },
+  passwordInput: { borderWidth: 1.5, borderColor: colors.borderDefault, borderRadius: radius.sm, height: controlSize.md, paddingHorizontal: spacing[3], fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900], marginBottom: spacing[4], marginTop: spacing[4] },
+  passwordInputFocused: { borderColor: colors.brand[500] },
+  modalButtons: { gap: spacing[3], marginTop: spacing[6] },
   destructiveButton: { backgroundColor: colors.error.solid, borderRadius: radius.full, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
   destructiveButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 15 },
   disabled: { opacity: 0.4 },

@@ -162,7 +162,7 @@ export function PlanGeneratedScreen() {
                 onPress={handleRestart}
                 disabled={restarting}
               />
-              <Button label="Cancelar" variant="secondary" onPress={() => setShowRestartModal(false)} disabled={restarting} />
+              <Button label="Cancelar" variant="ghost" onPress={() => setShowRestartModal(false)} disabled={restarting} />
             </View>
           </View>
         </View>

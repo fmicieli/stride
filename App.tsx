@@ -8,6 +8,7 @@ import { useFonts,
   PlusJakartaSans_700Bold,
   PlusJakartaSans_800ExtraBold,
 } from '@expo-google-fonts/plus-jakarta-sans';
+import { JetBrainsMono_500Medium } from '@expo-google-fonts/jetbrains-mono';
 import { View, ActivityIndicator } from 'react-native';
 import { AuthProvider } from './src/context/AuthContext';
 import { OnboardingProvider } from './src/utils/onboardingContext';
@@ -20,6 +21,7 @@ export default function App() {
     'PlusJakartaSans-SemiBold': PlusJakartaSans_600SemiBold,
     'PlusJakartaSans-Bold': PlusJakartaSans_700Bold,
     'PlusJakartaSans-ExtraBold': PlusJakartaSans_800ExtraBold,
+    'JetBrainsMono-Medium': JetBrainsMono_500Medium,
   });
 
   if (!fontsLoaded) {

@@ -88,14 +88,16 @@ function MainTabs() {
         ),
         tabBarActiveTintColor: '#1B6E52',
         tabBarInactiveTintColor: '#8A8A8A',
-        tabBarLabelStyle: { fontFamily: 'PlusJakartaSans', fontSize: 11 },
+        tabBarShowLabel: true,
+        tabBarLabelStyle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 11, marginTop: 2 },
+        tabBarIconStyle: { marginTop: 2 },
         tabBarStyle: {
           borderTopWidth: 1,
           borderTopColor: '#F0F0F0',
           backgroundColor: '#FFFFFF',
-          height: 68,
-          paddingTop: 12,
-          paddingBottom: 16,
+          height: 76,
+          paddingTop: 10,
+          paddingBottom: 12,
           paddingHorizontal: 16,
         },
       })}
@@ -142,7 +144,7 @@ export function AppNavigator() {
     return <SplashView />;
   }
 
-  const initialRoute: keyof RootStackParamList = user ? 'MainTabs' : 'OnboardingGoal';
+  const initialRoute: keyof RootStackParamList = user ? 'MainTabs' : 'Welcome';
 
   return (
     <NavigationContainer>

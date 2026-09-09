@@ -108,7 +108,10 @@ export function ProgressScreen() {
             <View style={styles.progressTrack}>
               <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` as any }]} />
             </View>
-            <Text style={styles.planLabel}>Semana {currentWeek} de {plan.totalWeeks}</Text>
+            <View style={styles.planLabelRow}>
+              <Text style={styles.planLabel}>Semana {currentWeek} de {plan.totalWeeks}</Text>
+              <Text style={styles.planPct}>{Math.round(progress * 100)}%</Text>
+            </View>
           </View>
         )}
 
@@ -128,11 +131,13 @@ export function ProgressScreen() {
         <View style={styles.historySection}>
           <View style={styles.historyHeader}>
             <Text style={styles.sectionTitle}>Historial</Text>
-            {sessions.length > 3 && (
-              <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Historial')}>
-                <Text style={styles.verTodo}>Ver todo</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              disabled={sessions.length === 0}
+              onPress={() => navigation.navigate('Historial')}
+            >
+              <Text style={[styles.verTodo, sessions.length === 0 && styles.verTodoDisabled]}>Ver todo</Text>
+            </TouchableOpacity>
           </View>
 
           {sessions.length === 0 ? (
@@ -183,7 +188,9 @@ const styles = StyleSheet.create({
   sectionTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: colors.ink[900] },
   progressTrack: { height: 8, backgroundColor: '#ECECEC', borderRadius: 4, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: colors.brand[500], borderRadius: 4 },
+  planLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   planLabel: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[500] },
+  planPct: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 13, color: colors.ink[700] },
   statGrid: { flexDirection: 'row', gap: spacing[3] },
   statBox: { flex: 1, backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], gap: 4 },
   statValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.ink[900] },
@@ -191,6 +198,7 @@ const styles = StyleSheet.create({
   historySection: { gap: spacing[3] },
   historyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   verTodo: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.brand[600] },
+  verTodoDisabled: { color: colors.ink[300] },
   sessionsList: { gap: 8 },
   sessionCard: {
     backgroundColor: colors.surfaceMuted,

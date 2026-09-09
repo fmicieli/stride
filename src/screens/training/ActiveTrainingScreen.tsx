@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Modal, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import * as Haptics from 'expo-haptics';
+import { Audio } from 'expo-av';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
 import { getPlan, saveSession, saveStreak, getSessions } from '../../services/firestore';
@@ -12,22 +13,14 @@ import { formatDuration, buildSessionIntervals, SessionInterval } from '../../ut
 import { Button } from '../../components/Button';
 import { colors, spacing, radius } from '../../theme';
 
+const DING = require('../../../assets/ding.wav');
+
 const TRACK_BG = '#0D1210';
 const TRACK_SUBTLE = 'rgba(255,255,255,0.10)';
 const TRACK_MUTED = '#B9BFBC';
 
-function ControlIcon({ name }: { name: 'stop' | 'pause' | 'play' | 'flag' }) {
-  const stroke = name === 'pause' || name === 'play' ? '#FFFFFF' : '#FFFFFF';
+function ControlIcon({ name }: { name: 'pause' | 'play' }) {
   if (Platform.OS === 'web') {
-    if (name === 'stop') {
-      return (
-        // @ts-ignore
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          {/* @ts-ignore */}
-          <rect x="5" y="5" width="10" height="10" rx="2" fill="#FFFFFF" />
-        </svg>
-      );
-    }
     if (name === 'play') {
       return (
         // @ts-ignore
@@ -37,27 +30,17 @@ function ControlIcon({ name }: { name: 'stop' | 'pause' | 'play' | 'flag' }) {
         </svg>
       );
     }
-    if (name === 'pause') {
-      return (
-        // @ts-ignore
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-          {/* @ts-ignore */}
-          <path d="M 8 4 L 8 18" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
-          {/* @ts-ignore */}
-          <path d="M 14 4 L 14 18" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
-        </svg>
-      );
-    }
     return (
       // @ts-ignore
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* @ts-ignore */}
-        <path d="M5 3v14M5 4h9l-2 3 2 3H5" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M 8 4 L 8 18" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+        {/* @ts-ignore */}
+        <path d="M 14 4 L 14 18" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
       </svg>
     );
   }
-  const glyph = name === 'stop' ? '■' : name === 'play' ? '▶' : name === 'pause' ? '⏸' : '⚑';
-  return <Text style={{ fontSize: 20, color: '#FFFFFF' }}>{glyph}</Text>;
+  return <Text style={{ fontSize: 22, color: '#FFFFFF' }}>{name === 'play' ? '▶' : '⏸'}</Text>;
 }
 
 type Nav = StackNavigationProp<RootStackParamList, 'ActiveTraining'>;
@@ -93,12 +76,12 @@ export function ActiveTrainingScreen() {
   const [intervals, setIntervals] = useState<SessionInterval[]>([]);
   const [elapsed, setElapsed] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [goalReached, setGoalReached] = useState(false);
   const prevIntervalIdxRef = useRef(-1);
+  const finishingRef = useRef(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pausedRef = useRef(false);
-  const toastAnim = useRef(new Animated.Value(-120)).current;
+  const dingRef = useRef<Audio.Sound | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -113,6 +96,23 @@ export function ActiveTrainingScreen() {
       });
     }, [user]),
   );
+
+  // Preload the interval-change chime
+  useEffect(() => {
+    let mounted = true;
+    Audio.setAudioModeAsync({ playsInSilentModeIOS: true }).catch(() => {});
+    Audio.Sound.createAsync(DING, { volume: 0.9 })
+      .then(({ sound }) => {
+        if (mounted) dingRef.current = sound;
+        else sound.unloadAsync();
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+      dingRef.current?.unloadAsync();
+      dingRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     if (!plan) return;
@@ -131,39 +131,9 @@ export function ActiveTrainingScreen() {
   const currentInterval = intervals[intervalIdx];
   const nextInterval = intervals[intervalIdx + 1];
 
-  // Haptic on interval advance
-  useEffect(() => {
-    if (intervals.length === 0 || elapsed === 0) return;
-    const { idx } = getIntervalState(elapsed, intervals);
-    if (prevIntervalIdxRef.current >= 0 && idx !== prevIntervalIdxRef.current) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    prevIntervalIdxRef.current = idx;
-  }, [elapsed, intervals]);
-
-  // Toast on session complete
-  useEffect(() => {
-    if (!goalReached && overallProgress >= 1 && totalDuration > 0) {
-      setGoalReached(true);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Animated.sequence([
-        Animated.timing(toastAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
-        Animated.delay(5000),
-        Animated.timing(toastAnim, { toValue: -120, duration: 400, useNativeDriver: true }),
-      ]).start();
-    }
-  }, [overallProgress]);
-
-  const handlePause = () => {
-    setPaused((p) => { pausedRef.current = !p; return !p; });
-  };
-
-  const handleResume = () => {
-    setPaused(false);
-    pausedRef.current = false;
-  };
-
-  const confirmStop = async () => {
+  const confirmStop = useCallback(async () => {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
     setPaused(false);
     if (timerRef.current) clearInterval(timerRef.current);
 
@@ -184,6 +154,33 @@ export function ActiveTrainingScreen() {
       } catch { /* navigate anyway */ }
     }
     navigation.navigate('TrainingCompleted', { sessionId });
+  }, [user, elapsed, plan, navigation]);
+
+  // Chime + haptic on interval advance
+  useEffect(() => {
+    if (intervals.length === 0 || elapsed === 0) return;
+    const { idx } = getIntervalState(elapsed, intervals);
+    if (prevIntervalIdxRef.current >= 0 && idx !== prevIntervalIdxRef.current) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      dingRef.current?.replayAsync().catch(() => {});
+    }
+    prevIntervalIdxRef.current = idx;
+  }, [elapsed, intervals]);
+
+  // Auto-finish when the full session duration is reached
+  useEffect(() => {
+    if (totalDuration > 0 && overallProgress >= 1) {
+      confirmStop();
+    }
+  }, [overallProgress, totalDuration, confirmStop]);
+
+  const handlePause = () => {
+    setPaused((p) => { pausedRef.current = !p; return !p; });
+  };
+
+  const handleResume = () => {
+    setPaused(false);
+    pausedRef.current = false;
   };
 
   const nextHint = nextInterval
@@ -192,11 +189,6 @@ export function ActiveTrainingScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <Animated.View style={[styles.toast, { transform: [{ translateY: toastAnim }] }]}>
-        <Text style={styles.toastTitle}>¡Entrenamiento completo!</Text>
-        <Text style={styles.toastSub}>Pausá para finalizar y ver el resumen</Text>
-      </Animated.View>
-
       <View style={styles.content}>
         <View style={styles.badge}>
           <Text style={styles.badgeText}>
@@ -212,17 +204,9 @@ export function ActiveTrainingScreen() {
       </View>
 
       <View style={styles.footer}>
-        <View style={styles.controlBar}>
-          <TouchableOpacity style={styles.ctrl} onPress={confirmStop} activeOpacity={0.8}>
-            <ControlIcon name="stop" />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.ctrl, styles.ctrlPrimary]} onPress={handlePause} activeOpacity={0.85}>
-            <ControlIcon name={paused ? 'play' : 'pause'} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ctrl} onPress={confirmStop} activeOpacity={0.8}>
-            <ControlIcon name="flag" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.ctrlPrimary} onPress={handlePause} activeOpacity={0.85}>
+          <ControlIcon name={paused ? 'play' : 'pause'} />
+        </TouchableOpacity>
       </View>
 
       <Modal visible={paused} transparent animationType="slide" onRequestClose={handleResume}>
@@ -252,30 +236,16 @@ export function ActiveTrainingScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: TRACK_BG },
-  toast: { position: 'absolute', top: 72, left: spacing[4], right: spacing[4], backgroundColor: colors.brand[500], borderRadius: radius.md, padding: spacing[4], zIndex: 100 },
-  toastTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: colors.surface, marginBottom: 2 },
-  toastSub: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: 'rgba(255,255,255,0.85)' },
 
   content: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[5], gap: spacing[4] },
   badge: { backgroundColor: TRACK_SUBTLE, borderRadius: radius.full, paddingVertical: 5, paddingHorizontal: spacing[3] },
   badgeText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, color: colors.surface },
   segLabel: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 26, lineHeight: 32, color: colors.surface, textAlign: 'center' },
-  timer: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 64, lineHeight: 72, color: colors.surface, letterSpacing: 2, fontVariant: ['tabular-nums'] },
+  timer: { fontFamily: 'JetBrainsMono-Medium', fontSize: 52, lineHeight: 62, color: colors.surface, fontVariant: ['tabular-nums'] },
   hint: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: TRACK_MUTED, textAlign: 'center' },
 
-  footer: { paddingBottom: spacing[8], paddingTop: spacing[4], paddingHorizontal: spacing[4], alignItems: 'center' },
-  controlBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#000000',
-    borderRadius: radius.full,
-    paddingVertical: spacing[4],
-    paddingHorizontal: spacing[7],
-    alignSelf: 'stretch',
-  },
-  ctrl: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
-  ctrlPrimary: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.brand[500] },
+  footer: { paddingBottom: spacing[8], paddingTop: spacing[4], alignItems: 'center' },
+  ctrlPrimary: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.brand[500], alignItems: 'center', justifyContent: 'center' },
 
   sheetOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.scrim },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, padding: spacing[6], paddingBottom: spacing[10], gap: spacing[4], alignItems: 'stretch' },

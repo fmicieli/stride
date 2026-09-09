@@ -97,7 +97,8 @@ export function MyPlanScreen() {
         .then(([p, s]) => {
           setPlan(p);
           setSessions(s);
-          if (p) setExpandedWeek(getCurrentWeek(p, s ?? []));
+          // Default the open week to the current one; keep the user's choice on re-focus.
+          if (p) setExpandedWeek((prev) => prev ?? getCurrentWeek(p, s ?? []));
         })
         .finally(() => setLoading(false));
     }, [user]),

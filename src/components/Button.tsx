@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { colors, controlSize, radius, spacing, borderWidth } from '../theme';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'tertiaryDanger';
+export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'tertiaryDanger' | 'ghost';
 export type ButtonSize = 'md' | 'sm';
 
 interface Props {
@@ -45,7 +45,7 @@ export function Button({
       ? colors.surface
       : variant === 'tertiaryDanger'
       ? colors.error.solid
-      : variant === 'tertiary'
+      : variant === 'tertiary' || variant === 'ghost'
       ? colors.ink[700]
       : colors.ink[900];
 
