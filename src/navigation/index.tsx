@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Animated, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { StrideLogo } from '../components/StrideLogo';
 import { TabIcon } from '../components/TabIcon';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -109,39 +108,12 @@ function MainTabs() {
   );
 }
 
-function SplashView() {
-  const taglineOpacity = useRef(new Animated.Value(0)).current;
-  const splashOpacity = useRef(new Animated.Value(1)).current;
-
-  const handleLogoDone = () => {
-    Animated.sequence([
-      Animated.timing(taglineOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-      Animated.delay(500),
-      Animated.timing(splashOpacity, { toValue: 0, duration: 450, useNativeDriver: true }),
-    ]).start();
-  };
-
-  return (
-    <Animated.View style={[styles.splash, { opacity: splashOpacity }]}>
-      <StrideLogo width={220} animated onDone={handleLogoDone} />
-      <Animated.Text style={[styles.splashTagline, { opacity: taglineOpacity }]}>
-        Tu entrenamiento, a tu ritmo
-      </Animated.Text>
-    </Animated.View>
-  );
-}
-
 export function AppNavigator() {
   const { user, loading } = useAuth();
-  const [splashDone, setSplashDone] = useState(false);
 
-  useEffect(() => {
-    const t = setTimeout(() => setSplashDone(true), 3300);
-    return () => clearTimeout(t);
-  }, []);
-
-  if (!splashDone || loading) {
-    return <SplashView />;
+  // Blank while auth resolves; the entrance animation lives on the first screen.
+  if (loading) {
+    return <View style={styles.splash} />;
   }
 
   const initialRoute: keyof RootStackParamList = user ? 'MainTabs' : 'Welcome';
@@ -189,12 +161,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  splashTagline: {
-    fontSize: 15,
-    fontFamily: 'PlusJakartaSans',
-    color: '#888888',
-    textAlign: 'center',
-    marginTop: 12,
   },
 });
