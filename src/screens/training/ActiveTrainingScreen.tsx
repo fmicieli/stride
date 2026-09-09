@@ -129,6 +129,22 @@ export function ActiveTrainingScreen() {
     setReady(true);
   }, [isResume, pendingElapsedRaw, intervals]);
 
+  // Make the status bar dark while on this screen (PWA + Chrome Android)
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS === 'web') {
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', '#0D1210');
+      }
+      return () => {
+        if (Platform.OS === 'web') {
+          const meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', '#1B6E52');
+        }
+      };
+    }, []),
+  );
+
   useFocusEffect(
     useCallback(() => {
       if (user) getPlan(user.uid).then((p) => {
