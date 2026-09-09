@@ -66,37 +66,42 @@ export function StrideLogo({ width = 200, color = '#1D1D1B', animated = false, o
   const sW = Math.round(width * (S_SPLIT / VB_W));
   const restW = width - sW;
   const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-  const restTranslate = reveal.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] });
+  // While only the "S" is showing, push the whole wordmark right by half of the
+  // hidden "tride" so the "S" sits dead-centre; as the letters reveal, slide it
+  // back left until the full word is centred.
+  const groupShift = reveal.interpolate({ inputRange: [0, 1], outputRange: [restW / 2, 0] });
 
   return (
-    <View style={{ width, height, flexDirection: 'row', alignItems: 'center' }}>
+    <View style={{ width, height, alignItems: 'center', justifyContent: 'center' }}>
       <Animated.View
-        style={{
-          width: sW,
-          height,
-          transform: [{ rotate }],
-          // @ts-ignore web-only
-          transformOrigin: 'center',
-        }}
+        style={{ width, height, flexDirection: 'row', alignItems: 'center', transform: [{ translateX: groupShift }] }}
       >
-        {/* @ts-ignore */}
-        <svg width={sW} height={height} viewBox={`0 0 ${S_SPLIT} ${VB_H}`} fill="none" xmlns="http://www.w3.org/2000/svg">
-          {S_PATHS.map((d, i) => (
-            // @ts-ignore
-            <path key={i} d={d} fill={color} />
-          ))}
-        </svg>
-      </Animated.View>
-      <Animated.View
-        style={{ width: restW, height, opacity: reveal, transform: [{ translateX: restTranslate }] }}
-      >
-        {/* @ts-ignore */}
-        <svg width={restW} height={height} viewBox={`${S_SPLIT} 0 ${VB_W - S_SPLIT} ${VB_H}`} fill="none" xmlns="http://www.w3.org/2000/svg">
-          {REST_PATHS.map((d, i) => (
-            // @ts-ignore
-            <path key={i} d={d} fill={color} />
-          ))}
-        </svg>
+        <Animated.View
+          style={{
+            width: sW,
+            height,
+            transform: [{ rotate }],
+            // @ts-ignore web-only
+            transformOrigin: 'center',
+          }}
+        >
+          {/* @ts-ignore */}
+          <svg width={sW} height={height} viewBox={`0 0 ${S_SPLIT} ${VB_H}`} fill="none" xmlns="http://www.w3.org/2000/svg">
+            {S_PATHS.map((d, i) => (
+              // @ts-ignore
+              <path key={i} d={d} fill={color} />
+            ))}
+          </svg>
+        </Animated.View>
+        <Animated.View style={{ width: restW, height, opacity: reveal }}>
+          {/* @ts-ignore */}
+          <svg width={restW} height={height} viewBox={`${S_SPLIT} 0 ${VB_W - S_SPLIT} ${VB_H}`} fill="none" xmlns="http://www.w3.org/2000/svg">
+            {REST_PATHS.map((d, i) => (
+              // @ts-ignore
+              <path key={i} d={d} fill={color} />
+            ))}
+          </svg>
+        </Animated.View>
       </Animated.View>
     </View>
   );
