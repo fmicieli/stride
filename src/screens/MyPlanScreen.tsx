@@ -59,6 +59,7 @@ function WeekCard({ week, expanded, onToggle, completed, isCurrentWeek }: { week
         </View>
         <ChevronIcon expanded={expanded} />
       </TouchableOpacity>
+      {expanded && <View style={styles.weekHairline} />}
       {expanded && (
         <View style={styles.weekDays}>
           {week.days.map((day) => {
@@ -178,13 +179,13 @@ export function MyPlanScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[3], borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[3] },
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-Bold', fontSize: 18, color: colors.ink[900] },
-  content: { paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[10] },
-  goalCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], marginBottom: spacing[4] },
-  goalLabel: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400], marginBottom: 6 },
-  goalTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: colors.ink[900], marginBottom: 6 },
+  headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.ink[900] },
+  content: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[10] },
+  goalCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.lg, padding: spacing[5], marginBottom: spacing[4] },
+  goalLabel: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.ink[500], marginBottom: 6 },
+  goalTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900], marginBottom: 6 },
   planFooter: { paddingHorizontal: spacing[4], paddingVertical: spacing[6], alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.surfaceMuted },
   planFooterText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[500] },
   goalDate: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500] },
@@ -192,17 +193,18 @@ const styles = StyleSheet.create({
   chip: { backgroundColor: colors.surfaceMuted, borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14 },
   chipText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[700] },
   weeks: { gap: spacing[3] },
-  weekCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, overflow: 'hidden' },
+  weekCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.lg, overflow: 'hidden' },
   weekCardCurrent: { backgroundColor: colors.brand[50] },
-  weekHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing[4] },
+  weekHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing[5], paddingVertical: spacing[4] },
   weekTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  weekTitle: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 16, color: colors.ink[900] },
+  weekTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: colors.ink[900] },
+  weekHairline: { height: 1, backgroundColor: colors.borderSubtle, marginHorizontal: spacing[5] },
   completedBadge: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 14, color: colors.brand[500] },
-  weekDays: { paddingHorizontal: spacing[4], paddingBottom: spacing[3], gap: 8 },
+  weekDays: { paddingHorizontal: spacing[5], paddingTop: spacing[3], paddingBottom: spacing[4], gap: 10 },
   dayRow: { flexDirection: 'row', alignItems: 'center' },
-  dayName: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 14, color: colors.ink[900], width: 36 },
-  dayActivity: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[900], flex: 1 },
-  dayDuration: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[900], textAlign: 'right', width: 60 },
+  dayName: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: colors.ink[900], width: 40 },
+  dayActivity: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900], flex: 1 },
+  dayDuration: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.ink[500], textAlign: 'right', width: 56 },
   restText: { color: colors.ink[300] },
   todayText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.ink[900] },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: spacing[3] },

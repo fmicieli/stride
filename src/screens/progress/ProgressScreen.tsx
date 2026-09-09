@@ -7,7 +7,7 @@ import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
 import { getPlan, getSessions } from '../../services/firestore';
 import { TrainingPlan, TrainingSession, WeekPlan } from '../../types';
-import { formatDuration, formatPace } from '../../utils/planGenerator';
+import { formatDuration } from '../../utils/planGenerator';
 import { Icon } from '../../components/Icon';
 import { colors, spacing, radius } from '../../theme';
 
@@ -64,7 +64,7 @@ export function ProgressScreen() {
 
   const completedWeeks = plan ? plan.weeks.filter((w) => isWeekCompleted(w, sessions)).length : 0;
   const streak = getStreakFromSessions(sessions);
-  const totalKm = sessions.reduce((sum, s) => sum + s.distance, 0);
+  const totalSessions = sessions.filter((s) => s.completed).length;
   const totalTime = sessions.reduce((sum, s) => sum + s.duration, 0);
   const progress = plan ? Math.min(1, completedWeeks / plan.totalWeeks) : 0;
   const currentWeek = completedWeeks + 1;
@@ -104,13 +104,12 @@ export function ProgressScreen() {
         {/* Plan progress */}
         {plan && (
           <View style={styles.planProgress}>
-            <Text style={styles.sectionTitle}>Avance en tu plan</Text>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` as any }]} />
-            </View>
             <View style={styles.planLabelRow}>
               <Text style={styles.planLabel}>Semana {currentWeek} de {plan.totalWeeks}</Text>
               <Text style={styles.planPct}>{Math.round(progress * 100)}%</Text>
+            </View>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` as any }]} />
             </View>
           </View>
         )}
@@ -118,8 +117,8 @@ export function ProgressScreen() {
         {/* StatGrid */}
         <View style={styles.statGrid}>
           <View style={styles.statBox}>
-            <Text style={styles.statValue}>{totalKm.toFixed(1)}</Text>
-            <Text style={styles.statLabel}>Km totales</Text>
+            <Text style={styles.statValue}>{totalSessions}</Text>
+            <Text style={styles.statLabel}>Entrenamientos</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statValue}>{formatDuration(totalTime)}</Text>
@@ -151,10 +150,7 @@ export function ProgressScreen() {
                 <View key={s.id} style={styles.sessionCard}>
                   <Text style={styles.sessionDate}>{formatSessionDate(s.date)}</Text>
                   <Text style={styles.sessionType}>{s.type || 'Trote con intervalos'}</Text>
-                  <Text style={styles.sessionStat}>
-                    {s.distance.toFixed(1)} km   {formatSessionMinutes(s.duration)}
-                    {s.pace > 0 ? `   ${formatPace(s.pace)} /km` : ''}
-                  </Text>
+                  <Text style={styles.sessionStat}>{formatSessionMinutes(s.duration)}</Text>
                 </View>
               ))}
             </View>
@@ -181,20 +177,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[5],
   },
   splitHalf: { flex: 1, gap: 4 },
-  splitNumber: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.ink[900] },
+  splitNumber: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 28, color: colors.ink[900] },
   splitLabel: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.ink[500] },
   splitDivider: { width: 1, height: 40, backgroundColor: colors.borderDefault, marginHorizontal: spacing[4] },
-  planProgress: { gap: 8 },
-  sectionTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: colors.ink[900] },
-  progressTrack: { height: 8, backgroundColor: '#ECECEC', borderRadius: 4, overflow: 'hidden' },
+  planProgress: { gap: 8, marginTop: spacing[2] },
+  sectionTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 16, color: colors.ink[900] },
+  progressTrack: { height: 8, backgroundColor: colors.surfaceSunken, borderRadius: 4, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: colors.brand[500], borderRadius: 4 },
   planLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  planLabel: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[500] },
-  planPct: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 13, color: colors.ink[700] },
+  planLabel: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.ink[900] },
+  planPct: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, color: colors.ink[700] },
   statGrid: { flexDirection: 'row', gap: spacing[3] },
-  statBox: { flex: 1, backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], gap: 4 },
-  statValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.ink[900] },
-  statLabel: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 10.5, color: colors.ink[600], textTransform: 'uppercase', letterSpacing: 0.5 },
+  statBox: { flex: 1, backgroundColor: colors.surfaceMuted, borderRadius: radius.md, padding: spacing[4], gap: 4 },
+  statValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 28, color: colors.ink[900] },
+  statLabel: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 10.5, color: colors.ink[500], textTransform: 'uppercase', letterSpacing: 0.5 },
   historySection: { gap: spacing[3] },
   historyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   verTodo: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.brand[600] },
