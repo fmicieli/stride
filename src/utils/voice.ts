@@ -15,9 +15,7 @@ function getAudioCtx(): AudioContext | null {
   } catch { return null; }
 }
 
-/** Synthesize one bell strike using additive harmonics with exponential decay. */
 function synthStrike(ctx: AudioContext, when: number, vol = 0.65): void {
-  // Classic bell partial series: [freq ratio, relative amplitude, decay seconds]
   const partials: [number, number, number][] = [
     [1.000, 1.00, 3.2],
     [2.756, 0.50, 2.2],
@@ -39,10 +37,6 @@ function synthStrike(ctx: AudioContext, when: number, vol = 0.65): void {
   }
 }
 
-/**
- * Ring a bell `count` times (web only — native callers use expo-av directly).
- * Fires synchronously and returns immediately; audio plays in the background.
- */
 export function ringBell(count = 1): void {
   const ctx = getAudioCtx();
   if (!ctx) return;
@@ -52,12 +46,10 @@ export function ringBell(count = 1): void {
   }
 }
 
-/** Warm up the Web Audio context after a user gesture so it's allowed to play. */
 export function primeAudio(): void {
   if (Platform.OS !== 'web') return;
   const ctx = getAudioCtx();
   if (!ctx) return;
-  // Play a silent buffer to unlock autoplay policy
   const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
   const src = ctx.createBufferSource();
   src.buffer = buf;
@@ -65,22 +57,12 @@ export function primeAudio(): void {
   src.start();
 }
 
-/**
- * Spoken coaching cues during a training session ("Trotar", "Descansar",
- * "10 segundos", "3", "2", "1"). Best-effort: silently no-ops if the platform
- * has no speech engine or the browser blocks it.
- *
- * We aim for a neutral Latin-American Spanish rather than Castilian ("es-ES").
- */
+// ─── Voice / TTS ──────────────────────────────────────────────────────────────
 
 let enabled = true;
-let chosenVoiceId: string | undefined;
-let voicesLoaded = false;
 
-// Neutral / Latin-American locales, most preferred first. "es-ES" is avoided.
+// Neutral / Latin-American locales — avoid Castilian es-ES
 const PREFERRED_LANGS = ['es-us', 'es-419', 'es-mx', 'es-ar', 'es-co', 'es-cl', 'es-la'];
-
-const BASE_LANG = Platform.OS === 'ios' ? 'es-MX' : 'es-US';
 
 function scoreVoice(lang: string, name: string): number {
   const l = (lang || '').toLowerCase();
@@ -92,9 +74,53 @@ function scoreVoice(lang: string, name: string): number {
   return -50;
 }
 
-async function loadVoices() {
-  if (voicesLoaded) return;
-  voicesLoaded = true;
+// ── Web: use speechSynthesis directly for reliability ──────────────────────────
+let webVoice: SpeechSynthesisVoice | null = null;
+let webVoiceLoaded = false;
+
+function pickWebVoice(): void {
+  const synth = (window as any).speechSynthesis as SpeechSynthesis | undefined;
+  if (!synth) return;
+  const voices = synth.getVoices();
+  if (voices.length === 0) return;
+  let best: SpeechSynthesisVoice | null = null;
+  let bestScore = -Infinity;
+  for (const v of voices) {
+    const score = scoreVoice(v.lang, v.name);
+    if (score > bestScore) { bestScore = score; best = v; }
+  }
+  if (best) webVoice = best;
+}
+
+function initWebVoice(): void {
+  if (webVoiceLoaded || Platform.OS !== 'web') return;
+  webVoiceLoaded = true;
+  pickWebVoice();
+  (window as any).speechSynthesis?.addEventListener?.('voiceschanged', pickWebVoice);
+}
+
+function sayWeb(text: string): void {
+  const synth = (window as any).speechSynthesis as SpeechSynthesis | undefined;
+  if (!synth) return;
+  // Chrome bug: synthesis pauses itself after idle — always resume first
+  if (synth.paused) synth.resume();
+  synth.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'es-US';
+  u.rate = 0.92;
+  u.pitch = 1.0;
+  if (webVoice) u.voice = webVoice;
+  synth.speak(u);
+}
+
+// ── Native: expo-speech ────────────────────────────────────────────────────────
+let chosenVoiceId: string | undefined;
+let nativeVoicesLoaded = false;
+const NATIVE_BASE_LANG = Platform.OS === 'ios' ? 'es-MX' : 'es-US';
+
+async function loadNativeVoices(): Promise<void> {
+  if (nativeVoicesLoaded) return;
+  nativeVoicesLoaded = true;
   try {
     const voices = await Speech.getAvailableVoicesAsync();
     let best: { id: string; score: number } | null = null;
@@ -108,38 +134,48 @@ async function loadVoices() {
   } catch {}
 }
 
-export function setVoiceEnabled(on: boolean) {
+// ── Public API ─────────────────────────────────────────────────────────────────
+
+export function setVoiceEnabled(on: boolean): void {
   enabled = on;
   if (!on) {
+    try { Speech.stop(); } catch {}
+    if (Platform.OS === 'web') {
+      (window as any).speechSynthesis?.cancel?.();
+    }
+  }
+}
+
+export function say(text: string): void {
+  if (!enabled) return;
+  if (Platform.OS === 'web') {
+    sayWeb(text);
+  } else {
     try {
       Speech.stop();
+      Speech.speak(text, {
+        language: NATIVE_BASE_LANG,
+        ...(chosenVoiceId ? { voice: chosenVoiceId } : {}),
+        rate: 0.92,
+        pitch: 1.0,
+      });
     } catch {}
   }
 }
 
-export function say(text: string) {
+export function primeVoice(): void {
   if (!enabled) return;
-  try {
-    // Don't let a long utterance block the next short cue.
-    Speech.stop();
-    Speech.speak(text, {
-      language: BASE_LANG,
-      ...(chosenVoiceId ? { voice: chosenVoiceId } : {}),
-      rate: 1.0,
-      pitch: 1.0,
-    });
-  } catch {}
-}
-
-/** Warm up the speech engine and Web Audio context after a user gesture. */
-export function primeVoice() {
-  if (!enabled) return;
-  loadVoices();
-  if (Platform.OS !== 'web') return;
-  try {
-    const u = new (window as any).SpeechSynthesisUtterance('');
-    u.volume = 0;
-    (window as any).speechSynthesis?.speak(u);
-  } catch {}
-  primeAudio();
+  if (Platform.OS === 'web') {
+    initWebVoice();
+    // Unlock speechSynthesis with a silent utterance
+    const synth = (window as any).speechSynthesis as SpeechSynthesis | undefined;
+    if (synth) {
+      const u = new SpeechSynthesisUtterance('');
+      u.volume = 0;
+      synth.speak(u);
+    }
+    primeAudio();
+  } else {
+    loadNativeVoices();
+  }
 }

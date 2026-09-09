@@ -176,7 +176,8 @@ export function ActiveTrainingScreen() {
     setCount(n);
 
     const beat = (spoken: number) => {
-      dingRef.current?.replayAsync().catch(() => {});
+      if (Platform.OS === 'web') ringBell(1);
+      else dingRef.current?.replayAsync().catch(() => {});
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       say(String(spoken));
       countAnim.setValue(0);
