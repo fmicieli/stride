@@ -11,7 +11,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { ProgressSteps } from './ProgressSteps';
-import { PrimaryButton } from './PrimaryButton';
+import { Button } from './Button';
+import { Icon } from './Icon';
 import { colors, spacing } from '../theme';
 
 interface Props {
@@ -22,6 +23,8 @@ interface Props {
   canContinue: boolean;
   onContinue: () => void;
   continueLabel?: string;
+  /** Hide the back control (first onboarding step). Defaults to hidden on step 1. */
+  hideBack?: boolean;
   children: React.ReactNode;
 }
 
@@ -33,9 +36,11 @@ export function OnboardingLayout({
   canContinue,
   onContinue,
   continueLabel = 'Continuar',
+  hideBack,
   children,
 }: Props) {
   const navigation = useNavigation();
+  const showBack = !(hideBack ?? step === 1);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -44,13 +49,17 @@ export function OnboardingLayout({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
+          {showBack ? (
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.7}
+            >
+              <Icon name="chevron-left" size={22} color={colors.ink[900]} />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.backButton} />
+          )}
         </View>
 
         <View style={styles.progressContainer}>
@@ -69,11 +78,7 @@ export function OnboardingLayout({
         </ScrollView>
 
         <View style={styles.footer}>
-          <PrimaryButton
-            label={continueLabel}
-            onPress={onContinue}
-            disabled={!canContinue}
-          />
+          <Button label={continueLabel} onPress={onContinue} disabled={!canContinue} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -98,11 +103,6 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backIcon: {
-    fontSize: 22,
-    color: colors.ink[900],
-    lineHeight: 26,
   },
   progressContainer: {
     paddingHorizontal: spacing[4],

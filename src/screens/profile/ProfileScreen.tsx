@@ -7,29 +7,18 @@ import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
 import { deletePlan } from '../../services/firestore';
 import { logout, deleteAccount } from '../../services/auth';
+import { Button } from '../../components/Button';
+import { Icon } from '../../components/Icon';
 import { colors, spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 type ModalType = 'logout' | 'changeGoal' | 'deleteAccount' | null;
 
-function ChevronRight() {
-  if (Platform.OS === 'web') {
-    return (
-      // @ts-ignore
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* @ts-ignore */}
-        <path d="M 7.5 4 L 13 10 L 7.5 16" stroke="#BBBBBB" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    );
-  }
-  return <Text style={styles.chevron}>›</Text>;
-}
-
-function SettingsRow({ label, onPress, destructive = false }: { label: string; onPress: () => void; destructive?: boolean }) {
+function SettingsRow({ label, onPress, destructive = false, chevron = true }: { label: string; onPress: () => void; destructive?: boolean; chevron?: boolean }) {
   return (
     <TouchableOpacity style={styles.settingsRow} onPress={onPress} activeOpacity={0.7}>
       <Text style={[styles.settingsLabel, destructive && styles.destructiveText]}>{label}</Text>
-      {!destructive && <ChevronRight />}
+      {chevron && !destructive && <Icon name="chevron" size={20} color={colors.ink[300]} />}
     </TouchableOpacity>
   );
 }
@@ -74,11 +63,7 @@ export function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>‹</Text>
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>Perfil</Text>
-        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -88,19 +73,22 @@ export function ProfileScreen() {
           </View>
           <Text style={styles.displayName}>{displayName}</Text>
           <Text style={styles.email}>{profile?.email || user?.email || ''}</Text>
-          <TouchableOpacity style={styles.editBtn} activeOpacity={0.7} onPress={() => navigation.navigate('EditProfile')}>
-            <Text style={styles.editBtnText}>Editar</Text>
-          </TouchableOpacity>
+          <Button
+            label="Editar perfil"
+            variant="secondary"
+            size="sm"
+            fullWidth={false}
+            onPress={() => navigation.navigate('EditProfile')}
+            style={styles.editBtn}
+          />
         </View>
 
         <View style={styles.settingsList}>
-          <SettingsRow label="Mi plan" onPress={() => navigation.navigate('PlanGenerated')} />
+          <SettingsRow label="Mi plan" onPress={() => navigation.navigate('MyPlan')} />
           <SettingsRow label="Historial de entrenamientos" onPress={() => navigation.navigate('Historial')} />
-          <SettingsRow label="Logros" onPress={() => navigation.navigate('Logros')} />
           <SettingsRow label="Cambiar objetivo" onPress={() => setActiveModal('changeGoal')} />
-          <SettingsRow label="Permisos" onPress={() => navigation.navigate('GPSPermission')} />
           <SettingsRow label="Cambiar contraseña" onPress={() => navigation.navigate('ChangePassword')} />
-          <SettingsRow label="Cerrar sesión" onPress={() => setActiveModal('logout')} />
+          <SettingsRow label="Cerrar sesión" onPress={() => setActiveModal('logout')} chevron={false} />
           <SettingsRow label="Eliminar cuenta" onPress={() => setActiveModal('deleteAccount')} destructive />
         </View>
       </ScrollView>
@@ -111,12 +99,8 @@ export function ProfileScreen() {
             <Text style={styles.modalTitle}>¿Querés cambiar tu objetivo?</Text>
             <Text style={styles.modalText}>Tu historial se mantiene, pero tu plan actual se va a reemplazar.</Text>
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={[styles.primaryButton, loading && styles.disabled]} activeOpacity={0.8} onPress={handleChangeGoal} disabled={loading}>
-                <Text style={styles.primaryButtonText}>{loading ? 'Procesando...' : 'Sí, cambiar objetivo'}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setActiveModal(null)} disabled={loading}>
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
+              <Button label={loading ? 'Procesando...' : 'Sí, cambiar objetivo'} onPress={handleChangeGoal} disabled={loading} loading={loading} />
+              <Button label="Cancelar" variant="secondary" onPress={() => setActiveModal(null)} disabled={loading} />
             </View>
           </View>
         </View>
@@ -127,12 +111,8 @@ export function ProfileScreen() {
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>¿Querés cerrar sesión?</Text>
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={[styles.primaryButton, loading && styles.disabled]} activeOpacity={0.8} onPress={handleLogout} disabled={loading}>
-                <Text style={styles.primaryButtonText}>{loading ? 'Saliendo...' : 'Cerrar sesión'}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setActiveModal(null)} disabled={loading}>
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
+              <Button label={loading ? 'Saliendo...' : 'Cerrar sesión'} onPress={handleLogout} disabled={loading} loading={loading} />
+              <Button label="Cancelar" variant="secondary" onPress={() => setActiveModal(null)} disabled={loading} />
             </View>
           </View>
         </View>
@@ -154,11 +134,9 @@ export function ProfileScreen() {
             />
             <View style={styles.modalButtons}>
               <TouchableOpacity style={[styles.destructiveButton, loading && styles.disabled]} activeOpacity={0.8} onPress={handleDeleteAccount} disabled={loading}>
-                <Text style={styles.primaryButtonText}>{loading ? 'Eliminando...' : 'Eliminar cuenta'}</Text>
+                <Text style={styles.destructiveButtonText}>{loading ? 'Eliminando...' : 'Eliminar cuenta'}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => { setActiveModal(null); setDeletePassword(''); }} disabled={loading}>
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
+              <Button label="Cancelar" variant="secondary" onPress={() => { setActiveModal(null); setDeletePassword(''); }} disabled={loading} />
             </View>
           </View>
         </View>
@@ -169,34 +147,26 @@ export function ProfileScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], paddingVertical: spacing[3], borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
-  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 28, color: colors.ink[900] },
-  headerTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: colors.ink[900] },
-  headerSpacer: { width: 40 },
+  header: { alignItems: 'center', paddingHorizontal: spacing[4], paddingVertical: spacing[3] },
+  headerTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 18, color: colors.ink[900] },
   content: { paddingBottom: spacing[10] },
-  avatarSection: { alignItems: 'center', paddingTop: spacing[8], paddingBottom: spacing[6], gap: 8 },
-  avatar: { width: 88, height: 88, borderRadius: 44, backgroundColor: colors.brand[50], alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  avatarText: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 36, color: colors.brand[600] },
-  displayName: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
+  avatarSection: { alignItems: 'center', paddingTop: spacing[6], paddingBottom: spacing[6], gap: 8 },
+  avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: colors.surfaceMuted, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  avatarText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 34, color: colors.ink[900] },
+  displayName: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.ink[900] },
   email: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[400] },
-  editBtn: { marginTop: 8, borderWidth: 1.5, borderColor: colors.borderDefault, borderRadius: radius.full, paddingVertical: 8, paddingHorizontal: spacing[5] },
-  editBtnText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[600] },
+  editBtn: { marginTop: 8 },
   settingsList: { borderTopWidth: 1, borderTopColor: colors.surfaceMuted },
   settingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
   settingsLabel: { fontFamily: 'PlusJakartaSans', fontSize: 16, color: colors.ink[900] },
   destructiveText: { color: colors.error.text },
-  chevron: { fontSize: 22, color: colors.ink[300] },
   modalOverlay: { flex: 1, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[4] },
   modalBox: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing[6], width: '100%' },
   modalTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 18, color: colors.ink[900], marginBottom: 8 },
   modalText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], marginBottom: spacing[6], lineHeight: 20 },
   passwordInput: { borderWidth: 1.5, borderColor: colors.borderDefault, borderRadius: radius.sm, height: controlSize.md, paddingHorizontal: spacing[3], fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900], marginBottom: spacing[4] },
   modalButtons: { gap: spacing[3] },
-  primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
-  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 15 },
-  destructiveButton: { backgroundColor: colors.error.solid, borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
-  disabled: { opacity: 0.6 },
-  cancelButton: { height: controlSize.lg, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.borderDefault, alignItems: 'center', justifyContent: 'center' },
-  cancelButtonText: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[500] },
+  destructiveButton: { backgroundColor: colors.error.solid, borderRadius: radius.full, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
+  destructiveButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 15 },
+  disabled: { opacity: 0.4 },
 });

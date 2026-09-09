@@ -6,6 +6,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
 import { saveUserProfile } from '../../services/firestore';
+import { Button } from '../../components/Button';
+import { Icon } from '../../components/Icon';
 import { colors, spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'EditProfile'>;
@@ -45,7 +47,7 @@ export function EditProfileScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>‹</Text>
+          <Icon name="chevron-left" size={22} color={colors.ink[900]} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Editar perfil</Text>
         <View style={styles.headerSpacer} />
@@ -74,10 +76,15 @@ export function EditProfileScreen() {
             <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="tu@email.com" placeholderTextColor={colors.ink[300]} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
           </View>
 
-          <TouchableOpacity style={[styles.primaryButton, saving && styles.disabled]} activeOpacity={0.8} onPress={handleSave} disabled={saving}>
-            <Text style={styles.primaryButtonText}>{saving ? 'Guardando...' : 'Guardar cambios'}</Text>
-          </TouchableOpacity>
         </ScrollView>
+        <View style={styles.footer}>
+          <Button
+            label={saving ? 'Guardando...' : 'Guardar cambios'}
+            onPress={handleSave}
+            disabled={saving}
+            loading={saving}
+          />
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -88,17 +95,14 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing[4], paddingVertical: spacing[3], borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 28, color: colors.ink[900] },
   headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: colors.ink[900] },
   headerSpacer: { width: 40 },
-  content: { paddingHorizontal: spacing[4], paddingTop: spacing[6], paddingBottom: spacing[10], gap: spacing[5] },
+  content: { paddingHorizontal: spacing[4], paddingTop: spacing[6], paddingBottom: spacing[6], gap: spacing[5] },
+  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], borderTopWidth: 1, borderTopColor: colors.surfaceMuted, backgroundColor: colors.surface },
   avatarSection: { alignItems: 'center', marginBottom: 8 },
   avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.brand[50], alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 32, color: colors.brand[600] },
   inputGroup: { gap: spacing[2] },
   inputLabel: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 13, color: colors.ink[700] },
   input: { borderWidth: 1.5, borderColor: colors.borderDefault, borderRadius: radius.sm, height: controlSize.md, paddingHorizontal: spacing[3], fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900], backgroundColor: colors.surface },
-  primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
-  disabled: { opacity: 0.6 },
 });

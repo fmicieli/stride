@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -9,8 +9,9 @@ import { getPlan, getSessions } from '../services/firestore';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { TrainingPlan, TrainingSession } from '../types';
 import { ProgressBar } from '../components/ProgressBar';
-import { getGoalShortLabel } from '../utils/planGenerator';
-import { colors, spacing, radius, controlSize } from '../theme';
+import { Button } from '../components/Button';
+import { greetingReady } from '../utils/planGenerator';
+import { colors, spacing, radius, borderWidth } from '../theme';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
@@ -25,11 +26,15 @@ function getTodayActivity(plan: TrainingPlan) {
 function getNextDays(plan: TrainingPlan) {
   const today = new Date().getDay();
   const currentWeek = plan.weeks[0];
-  return Array.from({ length: 5 }, (_, i) => {
+  return Array.from({ length: 4 }, (_, i) => {
     const dayIndex = (today + i) % 7;
     const dayName = DAY_NAMES[dayIndex];
     const activity = currentWeek?.days.find((d) => d.day === dayName);
-    return { label: i === 0 ? 'Hoy' : DAY_SHORTS[dayIndex], type: activity?.type === 'run' ? 'Trote' : 'Descanso', isToday: i === 0 };
+    return {
+      label: i === 0 ? 'Hoy' : DAY_SHORTS[dayIndex],
+      isRun: activity?.type === 'run',
+      isToday: i === 0,
+    };
   });
 }
 
@@ -41,6 +46,26 @@ function getCompletedWeeks(plan: TrainingPlan, sessions: TrainingSession[]): num
     else break;
   }
   return completed;
+}
+
+function DayChip({ label, isRun, isToday }: { label: string; isRun: boolean; isToday: boolean }) {
+  const runTone = isRun;
+  return (
+    <View
+      style={[
+        styles.dayChip,
+        runTone ? styles.dayChipRun : styles.dayChipRest,
+        isToday && styles.dayChipToday,
+      ]}
+    >
+      <Text style={[styles.dayChipLabel, runTone ? styles.dayChipLabelRun : styles.dayChipLabelRest]}>
+        {label.toUpperCase()}
+      </Text>
+      <Text style={[styles.dayChipType, runTone ? styles.dayChipTypeRun : styles.dayChipTypeRest]}>
+        {isRun ? 'Trote' : 'Descanso'}
+      </Text>
+    </View>
+  );
 }
 
 export function HomeScreen() {
@@ -87,7 +112,6 @@ export function HomeScreen() {
   const nextDays = plan ? getNextDays(plan) : [];
   const completedWeeks = plan ? getCompletedWeeks(plan, sessions) : 0;
   const progress = plan ? completedWeeks / plan.totalWeeks : 0;
-
   const isRunDay = todayActivity?.type === 'run';
 
   return (
@@ -98,90 +122,79 @@ export function HomeScreen() {
         </View>
       )}
 
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.avatar} onPress={() => navigation.navigate('Profile')} activeOpacity={0.7}>
-          <Text style={styles.avatarText}>{initial}</Text>
-        </TouchableOpacity>
-        <View style={styles.headerText}>
-          <Text style={styles.headerHola}>Hola, {displayName}</Text>
-          <Text style={styles.headerSub}>¿Lista para hoy?</Text>
-        </View>
-      </View>
-
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.avatar} onPress={() => navigation.navigate('MainTabs', { screen: 'Perfil' } as never)} activeOpacity={0.7}>
+            <Text style={styles.avatarText}>{initial}</Text>
+          </TouchableOpacity>
+          <View style={styles.headerText}>
+            <Text style={styles.headerHola}>Hola, {displayName}</Text>
+            <Text style={styles.headerSub}>
+              {isRunDay ? `¿${greetingReady(profile?.name)} para hoy?` : 'Hoy toca descansar'}
+            </Text>
+          </View>
+        </View>
+
         {plan ? (
           <>
-            <View style={styles.workoutCard}>
-              <Text style={styles.cardLabel}>Entrenamiento de hoy</Text>
-              <Text style={styles.cardTitle}>{isRunDay ? 'Trote con intervalos' : 'Día de descanso'}</Text>
-              {isRunDay && (
-                <Text style={styles.cardSub}>{todayActivity.duration} min · {plan.method}</Text>
+            <View style={styles.card}>
+              {isRunDay ? (
+                <View style={styles.cardHead}>
+                  <Text style={styles.cardLabel}>Entrenamiento de hoy</Text>
+                  <Text style={styles.cardTitle}>Trote con intervalos</Text>
+                  <Text style={styles.cardSub}>
+                    {todayActivity?.duration} min · {plan.method.toLowerCase()}
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.cardHead}>
+                  <View style={styles.restRow}>
+                    <Text style={styles.cardLabel}>Sin entrenamiento asignado</Text>
+                    <Text style={styles.restBadge}>Descanso</Text>
+                  </View>
+                  <Text style={styles.restBody}>
+                    El descanso también es parte del plan — así el cuerpo asimila el esfuerzo. Mañana volvés con todo.
+                  </Text>
+                </View>
               )}
-              <View style={styles.separator} />
-              <View style={styles.progressLabels}>
-                <Text style={styles.progressLabel}>Semana {completedWeeks + 1} de {plan.totalWeeks}</Text>
-                <Text style={styles.progressLabel}>{Math.round(progress * 100)}%</Text>
+
+              <View style={styles.hairline} />
+
+              <View style={styles.progressBlock}>
+                <View style={styles.progressLabels}>
+                  <Text style={styles.progressWeek}>Semana {completedWeeks + 1} de {plan.totalWeeks}</Text>
+                  <Text style={styles.progressPct}>{Math.round(progress * 100)}%</Text>
+                </View>
+                <ProgressBar
+                  progress={progress}
+                  height={8}
+                  borderRadius={radius.full}
+                  backgroundColor={colors.surfaceSunken}
+                />
               </View>
-              <ProgressBar progress={progress} height={8} />
             </View>
+
+            {isRunDay && (
+              <Button label="Empezar" onPress={() => navigation.navigate('ActiveTraining')} />
+            )}
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Próximos días</Text>
-              <FlatList
-                data={nextDays}
-                horizontal
-                keyExtractor={(_, i) => i.toString()}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.daysList}
-                renderItem={({ item }) => (
-                  <View style={[
-                    styles.dayChip,
-                    item.isToday && item.type === 'Trote' ? styles.dayChipActiveRun :
-                    item.isToday ? styles.dayChipActiveRest : null
-                  ]}>
-                    <Text style={[styles.dayChipLabel, item.isToday && styles.dayChipLabelActive]}>
-                      {item.label.toUpperCase()}
-                    </Text>
-                    <Text style={[styles.dayChipType, item.isToday && item.type === 'Trote' ? styles.dayChipTypeActiveRun : item.isToday ? styles.dayChipTypeActiveRest : null]}>
-                      {item.type === 'Trote' ? 'Trote' : 'Descanso'}
-                    </Text>
-                  </View>
-                )}
-              />
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Meta</Text>
-              <View style={styles.goalCard}>
-                <Text style={styles.goalText}>{getGoalShortLabel(plan.goal)}</Text>
-              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.daysList}>
+                {nextDays.map((d, i) => (
+                  <DayChip key={i} label={d.label} isRun={d.isRun} isToday={d.isToday} />
+                ))}
+              </ScrollView>
             </View>
           </>
         ) : (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>Sin plan activo</Text>
             <Text style={styles.emptyText}>Configurá tu plan de entrenamiento para empezar</Text>
+            <Button label="Activar mi plan" onPress={() => navigation.navigate('OnboardingGoal')} />
           </View>
         )}
       </ScrollView>
-
-      <View style={styles.footer}>
-        {plan ? (
-          isRunDay ? (
-            <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => navigation.navigate('GPSPermission')}>
-              <Text style={styles.primaryButtonText}>Empezar</Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.restFooter}>
-              <Text style={styles.restFooterText}>Hoy es día de descanso — ¡aprovechá para recuperarte!</Text>
-            </View>
-          )
-        ) : (
-          <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => navigation.navigate('OnboardingGoal')}>
-            <Text style={styles.primaryButtonText}>Activar mi plan</Text>
-          </TouchableOpacity>
-        )}
-      </View>
     </SafeAreaView>
   );
 }
@@ -191,40 +204,52 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   offlineBanner: { backgroundColor: colors.warning.bg, paddingVertical: 8, paddingHorizontal: spacing[4], alignItems: 'center' },
   offlineText: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.warning.text },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing[4], paddingVertical: spacing[3], borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted, gap: spacing[3] },
-  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.brand[50], alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 16, color: colors.brand[600] },
-  headerText: { flex: 1 },
-  headerHola: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[400] },
-  headerSub: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[4], gap: spacing[5] },
-  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.surfaceMuted },
-  restFooter: { alignItems: 'center', paddingVertical: spacing[3] },
-  restFooterText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], textAlign: 'center' },
-  workoutCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], gap: 6 },
-  cardLabel: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400] },
-  cardTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
-  cardSub: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], marginBottom: 4 },
-  separator: { height: 1, backgroundColor: colors.borderDefault, marginVertical: 8 },
-  progressLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
-  progressLabel: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400] },
-  primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
-  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
-  section: { gap: spacing[3] },
-  sectionLabel: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[900] },
-  daysList: { gap: 8 },
-  dayChip: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, paddingVertical: spacing[3], paddingHorizontal: spacing[3], alignItems: 'flex-start', minWidth: 86, gap: 4 },
-  dayChipActiveRun: { backgroundColor: colors.brand[50] },
-  dayChipActiveRest: { backgroundColor: colors.surfaceMuted },
-  dayChipLabel: { fontFamily: 'PlusJakartaSans', fontSize: 11, color: colors.ink[500] },
-  dayChipLabelActive: { color: '#134A37' },
-  dayChipType: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 15, color: colors.ink[500] },
-  dayChipTypeActiveRun: { color: colors.ink[900] },
-  dayChipTypeActiveRest: { color: colors.ink[500] },
-  goalCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4] },
-  goalText: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 16, color: colors.ink[900] },
-  emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 60, gap: spacing[3] },
+  scrollContent: { paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[8], gap: spacing[5] },
+
+  header: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
+  avatar: { width: 44, height: 44, borderRadius: radius.full, backgroundColor: colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 18, color: colors.ink[900] },
+  headerText: { flex: 1, gap: 4 },
+  headerHola: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[500] },
+  headerSub: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, lineHeight: 26, color: colors.ink[900] },
+
+  card: { backgroundColor: colors.surfaceMuted, borderRadius: radius.lg, padding: spacing[5], gap: spacing[4] },
+  cardHead: { gap: 4 },
+  cardLabel: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, color: colors.ink[500] },
+  cardTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, lineHeight: 26, color: colors.ink[900] },
+  cardSub: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.ink[500] },
+  restRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  restBadge: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 11, letterSpacing: 0.5, color: colors.ink[500] },
+  restBody: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[600], marginTop: 4 },
+  hairline: { height: 1, backgroundColor: colors.borderSubtle },
+  progressBlock: { gap: spacing[2] },
+  progressLabels: { flexDirection: 'row', justifyContent: 'space-between' },
+  progressWeek: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.ink[900] },
+  progressPct: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, color: colors.ink[700] },
+
+  section: { gap: spacing[2] },
+  sectionLabel: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, color: colors.ink[900] },
+  daysList: { gap: spacing[2], paddingRight: spacing[4] },
+  dayChip: {
+    minWidth: 104,
+    borderRadius: radius.md,
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[3],
+    gap: 4,
+    borderWidth: borderWidth.hairline,
+  },
+  dayChipRun: { backgroundColor: colors.brand[50], borderColor: colors.brand[200] },
+  dayChipRest: { backgroundColor: colors.surfaceMuted, borderColor: colors.borderSubtle },
+  dayChipToday: { borderColor: colors.brand[500], borderWidth: borderWidth.selected },
+  dayChipLabel: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 11, letterSpacing: 0.5 },
+  dayChipLabelRun: { color: colors.brand[700] },
+  dayChipLabelRest: { color: colors.ink[500] },
+  dayChipType: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 15 },
+  dayChipTypeRun: { color: colors.ink[900] },
+  dayChipTypeRest: { color: colors.ink[500] },
+
+  emptyState: { alignItems: 'center', paddingTop: 60, gap: spacing[3] },
   emptyTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
   emptyText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], textAlign: 'center', lineHeight: 20, marginBottom: 8 },
 });

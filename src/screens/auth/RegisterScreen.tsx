@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -18,6 +17,9 @@ import { RootStackParamList } from '../../navigation';
 import { registerWithEmail, signInWithGoogle } from '../../services/auth';
 import { saveUserProfile, savePlan, getPlan } from '../../services/firestore';
 import { useOnboarding } from '../../utils/onboardingContext';
+import { Button } from '../../components/Button';
+import { Icon } from '../../components/Icon';
+import { GoogleGlyph } from '../../components/GoogleGlyph';
 import { colors, spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Register'>;
@@ -95,14 +97,14 @@ export function RegisterScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={styles.backIcon}>‹</Text>
+            <Icon name="chevron-left" size={22} color={colors.ink[900]} />
           </TouchableOpacity>
           <View style={{ width: 40 }} />
         </View>
 
         <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Creá tu cuenta</Text>
-          <Text style={styles.subtitle}>Solo para guardar tu progreso. No pedimos tarjeta.</Text>
+          <Text style={styles.subtitle}>Solo para guardar tu progreso. No pedimos tarjeta de crédito.</Text>
           {[
             { label: 'Nombre', value: name, setter: setName, placeholder: 'Tu nombre', field: 'name' as const, capitalize: 'words' as const },
           ].map(({ label, value, setter, placeholder, field, capitalize }) => (
@@ -150,7 +152,7 @@ export function RegisterScreen() {
                 onBlur={() => setTouched((t) => ({ ...t, password: true }))}
               />
               <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.eyeButton}>
-                <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁'}</Text>
+                <Icon name={showPassword ? 'eye-off' : 'eye'} size={18} color={colors.ink[400]} />
               </TouchableOpacity>
             </View>
             {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
@@ -170,53 +172,34 @@ export function RegisterScreen() {
                 onBlur={() => setTouched((t) => ({ ...t, confirmPassword: true }))}
               />
               <TouchableOpacity onPress={() => setShowConfirm((v) => !v)} style={styles.eyeButton}>
-                <Text style={styles.eyeIcon}>{showConfirm ? '🙈' : '👁'}</Text>
+                <Icon name={showConfirm ? 'eye-off' : 'eye'} size={18} color={colors.ink[400]} />
               </TouchableOpacity>
             </View>
             {confirmError ? <Text style={styles.errorText}>{confirmError}</Text> : null}
           </View>
 
-          <TouchableOpacity
-            style={[styles.primaryButton, (hasErrors || loading) && styles.disabled]}
-            activeOpacity={0.85}
+          <Button
+            label={loading ? 'Creando cuenta...' : 'Crear cuenta'}
             onPress={handleRegister}
-            disabled={loading}
-          >
-            <Text style={styles.primaryButtonText}>{loading ? 'Creando cuenta...' : 'Crear cuenta'}</Text>
-          </TouchableOpacity>
+            disabled={hasErrors || loading}
+            loading={loading}
+            style={styles.ctaSpacing}
+          />
 
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>o</Text>
+            <Text style={styles.dividerText}>o continuar con</Text>
             <View style={styles.dividerLine} />
           </View>
 
           {Platform.OS === 'web' && (
-            <TouchableOpacity
-              style={[styles.googleButton, googleLoading && styles.disabled]}
-              activeOpacity={0.85}
+            <Button
+              variant="secondary"
+              label="Continuar con Google"
+              iconLeft={<GoogleGlyph />}
+              loading={googleLoading}
               onPress={handleGoogleRegister}
-              disabled={googleLoading}
-            >
-              {googleLoading ? (
-                <ActivityIndicator color={colors.ink[900]} size="small" />
-              ) : (
-                <>
-                  {/* @ts-ignore */}
-                  <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-                    {/* @ts-ignore */}
-                    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
-                    {/* @ts-ignore */}
-                    <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
-                    {/* @ts-ignore */}
-                    <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-                    {/* @ts-ignore */}
-                    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-                  </svg>
-                  <Text style={styles.googleButtonText}>Continuar con Google</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            />
           )}
 
           <Text style={styles.footerNote}>Sin tarjeta. Sin período de prueba que vencer.</Text>
@@ -243,8 +226,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing[2],
     paddingBottom: spacing[2],
   },
-  backButton: { width: 40, height: 40, justifyContent: 'center' },
-  backIcon: { fontSize: 28, color: colors.ink[900] },
+  backButton: { width: 40, height: 40, alignItems: 'flex-start', justifyContent: 'center' },
   scrollContent: { paddingHorizontal: spacing[4], paddingBottom: spacing[8], gap: spacing[4], paddingTop: spacing[2] },
   title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.ink[900] },
   subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[500], lineHeight: 22, marginTop: -spacing[2] },
@@ -278,41 +260,15 @@ const styles = StyleSheet.create({
   },
   passwordInput: { flex: 1, fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900] },
   eyeButton: { padding: 4 },
-  eyeIcon: { fontSize: 16 },
   errorText: {
     fontFamily: 'PlusJakartaSans',
     fontSize: 12,
     color: colors.error.text,
   },
-  primaryButton: {
-    backgroundColor: colors.brand[500],
-    borderRadius: radius.md,
-    height: controlSize.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: spacing[2],
-  },
-  disabled: { opacity: 0.5 },
-  primaryButtonText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    color: colors.surface,
-    fontSize: 16,
-  },
+  ctaSpacing: { marginTop: spacing[2] },
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
   dividerLine: { flex: 1, height: 1, backgroundColor: colors.borderDefault },
   dividerText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[400] },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing[3],
-    height: controlSize.lg,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.borderDefault,
-    backgroundColor: colors.surface,
-  },
-  googleButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: colors.ink[900] },
   footerNote: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[300], textAlign: 'center' },
   linkButton: { alignItems: 'center', paddingVertical: spacing[2] },
   linkText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500] },

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Platform, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Platform, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
 import { ProgressSteps } from '../../components/ProgressSteps';
-import { PrimaryButton } from '../../components/PrimaryButton';
+import { Button } from '../../components/Button';
+import { Icon } from '../../components/Icon';
 import { useOnboarding } from '../../utils/onboardingContext';
 import { weeksUntil } from '../../utils/planGenerator';
 import { colors, spacing } from '../../theme';
@@ -67,14 +68,19 @@ export function OnboardingDateScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Text style={styles.backIcon}>←</Text>
+          <Icon name="chevron-left" size={22} color={colors.ink[900]} />
         </TouchableOpacity>
       </View>
       <View style={styles.progressContainer}>
         <ProgressSteps step={4} totalSteps={6} />
       </View>
 
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.title}>¿Cuándo querés lograrlo?</Text>
         <Text style={styles.subtitle}>Elegí una fecha realista para tu meta</Text>
 
@@ -127,14 +133,10 @@ export function OnboardingDateScreen() {
             ? `Esta es la fecha más pronta posible para tu meta. No se recomienda acortar el plazo.`
             : `Eso te da ${weeks} semana${weeks !== 1 ? 's' : ''} para entrenar`}
         </Text>
-      </View>
+      </ScrollView>
 
       <View style={styles.footer}>
-        <PrimaryButton
-          label="Crear plan"
-          onPress={handleContinue}
-          disabled={weeks <= 0}
-        />
+        <Button label="Crear plan" onPress={handleContinue} disabled={weeks <= 0} />
       </View>
     </SafeAreaView>
   );
@@ -144,9 +146,9 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   header: { height: 60, paddingHorizontal: spacing[4], justifyContent: 'center' },
   backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
-  backIcon: { fontSize: 22, color: colors.ink[900], lineHeight: 26 },
   progressContainer: { paddingHorizontal: spacing[4], paddingBottom: spacing[1], alignItems: 'center' },
-  content: { flex: 1, paddingHorizontal: spacing[4], paddingTop: spacing[5] },
+  scroll: { flex: 1 },
+  content: { flexGrow: 1, paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[4] },
   title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, lineHeight: 30, color: colors.ink[900], marginBottom: spacing[2] },
   subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500], marginBottom: spacing[7] },
   pickerContainer: { width: '100%', marginVertical: spacing[4] },

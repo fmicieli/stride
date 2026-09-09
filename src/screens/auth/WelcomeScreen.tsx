@@ -5,7 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
 import { StrideLogo } from '../../components/StrideLogo';
-import { colors, spacing, radius, controlSize } from '../../theme';
+import { Button } from '../../components/Button';
+import { colors, spacing, radius } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Welcome'>;
 
@@ -15,7 +16,7 @@ export function WelcomeScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.content}>
-        <StrideLogo width={120} />
+        <StrideLogo width={168} />
         <View style={styles.placeholder} />
         <View style={styles.textBlock}>
           <Text style={styles.headline}>De tu primer trote a cruzar la meta</Text>
@@ -26,18 +27,8 @@ export function WelcomeScreen() {
       </View>
 
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.primaryButton}
-          activeOpacity={0.85}
-          onPress={() => navigation.navigate('OnboardingGoal')}
-        >
-          <Text style={styles.primaryButtonText}>Empezar</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => navigation.navigate('Login')}
-        >
+        <Button label="Empezar" onPress={() => navigation.navigate('OnboardingGoal')} />
+        <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Login')}>
           <Text style={styles.loginLink}>Ya tengo cuenta</Text>
         </TouchableOpacity>
       </View>
@@ -53,31 +44,35 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: spacing[4],
-    paddingTop: spacing[5],
-    gap: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 32,
   },
   placeholder: {
     width: 200,
     height: 200,
     backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     alignSelf: 'center',
   },
   textBlock: {
-    gap: 8,
-    maxWidth: 300,
+    gap: 12,
+    maxWidth: 320,
+    alignItems: 'center',
   },
   headline: {
     fontFamily: 'PlusJakartaSans-Bold',
     fontSize: 24,
     lineHeight: 32,
     color: colors.ink[900],
+    textAlign: 'center',
   },
   subtitle: {
     fontFamily: 'PlusJakartaSans',
     fontSize: 16,
     lineHeight: 24,
-    color: colors.ink[600],
+    color: colors.ink[500],
+    textAlign: 'center',
   },
   footer: {
     paddingHorizontal: spacing[4],
@@ -85,19 +80,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing[4],
     gap: spacing[3],
     alignItems: 'center',
-  },
-  primaryButton: {
-    backgroundColor: colors.brand[500],
-    borderRadius: radius.full,
-    height: controlSize.lg,
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButtonText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    color: colors.surface,
-    fontSize: 16,
   },
   loginLink: {
     fontFamily: 'PlusJakartaSans',

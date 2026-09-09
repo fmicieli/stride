@@ -9,7 +9,8 @@ import { useOnboarding } from '../utils/onboardingContext';
 import { getPlan, deletePlan } from '../services/firestore';
 import { TrainingPlan, WeekPlan } from '../types';
 import { getGoalShortLabel, formatTargetDate } from '../utils/planGenerator';
-import { colors, spacing, radius, controlSize } from '../theme';
+import { Button } from '../components/Button';
+import { colors, spacing, radius } from '../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'PlanGenerated'>;
 
@@ -34,11 +35,10 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
   return <Text style={{ fontSize: 14, color: '#777777' }}>{expanded ? '∧' : '›'}</Text>;
 }
 
-function WeekCard({ week, defaultExpanded = false }: { week: WeekPlan; defaultExpanded?: boolean }) {
-  const [expanded, setExpanded] = useState(defaultExpanded);
+function WeekCard({ week, expanded, onToggle }: { week: WeekPlan; expanded: boolean; onToggle: () => void }) {
   return (
     <View style={styles.weekCard}>
-      <TouchableOpacity style={styles.weekHeader} onPress={() => setExpanded((v) => !v)} activeOpacity={0.8}>
+      <TouchableOpacity style={styles.weekHeader} onPress={onToggle} activeOpacity={0.8}>
         <Text style={styles.weekTitle}>Semana {week.week}</Text>
         <ChevronIcon expanded={expanded} />
       </TouchableOpacity>
@@ -66,6 +66,7 @@ export function PlanGeneratedScreen() {
   const [showRestartModal, setShowRestartModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [restarting, setRestarting] = useState(false);
+  const [expandedWeek, setExpandedWeek] = useState<number | null>(1);
 
   useEffect(() => {
     if (user) {
@@ -99,8 +100,10 @@ export function PlanGeneratedScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerEyebrow}>Tu plan está listo</Text>
-        <Text style={styles.headerTitle}>¡Empecemos!</Text>
+        <Text style={styles.headerTitle}>Tu plan semanal, listo</Text>
+        <Text style={styles.headerSubtitle}>
+          Lo generamos automáticamente según tus respuestas. No hay otras opciones para elegir, podés ajustarlo más adelante.
+        </Text>
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -117,36 +120,33 @@ export function PlanGeneratedScreen() {
         </View>
 
         <View style={styles.weeksContainer}>
-          {plan.weeks.map((week, i) => <WeekCard key={week.week} week={week} defaultExpanded={i === 0} />)}
-        </View>
-
-        <View style={styles.actionButtons}>
-          {user ? (
-            <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => navigation.replace('MainTabs')}>
-              <Text style={styles.primaryButtonText}>Empezar con este plan</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => setShowSaveModal(true)}>
-              <Text style={styles.primaryButtonText}>Guardá tu plan</Text>
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity style={styles.ghostButton} activeOpacity={0.7} onPress={() => setShowRestartModal(true)}>
-            <Text style={styles.ghostButtonText}>Volver a empezar desde cero</Text>
-          </TouchableOpacity>
+          {plan.weeks.map((week) => (
+            <WeekCard
+              key={week.week}
+              week={week}
+              expanded={expandedWeek === week.week}
+              onToggle={() => setExpandedWeek((v) => (v === week.week ? null : week.week))}
+            />
+          ))}
         </View>
       </ScrollView>
+
+      <View style={styles.footer}>
+        {user ? (
+          <Button label="Empezar con este plan" onPress={() => navigation.replace('MainTabs')} />
+        ) : (
+          <Button label="Guardá tu plan" onPress={() => setShowSaveModal(true)} />
+        )}
+        <Button label="Volver a empezar desde cero" variant="tertiary" onPress={() => setShowRestartModal(true)} />
+      </View>
 
       <Modal visible={showSaveModal} transparent animationType="slide" onRequestClose={() => {}}>
         <View style={styles.sheetOverlay}>
           <View style={styles.sheet}>
             <Text style={styles.modalTitle}>Guardá tu plan</Text>
             <Text style={styles.modalText}>Necesitás una cuenta para empezar a entrenar y guardar tu progreso.</Text>
-            <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={() => { setShowSaveModal(false); navigation.navigate('Register'); }}>
-              <Text style={styles.primaryButtonText}>Crear cuenta</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.ghostButton} activeOpacity={0.7} onPress={() => { setShowSaveModal(false); navigation.navigate('Login'); }}>
-              <Text style={styles.ghostButtonText}>Ya tengo cuenta. Iniciar sesión</Text>
-            </TouchableOpacity>
+            <Button label="Crear cuenta" onPress={() => { setShowSaveModal(false); navigation.navigate('Register'); }} />
+            <Button label="Ya tengo cuenta. Iniciar sesión" variant="tertiary" onPress={() => { setShowSaveModal(false); navigation.navigate('Login'); }} />
           </View>
         </View>
       </Modal>
@@ -157,12 +157,12 @@ export function PlanGeneratedScreen() {
             <Text style={styles.modalTitle}>¿Segura que querés volver a empezar?</Text>
             <Text style={styles.modalText}>Tu plan actual se eliminará y tendrás que configurar uno nuevo.</Text>
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={[styles.primaryButton, restarting && styles.disabled]} activeOpacity={0.8} onPress={handleRestart} disabled={restarting}>
-                <Text style={styles.primaryButtonText}>{restarting ? 'Eliminando...' : 'Sí, empezar de nuevo'}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setShowRestartModal(false)} disabled={restarting}>
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
+              <Button
+                label={restarting ? 'Eliminando...' : 'Sí, empezar de nuevo'}
+                onPress={handleRestart}
+                disabled={restarting}
+              />
+              <Button label="Cancelar" variant="secondary" onPress={() => setShowRestartModal(false)} disabled={restarting} />
             </View>
           </View>
         </View>
@@ -174,11 +174,12 @@ export function PlanGeneratedScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[3], borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
-  headerEyebrow: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[400], marginBottom: 4 },
+  header: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[4], gap: spacing[2] },
   headerTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 28, color: colors.ink[900] },
+  headerSubtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500] },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[10] },
+  scrollContent: { paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[6] },
+  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], gap: spacing[2], backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.surfaceMuted },
   goalCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], marginBottom: spacing[4] },
   goalLabel: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400], marginBottom: 6 },
   goalTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900], marginBottom: 6 },
@@ -186,25 +187,16 @@ const styles = StyleSheet.create({
   chipsRow: { flexDirection: 'row', gap: 8, marginBottom: spacing[6], flexWrap: 'wrap' },
   chip: { backgroundColor: colors.surfaceMuted, borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14 },
   chipText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[700] },
-  weeksContainer: { gap: spacing[3], marginBottom: spacing[8] },
+  weeksContainer: { gap: spacing[3] },
   weekCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, overflow: 'hidden' },
   weekHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing[4] },
   weekTitle: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 16, color: colors.ink[900] },
-  chevron: { fontSize: 14, color: colors.ink[400] },
   weekDays: { paddingHorizontal: spacing[4], paddingBottom: spacing[3], gap: 8 },
   dayRow: { flexDirection: 'row', alignItems: 'center' },
   dayName: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 14, color: colors.ink[900], width: 36 },
   dayActivity: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[900], flex: 1 },
   dayDuration: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[900], textAlign: 'right', width: 60 },
   restText: { color: colors.ink[300] },
-  actionButtons: { gap: spacing[3] },
-  primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
-  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
-  disabled: { opacity: 0.6 },
-  ghostButton: { alignItems: 'center', paddingVertical: spacing[3] },
-  ghostButtonText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], textDecorationLine: 'underline' },
-  skipBtn: { alignItems: 'center', paddingVertical: spacing[2] },
-  skipText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[300] },
   sheetOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.scrim },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, padding: spacing[6], paddingBottom: spacing[10], gap: spacing[4] },
   modalOverlay: { flex: 1, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[4] },
@@ -212,6 +204,4 @@ const styles = StyleSheet.create({
   modalTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900], marginBottom: 6 },
   modalText: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[500], lineHeight: 22, marginBottom: spacing[2] },
   modalButtons: { gap: spacing[3] },
-  cancelButton: { height: controlSize.lg, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.borderDefault, alignItems: 'center', justifyContent: 'center' },
-  cancelButtonText: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[500] },
 });

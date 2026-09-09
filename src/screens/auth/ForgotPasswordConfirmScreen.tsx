@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
-import { colors, spacing, radius, controlSize } from '../../theme';
+import { Button } from '../../components/Button';
+import { colors, spacing } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'ForgotPasswordConfirm'>;
 type Route = RouteProp<RootStackParamList, 'ForgotPasswordConfirm'>;
@@ -24,9 +25,7 @@ export function ForgotPasswordConfirmScreen() {
         <Text style={styles.description}>
           {'Te enviamos un link a '}<Text style={styles.emailHighlight}>{email}</Text>
         </Text>
-        <TouchableOpacity style={styles.primaryButton} activeOpacity={0.85} onPress={() => navigation.navigate('Welcome')}>
-          <Text style={styles.primaryButtonText}>Volver al inicio</Text>
-        </TouchableOpacity>
+        <Button label="Volver al inicio" onPress={() => navigation.navigate('Welcome')} style={styles.cta} />
       </View>
     </SafeAreaView>
   );
@@ -40,6 +39,5 @@ const styles = StyleSheet.create({
   title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, lineHeight: 30, color: colors.ink[900], textAlign: 'center' },
   description: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500], textAlign: 'center', paddingHorizontal: spacing[4] },
   emailHighlight: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.ink[900] },
-  primaryButton: { backgroundColor: colors.brand[500], borderRadius: radius.md, height: controlSize.lg, alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch', marginTop: spacing[3] },
-  primaryButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 16 },
+  cta: { alignSelf: 'stretch', marginTop: spacing[3] },
 });

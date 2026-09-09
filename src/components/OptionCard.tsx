@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { colors, radius } from '../theme';
+import { colors, radius, borderWidth } from '../theme';
 
 interface Props {
   label: string;
@@ -23,17 +23,19 @@ export function OptionCard({ label, selected, onPress }: Props) {
 const styles = StyleSheet.create({
   card: {
     width: '100%',
-    height: 56,
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.sm,
+    minHeight: 56,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
     paddingHorizontal: 16,
+    paddingVertical: 14,
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'transparent',
+    borderWidth: borderWidth.hairline,
+    borderColor: colors.borderDefault,
   },
   selected: {
     backgroundColor: colors.brand[50],
     borderColor: colors.brand[500],
+    borderWidth: borderWidth.selected,
   },
   text: {
     fontFamily: 'PlusJakartaSans',

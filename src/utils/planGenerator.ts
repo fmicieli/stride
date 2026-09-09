@@ -55,6 +55,51 @@ function getBaseRunDistance(week: number, goal: Goal): number {
   return Math.round((startKm + increment * (week - 1)) * 10) / 10;
 }
 
+export type SessionInterval = { type: 'run' | 'walk'; label: string; duration: number };
+
+/**
+ * Builds the ordered interval list for a single training session.
+ * `runTargetMin` is the pure running target for that day; the returned session
+ * adds warm-up + walk breaks + cool-down around it. Shared by the plan
+ * generator (for the displayed total) and the live tracker.
+ */
+export function buildSessionIntervals(
+  runTargetMin: number,
+  week: number,
+  method: string,
+): SessionInterval[] {
+  const runTargetSec = Math.max(runTargetMin, method === 'Método Caco' ? 6 : 10) * 60;
+
+  if (method !== 'Método Caco') {
+    return [{ type: 'run', label: 'Trotar', duration: Math.max(runTargetSec, 600) }];
+  }
+
+  let runSecs = 60;
+  let walkSecs = 90;
+  if (week >= 9) { runSecs = 300; walkSecs = 60; }
+  else if (week >= 7) { runSecs = 240; walkSecs = 60; }
+  else if (week >= 5) { runSecs = 180; walkSecs = 90; }
+  else if (week >= 3) { runSecs = 120; walkSecs = 90; }
+
+  const warmup = 180;
+  const cooldown = 180;
+  const reps = Math.max(2, Math.ceil(runTargetSec / runSecs));
+
+  const out: SessionInterval[] = [{ type: 'walk', label: 'Calentamiento', duration: warmup }];
+  for (let i = 0; i < reps; i++) {
+    out.push({ type: 'run', label: 'Trotar', duration: runSecs });
+    if (i < reps - 1) out.push({ type: 'walk', label: 'Descanso', duration: walkSecs });
+  }
+  out.push({ type: 'walk', label: 'Enfriamiento', duration: cooldown });
+  return out;
+}
+
+/** Full session length in minutes (warm-up + intervals + cool-down), min 15. */
+export function estimateSessionMinutes(runTargetMin: number, week: number, method: string): number {
+  const total = buildSessionIntervals(runTargetMin, week, method).reduce((s, i) => s + i.duration, 0);
+  return Math.max(15, Math.round(total / 60));
+}
+
 export function generatePlan(
   goal: Goal,
   goalMode: GoalMode,
@@ -89,21 +134,23 @@ export function generatePlan(
       }
 
       if (goalMode === 'time') {
-        const duration = getBaseRunDuration(w, goalMode, goal);
+        const runTargetMin = getBaseRunDuration(w, goalMode, goal);
         return {
           day,
           dayShort: DAY_SHORTS[day],
           type: 'run' as ActivityType,
-          duration,
+          runTargetMin,
+          duration: estimateSessionMinutes(runTargetMin, w, method),
         };
       } else {
         const distance = getBaseRunDistance(w, goal);
-        const duration = Math.round(distance * 6.5);
+        const runTargetMin = Math.round(distance * 6.5);
         return {
           day,
           dayShort: DAY_SHORTS[day],
           type: 'run' as ActivityType,
-          duration,
+          runTargetMin,
+          duration: estimateSessionMinutes(runTargetMin, w, method),
           distance,
         };
       }
@@ -149,6 +196,12 @@ export function getGoalShortLabel(goal: Goal): string {
     '42K': 'Correr 42K',
   };
   return labels[goal];
+}
+
+/** "Listo" / "Lista" based on the given name (heuristic: first token ending in 'a' → feminine). */
+export function greetingReady(name?: string): string {
+  const first = (name ?? '').trim().split(/\s+/)[0].toLowerCase();
+  return first.endsWith('a') ? 'Lista' : 'Listo';
 }
 
 export function formatTargetDate(isoDate: string): string {
