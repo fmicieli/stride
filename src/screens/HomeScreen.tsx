@@ -47,7 +47,7 @@ function buildPreRunSteps(intervals: SessionInterval[]): PreRunStep[] {
   for (let i = 0; i < intervals.length; i++) {
     if (intervals[i].type !== 'run') continue;
     const next = intervals[i + 1];
-    units.push({ run: intervals[i].duration, walk: next && next.label === 'Descanso' ? next.duration : null });
+    units.push({ run: intervals[i].duration, walk: next && next.label === 'Caminata' ? next.duration : null });
   }
 
   // Group consecutive units that share the same run duration.

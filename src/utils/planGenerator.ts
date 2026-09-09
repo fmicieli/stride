@@ -88,7 +88,7 @@ export function buildSessionIntervals(
   const out: SessionInterval[] = [{ type: 'walk', label: 'Calentamiento', duration: warmup }];
   for (let i = 0; i < reps; i++) {
     out.push({ type: 'run', label: 'Trotar', duration: runSecs });
-    if (i < reps - 1) out.push({ type: 'walk', label: 'Descanso', duration: walkSecs });
+    if (i < reps - 1) out.push({ type: 'walk', label: 'Caminata', duration: walkSecs });
   }
   out.push({ type: 'walk', label: 'Enfriamiento', duration: cooldown });
   return out;
