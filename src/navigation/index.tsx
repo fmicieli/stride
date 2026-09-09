@@ -74,7 +74,8 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
-const TAB_BAR_CONTENT_HEIGHT = 60;
+// Room for icon + label; the device's bottom inset is reserved on top of this.
+const TAB_BAR_CONTENT_HEIGHT = 76;
 
 function MainTabs() {
   const insets = useSafeAreaInsets();
@@ -95,15 +96,15 @@ function MainTabs() {
         tabBarShowLabel: true,
         tabBarLabelStyle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 11, marginTop: 2 },
         tabBarIconStyle: { marginTop: 2 },
-        // Fixed content height + the device's bottom inset added on top, so the
-        // icons/labels never get clipped by a home indicator or a short viewport.
+        // Constant content room (icon + label) with the device's bottom inset
+        // reserved underneath, so nothing clips on any screen height.
         tabBarStyle: {
           borderTopWidth: 1,
           borderTopColor: '#F0F0F0',
           backgroundColor: '#FFFFFF',
           height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
-          paddingTop: 8,
-          paddingBottom: Math.max(insets.bottom, 10),
+          paddingTop: 10,
+          paddingBottom: 12 + insets.bottom,
           paddingHorizontal: 16,
         },
       })}

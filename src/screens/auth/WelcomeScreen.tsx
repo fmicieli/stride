@@ -44,7 +44,7 @@ export function WelcomeScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.content}>
-        <StrideLogo width={180} animated />
+        <StrideLogo width={225} animated />
         <Animated.Text style={[styles.slogan, { opacity: sloganOpacity }]}>
           Tu entrenamiento, a tu ritmo
         </Animated.Text>
