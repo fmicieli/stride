@@ -40,6 +40,14 @@ export function StrideLogo({ width = 200, color = '#1D1D1B', animated = false, o
       onDone?.();
       return;
     }
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      spin.setValue(1);
+      reveal.setValue(1);
+      onDone?.();
+    };
     Animated.sequence([
       Animated.timing(spin, {
         toValue: 1,
@@ -54,7 +62,10 @@ export function StrideLogo({ width = 200, color = '#1D1D1B', animated = false, o
         useNativeDriver: false,
       }),
       Animated.delay(500),
-    ]).start(() => onDone?.());
+    ]).start(finish);
+    // Safety net: snap to the resting state if the animation loop is throttled.
+    const settle = setTimeout(finish, 2600);
+    return () => clearTimeout(settle);
   }, [animated]);
 
   if (Platform.OS !== 'web') {
