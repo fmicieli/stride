@@ -11,7 +11,7 @@ import { getPlan, saveSession, saveStreak, getSessions } from '../../services/fi
 import { pendingRun } from '../../storage/storage';
 import { TrainingPlan, TrainingSession, DayKey } from '../../types';
 import { formatDuration, buildSessionIntervals, SessionInterval } from '../../utils/planGenerator';
-import { say, primeVoice } from '../../utils/voice';
+import { say, primeVoice, ringBell } from '../../utils/voice';
 import { Button } from '../../components/Button';
 import { BottomSheet } from '../../components/BottomSheet';
 import { SessionSummary } from '../../components/SessionSummary';
@@ -68,19 +68,12 @@ function formatCountdown(secs: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-function segLabelText(iv?: SessionInterval): string {
-  if (!iv) return '';
-  if (iv.label === 'Calentamiento') return 'Calentamiento';
-  if (iv.label === 'Enfriamiento') return 'Enfriamiento';
-  return iv.type === 'walk' ? 'Momento de caminar' : 'Momento de trotar';
-}
-
-/** Short spoken cue when a segment starts. */
+/** Label shown on screen AND spoken — both must match. */
 function cueForInterval(iv?: SessionInterval): string {
   if (!iv) return '';
   if (iv.label === 'Calentamiento') return 'Calentamiento';
   if (iv.label === 'Enfriamiento') return 'Enfriamiento';
-  return iv.type === 'run' ? 'Trotar' : 'Descansar';
+  return iv.type === 'run' ? 'A trotar' : 'A caminar';
 }
 
 export function ActiveTrainingScreen() {
@@ -201,6 +194,7 @@ export function ActiveTrainingScreen() {
       if (n <= 0) {
         clearInterval(id);
         countAnim.setValue(1);
+        if (Platform.OS === 'web') ringBell(1);
         say(cueForInterval(intervals[0]));
         setPhase('running');
         return;
@@ -244,6 +238,19 @@ export function ActiveTrainingScreen() {
     setPaused(false);
     if (timerRef.current) clearInterval(timerRef.current);
     pendingRun.clear().catch(() => {});
+
+    // Triple bell + voice cue before navigating
+    if (Platform.OS === 'web') {
+      ringBell(3);
+    } else {
+      for (let i = 0; i < 3; i++) {
+        await dingRef.current?.replayAsync().catch(() => {});
+        if (i < 2) await new Promise(r => setTimeout(r, 650));
+      }
+    }
+    await new Promise(r => setTimeout(r, 400));
+    say('Entrenamiento terminado');
+    await new Promise(r => setTimeout(r, 1400));
 
     const sessionId = Date.now().toString();
     if (user) {
@@ -297,7 +304,8 @@ export function ActiveTrainingScreen() {
 
     if (!firstRun && idx !== prevIntervalIdxRef.current) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-      dingRef.current?.replayAsync().catch(() => {});
+      if (Platform.OS === 'web') ringBell(1);
+      else dingRef.current?.replayAsync().catch(() => {});
       say(cueForInterval(intervals[idx]));
     } else if (!firstRun) {
       // final-seconds callouts while a segment runs down
@@ -336,7 +344,7 @@ export function ActiveTrainingScreen() {
           </Text>
         </View>
 
-        <Text style={styles.segLabel}>{segLabelText(currentInterval)}</Text>
+        <Text style={styles.segLabel}>{cueForInterval(currentInterval)}</Text>
 
         <Text style={styles.timer}>{formatCountdown(countdown)}</Text>
 
