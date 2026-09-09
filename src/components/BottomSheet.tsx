@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Icon } from './Icon';
 import { colors, spacing, radius } from '../theme';
 
@@ -10,6 +10,10 @@ interface Props {
   subtitle?: string;
   /** When false, hides the ✕ and disables backdrop-tap dismiss (forced choice). */
   dismissible?: boolean;
+  /** Scroll the body content; pair with `footer` to keep an action pinned. */
+  scrollBody?: boolean;
+  /** Pinned below the (optionally scrolling) body — always visible. */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -17,7 +21,16 @@ interface Props {
  * App-wide popup surface: slides up from the bottom, rounded top corners,
  * scrim behind, ✕ top-right, tap-outside to dismiss.
  */
-export function BottomSheet({ visible, onClose, title, subtitle, dismissible = true, children }: Props) {
+export function BottomSheet({
+  visible,
+  onClose,
+  title,
+  subtitle,
+  dismissible = true,
+  scrollBody = false,
+  footer,
+  children,
+}: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -39,7 +52,20 @@ export function BottomSheet({ visible, onClose, title, subtitle, dismissible = t
           )}
           {title ? <Text style={styles.title}>{title}</Text> : null}
           {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-          <View style={styles.body}>{children}</View>
+
+          {scrollBody ? (
+            <ScrollView
+              style={styles.scrollBody}
+              contentContainerStyle={styles.scrollBodyContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {children}
+            </ScrollView>
+          ) : (
+            <View style={styles.body}>{children}</View>
+          )}
+
+          {footer ? <View style={styles.footer}>{footer}</View> : null}
         </View>
       </View>
     </Modal>
@@ -82,4 +108,7 @@ const styles = StyleSheet.create({
     color: colors.ink[500],
   },
   body: { gap: spacing[3], marginTop: spacing[1] },
+  scrollBody: { flexShrink: 1, marginTop: spacing[1] },
+  scrollBodyContent: { paddingBottom: spacing[2] },
+  footer: { paddingTop: spacing[3] },
 });

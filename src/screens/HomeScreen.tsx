@@ -23,34 +23,56 @@ type PreRunStep = { title: string; detail: string };
 
 const stepMins = (secs: number) => `${Math.max(1, Math.round(secs / 60))} min`;
 
-/** Collapses the flat interval list into the pre-run timeline rows (warm-up, Intervalo N, cool-down). */
+/**
+ * Collapses the flat interval list into pre-run timeline rows: warm-up,
+ * then consecutive identical run/walk reps grouped as "N intervalos", then cool-down.
+ */
 function buildPreRunSteps(intervals: SessionInterval[]): PreRunStep[] {
   if (intervals.length === 0) return [];
   if (intervals.length === 1) {
     return [{ title: 'Trote continuo', detail: stepMins(intervals[0].duration) }];
   }
+
   const steps: PreRunStep[] = [];
-  let intervalNum = 0;
-  for (let i = 0; i < intervals.length; i++) {
-    const it = intervals[i];
-    if (it.label === 'Calentamiento') {
-      steps.push({ title: 'Calentamiento', detail: `${stepMins(it.duration)} caminando` });
-    } else if (it.label === 'Enfriamiento') {
-      steps.push({ title: 'Enfriamiento', detail: `${stepMins(it.duration)} caminando` });
-    } else if (it.type === 'run') {
-      intervalNum += 1;
-      const next = intervals[i + 1];
-      if (next && next.label === 'Descanso') {
-        steps.push({
-          title: `Intervalo ${intervalNum}`,
-          detail: `${stepMins(it.duration)} trote / ${stepMins(next.duration)} caminata`,
-        });
-        i += 1;
-      } else {
-        steps.push({ title: `Intervalo ${intervalNum}`, detail: `${stepMins(it.duration)} trote` });
-      }
-    }
+
+  const first = intervals[0];
+  if (first.label === 'Calentamiento') {
+    steps.push({ title: 'Calentamiento', detail: `${stepMins(first.duration)} caminando` });
   }
+
+  // One "unit" = a run plus its following walk break (the last rep has no break).
+  const units: { run: number; walk: number | null }[] = [];
+  for (let i = 0; i < intervals.length; i++) {
+    if (intervals[i].type !== 'run') continue;
+    const next = intervals[i + 1];
+    units.push({ run: intervals[i].duration, walk: next && next.label === 'Descanso' ? next.duration : null });
+  }
+
+  // Group consecutive units that share the same run duration.
+  let g = 0;
+  while (g < units.length) {
+    const runDur = units[g].run;
+    let count = 0;
+    let walkDur: number | null = null;
+    while (g + count < units.length && units[g + count].run === runDur) {
+      if (walkDur == null && units[g + count].walk != null) walkDur = units[g + count].walk;
+      count += 1;
+    }
+    steps.push({
+      title: count === 1 ? '1 intervalo' : `${count} intervalos`,
+      detail:
+        walkDur != null
+          ? `${stepMins(runDur)} trote / ${stepMins(walkDur)} caminata`
+          : `${stepMins(runDur)} trote`,
+    });
+    g += count;
+  }
+
+  const last = intervals[intervals.length - 1];
+  if (last.label === 'Enfriamiento') {
+    steps.push({ title: 'Enfriamiento', detail: `${stepMins(last.duration)} caminando` });
+  }
+
   return steps;
 }
 
@@ -248,33 +270,29 @@ export function HomeScreen() {
         onClose={() => setShowPreRun(false)}
         title="Antes de arrancar"
         subtitle="Así está armado tu entrenamiento de hoy. Podés pausarlo en cualquier momento."
+        scrollBody
+        footer={
+          <Button
+            label="Empezar entrenamiento"
+            onPress={() => {
+              setShowPreRun(false);
+              navigation.navigate('ActiveTraining');
+            }}
+          />
+        }
       >
-        <ScrollView
-          style={styles.timelineScroll}
-          contentContainerStyle={styles.timeline}
-          showsVerticalScrollIndicator={false}
-        >
-          {preRunSteps.map((s, i) => (
-            <View key={i} style={styles.tlRow}>
-              <View style={styles.tlGutter}>
-                <View style={styles.tlDot} />
-                {i < preRunSteps.length - 1 && <View style={styles.tlLine} />}
-              </View>
-              <View style={styles.tlBody}>
-                <Text style={styles.tlTitle}>{s.title}</Text>
-                <Text style={styles.tlDetail}>{s.detail}</Text>
-              </View>
+        {preRunSteps.map((s, i) => (
+          <View key={i} style={styles.tlRow}>
+            <View style={styles.tlGutter}>
+              <View style={styles.tlDot} />
+              {i < preRunSteps.length - 1 && <View style={styles.tlLine} />}
             </View>
-          ))}
-        </ScrollView>
-
-        <Button
-          label="Empezar entrenamiento"
-          onPress={() => {
-            setShowPreRun(false);
-            navigation.navigate('ActiveTraining');
-          }}
-        />
+            <View style={styles.tlBody}>
+              <Text style={styles.tlTitle}>{s.title}</Text>
+              <Text style={styles.tlDetail}>{s.detail}</Text>
+            </View>
+          </View>
+        ))}
       </BottomSheet>
     </SafeAreaView>
   );
@@ -334,8 +352,6 @@ const styles = StyleSheet.create({
   emptyTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
   emptyText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], textAlign: 'center', lineHeight: 20, marginBottom: 8 },
 
-  timelineScroll: { flexGrow: 0, marginTop: spacing[2] },
-  timeline: { paddingVertical: spacing[2] },
   tlRow: { flexDirection: 'row', gap: spacing[3] },
   tlGutter: { alignItems: 'center', width: 16 },
   tlDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.brand[500], marginTop: 4 },
