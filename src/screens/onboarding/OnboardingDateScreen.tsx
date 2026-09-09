@@ -93,18 +93,25 @@ export function OnboardingDateScreen() {
               min={toDateString(minDate)}
               onChange={handleWebChange}
               style={{
+                display: 'block',
                 width: '100%',
+                maxWidth: '100%',
+                minWidth: 0,
+                margin: 0,
                 height: 48,
-                border: '1px solid #E0E0E0',
-                borderRadius: 8,
-                paddingLeft: 12,
-                paddingRight: 12,
+                border: `1.5px solid ${colors.borderDefault}`,
+                borderRadius: 12,
+                paddingLeft: 14,
+                paddingRight: 14,
                 fontSize: 16,
-                color: '#111111',
-                backgroundColor: '#FFFFFF',
+                fontFamily: 'PlusJakartaSans, system-ui, -apple-system, sans-serif',
+                color: colors.ink[900],
+                backgroundColor: colors.surface,
                 cursor: 'pointer',
                 outline: 'none',
                 boxSizing: 'border-box',
+                WebkitAppearance: 'none',
+                appearance: 'none',
               }}
             />
           ) : (
@@ -136,7 +143,7 @@ export function OnboardingDateScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button label="Crear plan" onPress={handleContinue} disabled={weeks <= 0} />
+        <Button label="Continuar" onPress={handleContinue} disabled={weeks <= 0} />
       </View>
     </SafeAreaView>
   );
@@ -151,7 +158,7 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[4] },
   title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, lineHeight: 30, color: colors.ink[900], marginBottom: spacing[2] },
   subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500], marginBottom: spacing[7] },
-  pickerContainer: { width: '100%', marginVertical: spacing[4] },
+  pickerContainer: { width: '100%', alignSelf: 'stretch', marginVertical: spacing[4] },
   picker: { width: '100%' },
   dateDisplay: {
     fontFamily: 'PlusJakartaSans-SemiBold',

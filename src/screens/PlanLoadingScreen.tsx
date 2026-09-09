@@ -50,7 +50,7 @@ export function PlanLoadingScreen() {
       } catch (e) {
         console.error('Error generating plan:', e);
       } finally {
-        navigation.replace('PlanGenerated');
+        navigation.replace(user ? 'MainTabs' : 'Register');
       }
     }, 2500);
     return () => clearTimeout(timer);

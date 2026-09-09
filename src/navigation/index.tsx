@@ -23,7 +23,6 @@ import { OnboardingProjectionScreen } from '../screens/onboarding/OnboardingProj
 import { OnboardingDateScreen } from '../screens/onboarding/OnboardingDateScreen';
 import { InsufficientTimeScreen } from '../screens/onboarding/InsufficientTimeScreen';
 import { PlanLoadingScreen } from '../screens/PlanLoadingScreen';
-import { PlanGeneratedScreen } from '../screens/PlanGeneratedScreen';
 
 // Main tabs
 import { HomeScreen } from '../screens/HomeScreen';
@@ -141,7 +140,6 @@ export function AppNavigator() {
         <Stack.Screen name="OnboardingDate" component={OnboardingDateScreen} />
         <Stack.Screen name="InsufficientTime" component={InsufficientTimeScreen} />
         <Stack.Screen name="PlanLoading" component={PlanLoadingScreen} />
-        <Stack.Screen name="PlanGenerated" component={PlanGeneratedScreen} />
 
         {/* App */}
         <Stack.Screen name="MainTabs" component={MainTabs} />

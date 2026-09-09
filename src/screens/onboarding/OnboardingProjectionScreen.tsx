@@ -61,11 +61,16 @@ function Curve() {
 
 export function OnboardingProjectionScreen() {
   const navigation = useNavigation<Nav>();
-  const { data } = useOnboarding();
+  const { data, reset } = useOnboarding();
 
   const today = (data.level && TODAY_MIN[data.level]) || 15;
   const goalLabel = (data.goal && GOAL_LABEL[data.goal]) || '5K';
   const weeks = data.targetDate ? Math.max(4, weeksUntil(data.targetDate)) : 8;
+
+  const handleRestart = () => {
+    reset();
+    navigation.navigate('OnboardingGoal');
+  };
 
   return (
     <OnboardingLayout
@@ -74,7 +79,10 @@ export function OnboardingProjectionScreen() {
       title="Así podría verse tu progreso"
       subtitle="Proyección gratuita, calculada con tus propios números — no con una tabla genérica."
       canContinue
+      continueLabel="Crear Plan"
       onContinue={() => navigation.navigate('PlanLoading')}
+      secondaryLabel="Volver a empezar desde cero"
+      onSecondary={handleRestart}
     >
       <View style={styles.card}>
         <Curve />

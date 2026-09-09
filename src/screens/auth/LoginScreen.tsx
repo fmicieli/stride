@@ -88,12 +88,6 @@ export function LoginScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={styles.backIcon}>‹</Text>
-          </TouchableOpacity>
-        </View>
-
         <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Bienvenido de vuelta</Text>
           <Text style={styles.subtitle}>Iniciá sesión para continuar</Text>
@@ -171,10 +165,7 @@ export function LoginScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   flex: { flex: 1 },
-  header: { paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: spacing[1] },
-  backButton: { width: 40, height: 40, justifyContent: 'center' },
-  backIcon: { fontSize: 28, color: colors.ink[900] },
-  scrollContent: { paddingHorizontal: spacing[4], paddingBottom: spacing[8], gap: spacing[4] },
+  scrollContent: { paddingHorizontal: spacing[4], paddingTop: spacing[6], paddingBottom: spacing[8], gap: spacing[4] },
   title: {
     fontFamily: 'PlusJakartaSans-Bold',
     fontSize: 24,

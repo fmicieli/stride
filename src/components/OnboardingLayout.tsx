@@ -25,6 +25,9 @@ interface Props {
   canContinue: boolean;
   onContinue: () => void;
   continueLabel?: string;
+  /** Optional secondary action rendered as a tertiary button below the CTA. */
+  secondaryLabel?: string;
+  onSecondary?: () => void;
   /** Hide the back control (first onboarding step). Defaults to hidden on step 1. */
   hideBack?: boolean;
   children: React.ReactNode;
@@ -38,6 +41,8 @@ export function OnboardingLayout({
   canContinue,
   onContinue,
   continueLabel = 'Continuar',
+  secondaryLabel,
+  onSecondary,
   hideBack,
   children,
 }: Props) {
@@ -98,6 +103,9 @@ export function OnboardingLayout({
 
         <View style={styles.footer}>
           <Button label={continueLabel} onPress={onContinue} disabled={!canContinue} />
+          {secondaryLabel && onSecondary ? (
+            <Button label={secondaryLabel} variant="tertiary" onPress={onSecondary} />
+          ) : null}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -158,5 +166,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing[4],
     paddingTop: spacing[4],
     backgroundColor: colors.surface,
+    gap: spacing[2],
   },
 });
