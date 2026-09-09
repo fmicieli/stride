@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { TabIcon } from '../components/TabIcon';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -73,7 +74,10 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
+const TAB_BAR_CONTENT_HEIGHT = 60;
+
 function MainTabs() {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -91,13 +95,15 @@ function MainTabs() {
         tabBarShowLabel: true,
         tabBarLabelStyle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 11, marginTop: 2 },
         tabBarIconStyle: { marginTop: 2 },
+        // Fixed content height + the device's bottom inset added on top, so the
+        // icons/labels never get clipped by a home indicator or a short viewport.
         tabBarStyle: {
           borderTopWidth: 1,
           borderTopColor: '#F0F0F0',
           backgroundColor: '#FFFFFF',
-          height: 76,
-          paddingTop: 10,
-          paddingBottom: 12,
+          height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
+          paddingTop: 8,
+          paddingBottom: Math.max(insets.bottom, 10),
           paddingHorizontal: 16,
         },
       })}
