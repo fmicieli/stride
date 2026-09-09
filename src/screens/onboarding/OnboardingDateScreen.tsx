@@ -72,7 +72,7 @@ export function OnboardingDateScreen() {
         </TouchableOpacity>
       </View>
       <View style={styles.progressContainer}>
-        <ProgressSteps step={4} totalSteps={6} />
+        <ProgressSteps step={5} totalSteps={6} />
       </View>
 
       <ScrollView

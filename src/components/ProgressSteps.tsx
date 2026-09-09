@@ -19,10 +19,12 @@ function stateFor(index1: number, step: number) {
 }
 
 export function ProgressSteps({ step, totalSteps }: Props) {
-  // one animated driver per dot; drives both width and color
+  // Each onboarding step is a fresh screen mount, so seed the drivers with the
+  // PREVIOUS step's state and let the effect animate to the current one — the
+  // active pill visibly grows / shifts every time a new step comes in.
   const drivers = useRef(
     Array.from({ length: totalSteps }, (_, i) =>
-      new Animated.Value(stateFor(i + 1, step)),
+      new Animated.Value(stateFor(i + 1, Math.max(0, step - 1))),
     ),
   ).current;
 

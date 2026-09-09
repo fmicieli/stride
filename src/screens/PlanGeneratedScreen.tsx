@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Modal, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -7,55 +7,11 @@ import { RootStackParamList } from '../navigation';
 import { useAuth } from '../context/AuthContext';
 import { useOnboarding } from '../utils/onboardingContext';
 import { getPlan, deletePlan } from '../services/firestore';
-import { TrainingPlan, WeekPlan } from '../types';
-import { getGoalShortLabel, formatTargetDate } from '../utils/planGenerator';
+import { TrainingPlan } from '../types';
 import { Button } from '../components/Button';
 import { colors, spacing, radius } from '../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'PlanGenerated'>;
-
-function Chip({ label }: { label: string }) {
-  return (
-    <View style={styles.chip}>
-      <Text style={styles.chipText}>{label}</Text>
-    </View>
-  );
-}
-
-function ChevronIcon({ expanded }: { expanded: boolean }) {
-  if (Platform.OS === 'web') {
-    return (
-      // @ts-ignore
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
-        {/* @ts-ignore */}
-        <path d="M 6.5 3.5 L 11.5 9 L 6.5 14.5" stroke="#777777" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    );
-  }
-  return <Text style={{ fontSize: 14, color: '#777777' }}>{expanded ? '∧' : '›'}</Text>;
-}
-
-function WeekCard({ week, expanded, onToggle }: { week: WeekPlan; expanded: boolean; onToggle: () => void }) {
-  return (
-    <View style={styles.weekCard}>
-      <TouchableOpacity style={styles.weekHeader} onPress={onToggle} activeOpacity={0.8}>
-        <Text style={styles.weekTitle}>Semana {week.week}</Text>
-        <ChevronIcon expanded={expanded} />
-      </TouchableOpacity>
-      {expanded && (
-        <View style={styles.weekDays}>
-          {week.days.map((day) => (
-            <View key={day.day} style={styles.dayRow}>
-              <Text style={[styles.dayName, day.type === 'rest' && styles.restText]}>{day.dayShort}</Text>
-              <Text style={[styles.dayActivity, day.type === 'rest' && styles.restText]}>{day.type === 'run' ? 'Trote' : 'Descanso'}</Text>
-              <Text style={[styles.dayDuration, day.type === 'rest' && styles.restText]}>{day.type === 'run' && day.duration ? `${day.duration} min` : ''}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-    </View>
-  );
-}
 
 export function PlanGeneratedScreen() {
   const navigation = useNavigation<Nav>();
@@ -64,16 +20,13 @@ export function PlanGeneratedScreen() {
   const [plan, setPlan] = useState<TrainingPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [showRestartModal, setShowRestartModal] = useState(false);
-  const [showSaveModal, setShowSaveModal] = useState(false);
   const [restarting, setRestarting] = useState(false);
-  const [expandedWeek, setExpandedWeek] = useState<number | null>(1);
 
   useEffect(() => {
     if (user) {
       getPlan(user.uid).then((p) => setPlan(p ?? pendingPlan)).catch(() => setPlan(pendingPlan)).finally(() => setLoading(false));
     } else if (pendingPlan) {
       setPlan(pendingPlan);
-      setShowSaveModal(true);
       setLoading(false);
     }
   }, [user, pendingPlan]);
@@ -88,6 +41,11 @@ export function PlanGeneratedScreen() {
     navigation.navigate('OnboardingGoal');
   };
 
+  const handleStart = () => {
+    if (user) navigation.replace('MainTabs');
+    else navigation.navigate('Register');
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -96,6 +54,8 @@ export function PlanGeneratedScreen() {
     );
   }
   if (!plan) return null;
+
+  const runDays = (plan.weeks[0]?.days ?? []).filter((d) => d.type === 'run');
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -107,49 +67,30 @@ export function PlanGeneratedScreen() {
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.goalCard}>
-          <Text style={styles.goalLabel}>Tu meta</Text>
-          <Text style={styles.goalTitle}>{getGoalShortLabel(plan.goal)}</Text>
-          <Text style={styles.goalDate}>Fecha objetivo: {formatTargetDate(plan.targetDate)}</Text>
-        </View>
-
-        <View style={styles.chipsRow}>
-          <Chip label={`${plan.totalWeeks} semanas`} />
-          <Chip label={`${plan.daysPerWeek} días/sem`} />
-          <Chip label={plan.method} />
-        </View>
-
-        <View style={styles.weeksContainer}>
-          {plan.weeks.map((week) => (
-            <WeekCard
-              key={week.week}
-              week={week}
-              expanded={expandedWeek === week.week}
-              onToggle={() => setExpandedWeek((v) => (v === week.week ? null : week.week))}
-            />
+        <View style={styles.planCard}>
+          {runDays.map((day, i) => (
+            <View key={day.day}>
+              {i > 0 && <View style={styles.hairline} />}
+              <View style={styles.planRow}>
+                <View style={styles.dot}>
+                  <Text style={styles.dotLetter}>{(day.dayShort ?? day.day).charAt(0)}</Text>
+                </View>
+                <View style={styles.planRowText}>
+                  <Text style={styles.planDay}>{day.day}</Text>
+                  <Text style={styles.planActivity}>
+                    Trote con intervalos{day.duration ? ` · ${day.duration} min` : ''}
+                  </Text>
+                </View>
+              </View>
+            </View>
           ))}
         </View>
       </ScrollView>
 
       <View style={styles.footer}>
-        {user ? (
-          <Button label="Empezar con este plan" onPress={() => navigation.replace('MainTabs')} />
-        ) : (
-          <Button label="Guardá tu plan" onPress={() => setShowSaveModal(true)} />
-        )}
+        <Button label="Empezar con este plan" onPress={handleStart} />
         <Button label="Volver a empezar desde cero" variant="tertiary" onPress={() => setShowRestartModal(true)} />
       </View>
-
-      <Modal visible={showSaveModal} transparent animationType="slide" onRequestClose={() => {}}>
-        <View style={styles.sheetOverlay}>
-          <View style={styles.sheet}>
-            <Text style={styles.modalTitle}>Guardá tu plan</Text>
-            <Text style={styles.modalText}>Necesitás una cuenta para empezar a entrenar y guardar tu progreso.</Text>
-            <Button label="Crear cuenta" onPress={() => { setShowSaveModal(false); navigation.navigate('Register'); }} />
-            <Button label="Ya tengo cuenta. Iniciar sesión" variant="tertiary" onPress={() => { setShowSaveModal(false); navigation.navigate('Login'); }} />
-          </View>
-        </View>
-      </Modal>
 
       <Modal visible={showRestartModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
@@ -178,30 +119,34 @@ const styles = StyleSheet.create({
   headerTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 28, color: colors.ink[900] },
   headerSubtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500] },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[6] },
-  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], gap: spacing[2], backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.surfaceMuted },
-  goalCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4], marginBottom: spacing[4] },
-  goalLabel: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400], marginBottom: 6 },
-  goalTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900], marginBottom: 6 },
-  goalDate: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500] },
-  chipsRow: { flexDirection: 'row', gap: 8, marginBottom: spacing[6], flexWrap: 'wrap' },
-  chip: { backgroundColor: colors.surfaceMuted, borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14 },
-  chipText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[700] },
-  weeksContainer: { gap: spacing[3] },
-  weekCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, overflow: 'hidden' },
-  weekHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing[4] },
-  weekTitle: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 16, color: colors.ink[900] },
-  weekDays: { paddingHorizontal: spacing[4], paddingBottom: spacing[3], gap: 8 },
-  dayRow: { flexDirection: 'row', alignItems: 'center' },
-  dayName: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 14, color: colors.ink[900], width: 36 },
-  dayActivity: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[900], flex: 1 },
-  dayDuration: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[900], textAlign: 'right', width: 60 },
-  restText: { color: colors.ink[300] },
-  sheetOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.scrim },
-  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, padding: spacing[6], paddingBottom: spacing[10], gap: spacing[4] },
+  scrollContent: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[6] },
+  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], gap: spacing[2], backgroundColor: colors.surface },
+
+  planCard: {
+    borderWidth: 1.5,
+    borderColor: colors.borderDefault,
+    borderRadius: radius.lg,
+    paddingVertical: spacing[2],
+    paddingHorizontal: spacing[5],
+  },
+  hairline: { height: 1, backgroundColor: colors.borderSubtle },
+  planRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[3], paddingVertical: spacing[3] },
+  dot: {
+    width: 34,
+    height: 34,
+    borderRadius: radius.full,
+    backgroundColor: colors.brand[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dotLetter: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, color: colors.brand[700] },
+  planRowText: { flex: 1, gap: 2 },
+  planDay: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: colors.ink[900] },
+  planActivity: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.ink[500] },
+
   modalOverlay: { flex: 1, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[4] },
   modalBox: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing[6], width: '100%' },
-  modalTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900], marginBottom: 6 },
-  modalText: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[500], lineHeight: 22, marginBottom: spacing[2] },
-  modalButtons: { gap: spacing[3] },
+  modalTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900], marginBottom: 6, textAlign: 'center' },
+  modalText: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[500], lineHeight: 22, marginBottom: spacing[2], textAlign: 'center' },
+  modalButtons: { gap: spacing[3], marginTop: spacing[6] },
 });

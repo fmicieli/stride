@@ -19,6 +19,7 @@ import { ForgotPasswordConfirmScreen } from '../screens/auth/ForgotPasswordConfi
 import { OnboardingGoalScreen } from '../screens/onboarding/OnboardingGoalScreen';
 import { OnboardingLevelScreen } from '../screens/onboarding/OnboardingLevelScreen';
 import { OnboardingDaysScreen } from '../screens/onboarding/OnboardingDaysScreen';
+import { OnboardingProjectionScreen } from '../screens/onboarding/OnboardingProjectionScreen';
 import { OnboardingDateScreen } from '../screens/onboarding/OnboardingDateScreen';
 import { InsufficientTimeScreen } from '../screens/onboarding/InsufficientTimeScreen';
 import { PlanLoadingScreen } from '../screens/PlanLoadingScreen';
@@ -51,6 +52,7 @@ export type RootStackParamList = {
   OnboardingGoal: undefined;
   OnboardingLevel: undefined;
   OnboardingDays: undefined;
+  OnboardingProjection: undefined;
   OnboardingDate: undefined;
   InsufficientTime: undefined;
   PlanLoading: undefined;
@@ -135,6 +137,7 @@ export function AppNavigator() {
         <Stack.Screen name="OnboardingGoal" component={OnboardingGoalScreen} />
         <Stack.Screen name="OnboardingLevel" component={OnboardingLevelScreen} />
         <Stack.Screen name="OnboardingDays" component={OnboardingDaysScreen} />
+        <Stack.Screen name="OnboardingProjection" component={OnboardingProjectionScreen} />
         <Stack.Screen name="OnboardingDate" component={OnboardingDateScreen} />
         <Stack.Screen name="InsufficientTime" component={InsufficientTimeScreen} />
         <Stack.Screen name="PlanLoading" component={PlanLoadingScreen} />

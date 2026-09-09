@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -42,6 +44,21 @@ export function OnboardingLayout({
   const navigation = useNavigation();
   const showBack = !(hideBack ?? step === 1);
 
+  // Slide + fade the step content in on mount (each step is a fresh screen).
+  const enter = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(enter, {
+      toValue: 1,
+      duration: 300,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, []);
+  const enterStyle = {
+    opacity: enter,
+    transform: [{ translateX: enter.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
@@ -72,9 +89,11 @@ export function OnboardingLayout({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
-          <View style={styles.options}>{children}</View>
+          <Animated.View style={enterStyle}>
+            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.subtitle}>{subtitle}</Text>
+            <View style={styles.options}>{children}</View>
+          </Animated.View>
         </ScrollView>
 
         <View style={styles.footer}>
