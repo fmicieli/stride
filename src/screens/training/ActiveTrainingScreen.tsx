@@ -85,7 +85,7 @@ export function ActiveTrainingScreen() {
   const [intervals, setIntervals] = useState<SessionInterval[]>([]);
   const [elapsed, setElapsed] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [phase, setPhase] = useState<'countdown' | 'running'>(isResume ? 'running' : 'countdown');
+  const [phase, setPhase] = useState<'countdown' | 'running'>('countdown');
   const [count, setCount] = useState(3);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [showStopSummary, setShowStopSummary] = useState(false);
