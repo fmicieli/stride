@@ -88,7 +88,7 @@ export function OnboardingDateScreen() {
           {Platform.OS === 'web' ? (
             <View style={styles.webField}>
               <Text style={styles.webFieldText}>{formatDateDisplay(date)}</Text>
-              <Icon name="calendar" size={20} color={colors.ink[500]} />
+              <Icon name="calendar" size={22} color={colors.ink[500]} />
               {/* @ts-ignore — real input, transparent, on top of the styled field */}
               <input
                 type="date"
@@ -130,9 +130,6 @@ export function OnboardingDateScreen() {
           )}
         </View>
 
-        {Platform.OS !== 'web' && (
-          <Text style={styles.dateDisplay}>{formatDateDisplay(date)}</Text>
-        )}
         <Text style={[styles.weeksInfo, isAtMinimum && styles.weeksMinimum]}>
           {isAtMinimum
             ? `Esta es la fecha más pronta posible para tu meta. No se recomienda acortar el plazo.`
@@ -160,25 +157,17 @@ const styles = StyleSheet.create({
   picker: { width: '100%' },
   webField: {
     width: '100%',
-    height: 52,
+    height: 64,
     borderWidth: 1.5,
     borderColor: colors.borderDefault,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingHorizontal: spacing[4],
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: colors.surface,
   },
-  webFieldText: { fontFamily: 'PlusJakartaSans', fontSize: 16, color: colors.ink[900] },
-  dateDisplay: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 20,
-    color: colors.ink[900],
-    textAlign: 'center',
-    marginTop: spacing[3],
-    marginBottom: spacing[1],
-  },
+  webFieldText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.ink[900] },
   weeksInfo: { fontFamily: 'PlusJakartaSans', fontSize: 14, lineHeight: 20, color: colors.ink[500], textAlign: 'center', marginTop: spacing[2] },
   weeksMinimum: { color: colors.warning.text },
   footer: { paddingHorizontal: spacing[4], paddingBottom: spacing[4], paddingTop: spacing[3] },
