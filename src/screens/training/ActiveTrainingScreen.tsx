@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, Animated, Easing } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Platform, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -341,26 +341,32 @@ export function ActiveTrainingScreen() {
         <Button label="Seguir entrenando" onPress={() => { setShowFinishConfirm(false); setPaused(true); }} />
       </BottomSheet>
 
-      <BottomSheet visible={showStopSummary} dismissible={false} onClose={() => {}}>
-        <SessionSummary
-          variant="paused"
-          title="Entrenamiento en pausa"
-          subtitle="Guardamos tu progreso. Podés retomarlo cuando quieras hoy."
-          stats={[
-            { value: String(Math.min(intervalIdx, intervals.length)), label: 'Tramos completados' },
-            { value: formatDuration(elapsed), label: 'Tiempo total' },
-          ]}
-        />
-        <Button label="Reanudar" onPress={handleResumeFromSummary} />
-        <Button
-          label="Volver a inicio"
-          variant="tertiary"
-          onPress={() => {
-            setShowStopSummary(false);
-            navigation.navigate('MainTabs');
-          }}
-        />
-      </BottomSheet>
+      {showStopSummary && (
+        <SafeAreaView style={styles.stopScreen} edges={['top', 'bottom']}>
+          <ScrollView contentContainerStyle={styles.stopContent} showsVerticalScrollIndicator={false}>
+            <SessionSummary
+              variant="paused"
+              title="Entrenamiento en pausa"
+              subtitle="Guardamos tu progreso. Podés retomarlo cuando quieras hoy."
+              stats={[
+                { value: String(Math.min(intervalIdx, intervals.length)), label: 'Tramos completados' },
+                { value: formatDuration(elapsed), label: 'Tiempo total' },
+              ]}
+            />
+          </ScrollView>
+          <View style={styles.stopFooter}>
+            <Button label="Reanudar" onPress={handleResumeFromSummary} />
+            <Button
+              label="Volver a inicio"
+              variant="tertiary"
+              onPress={() => {
+                setShowStopSummary(false);
+                navigation.navigate('MainTabs');
+              }}
+            />
+          </View>
+        </SafeAreaView>
+      )}
 
       {phase === 'countdown' && (
         <View style={styles.countdownOverlay}>
@@ -400,4 +406,21 @@ const styles = StyleSheet.create({
   countdownOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: TRACK_BG, alignItems: 'center', justifyContent: 'center', gap: spacing[3], zIndex: 10 },
   countdownLabel: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 16, letterSpacing: 2, color: TRACK_MUTED, textTransform: 'uppercase' },
   countdownNum: { fontFamily: 'JetBrainsMono-Medium', fontSize: 120, lineHeight: 134, color: colors.surface, fontVariant: ['tabular-nums'] },
+
+  stopScreen: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.surface, zIndex: 20 },
+  stopContent: {
+    flexGrow: 1,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[6],
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[5],
+  },
+  stopFooter: {
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[3],
+    paddingBottom: spacing[4],
+    gap: spacing[2],
+    backgroundColor: colors.surface,
+  },
 });
