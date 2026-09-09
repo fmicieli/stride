@@ -7,6 +7,7 @@ import { RootStackParamList } from '../navigation';
 import { useAuth } from '../context/AuthContext';
 import { useOnboarding } from '../utils/onboardingContext';
 import { getPlan, deletePlan } from '../services/firestore';
+import { pendingRun } from '../storage/storage';
 import { TrainingPlan } from '../types';
 import { Button } from '../components/Button';
 import { BottomSheet } from '../components/BottomSheet';
@@ -37,7 +38,7 @@ export function PlanGeneratedScreen() {
   const handleRestart = async () => {
     if (user) {
       setRestarting(true);
-      try { await deletePlan(user.uid); } finally { setRestarting(false); }
+      try { await Promise.all([deletePlan(user.uid), pendingRun.clear()]); } finally { setRestarting(false); }
     }
     resetOnboarding();
     setShowRestartModal(false);

@@ -6,6 +6,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
 import { deletePlan } from '../../services/firestore';
+import { pendingRun } from '../../storage/storage';
 import { logout, deleteAccount } from '../../services/auth';
 import { Button } from '../../components/Button';
 import { BottomSheet } from '../../components/BottomSheet';
@@ -44,7 +45,7 @@ export function ProfileScreen() {
   const handleChangeGoal = async () => {
     if (!user) return;
     setLoading(true);
-    try { await deletePlan(user.uid); setActiveModal(null); navigation.navigate('OnboardingGoal'); }
+    try { await Promise.all([deletePlan(user.uid), pendingRun.clear()]); setActiveModal(null); navigation.navigate('OnboardingGoal'); }
     finally { setLoading(false); }
   };
 
