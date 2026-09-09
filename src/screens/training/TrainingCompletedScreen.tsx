@@ -74,7 +74,7 @@ export function TrainingCompletedScreen() {
           subtitle={getSubtitle(plan)}
           stats={[
             { value: formatDuration(session?.duration ?? 0), label: 'Tiempo total' },
-            { value: String(countIntervals(plan)), label: 'Tramos completados' },
+            { value: `${countIntervals(plan)} de ${countIntervals(plan)}`, label: 'Intervalos' },
           ]}
         />
       </ScrollView>

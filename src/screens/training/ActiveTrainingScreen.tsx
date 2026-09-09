@@ -205,6 +205,10 @@ export function ActiveTrainingScreen() {
   const currentInterval = intervals[intervalIdx];
   const nextInterval = intervals[intervalIdx + 1];
 
+  // "N de M" intervals — completed count over total, no GPS stats
+  const intervalsDone = Math.min(intervalIdx, intervals.length);
+  const intervalsStat = { value: `${intervalsDone} de ${intervals.length || 0}`, label: 'Intervalos' };
+
   // Full workout done → save it, clear any pending state, show the summary screen
   const confirmStop = useCallback(async () => {
     if (finishingRef.current) return;
@@ -324,7 +328,7 @@ export function ActiveTrainingScreen() {
           subtitle="Tomate el tiempo que necesites. Cuando quieras, seguimos."
           stats={[
             { value: formatDuration(elapsed), label: 'Tiempo total' },
-            { value: String(Math.min(intervalIdx, intervals.length)), label: 'Tramos completados' },
+            intervalsStat,
           ]}
         />
         <Button label="Reanudar" onPress={handleResume} />
@@ -349,8 +353,8 @@ export function ActiveTrainingScreen() {
               title="Entrenamiento en pausa"
               subtitle="Guardamos tu progreso. Podés retomarlo cuando quieras hoy."
               stats={[
-                { value: String(Math.min(intervalIdx, intervals.length)), label: 'Tramos completados' },
                 { value: formatDuration(elapsed), label: 'Tiempo total' },
+                intervalsStat,
               ]}
             />
           </ScrollView>
