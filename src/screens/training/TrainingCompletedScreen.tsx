@@ -81,9 +81,6 @@ export function TrainingCompletedScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Resumen</Text>
-      </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <CheckCircle />
         <Text style={styles.title}>¡Entrenamiento completo!</Text>
@@ -104,7 +101,7 @@ export function TrainingCompletedScreen() {
 
       </ScrollView>
       <View style={styles.footer}>
-        <Button label="Volver a Hoy" onPress={() => navigation.navigate('MainTabs')} />
+        <Button label="Volver a inicio" onPress={() => navigation.navigate('MainTabs')} />
       </View>
     </SafeAreaView>
   );
@@ -113,8 +110,6 @@ export function TrainingCompletedScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[3], alignItems: 'center' },
-  headerTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 18, color: colors.ink[900] },
   content: { flexGrow: 1, paddingHorizontal: spacing[4], paddingTop: spacing[6], paddingBottom: spacing[6], alignItems: 'center', justifyContent: 'center', gap: spacing[5] },
   footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], backgroundColor: colors.surface },
   iconCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.brand[50], alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
