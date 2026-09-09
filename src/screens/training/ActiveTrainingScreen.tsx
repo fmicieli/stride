@@ -14,6 +14,7 @@ import { formatDuration, buildSessionIntervals, SessionInterval } from '../../ut
 import { say, primeVoice } from '../../utils/voice';
 import { Button } from '../../components/Button';
 import { BottomSheet } from '../../components/BottomSheet';
+import { SessionSummary } from '../../components/SessionSummary';
 import { colors, spacing, radius } from '../../theme';
 
 const DING = require('../../../assets/ding.wav');
@@ -316,19 +317,16 @@ export function ActiveTrainingScreen() {
         </TouchableOpacity>
       </View>
 
-      <BottomSheet visible={paused} onClose={handleResume} title="Entrenamiento en pausa">
-        <View style={styles.modalStats}>
-          <View style={styles.modalStatBox}>
-            <Text style={styles.modalStatValue}>{formatDuration(elapsed)}</Text>
-            <Text style={styles.modalStatLabel}>Tiempo total</Text>
-          </View>
-          <View style={styles.modalStatBox}>
-            <Text style={styles.modalStatValue}>
-              {Math.min(intervalIdx + 1, intervals.length || 1)} de {intervals.length || 1}
-            </Text>
-            <Text style={styles.modalStatLabel}>Intervalo</Text>
-          </View>
-        </View>
+      <BottomSheet visible={paused} onClose={handleResume}>
+        <SessionSummary
+          variant="paused"
+          title="Entrenamiento en pausa"
+          subtitle="Tomate el tiempo que necesites. Cuando quieras, seguimos."
+          stats={[
+            { value: formatDuration(elapsed), label: 'Tiempo total' },
+            { value: String(Math.min(intervalIdx, intervals.length)), label: 'Tramos completados' },
+          ]}
+        />
         <Button label="Reanudar" onPress={handleResume} />
         <Button label="Finalizar entrenamiento" variant="tertiaryDanger" onPress={handleFinishPressed} />
       </BottomSheet>
@@ -343,23 +341,16 @@ export function ActiveTrainingScreen() {
         <Button label="Seguir entrenando" onPress={() => { setShowFinishConfirm(false); setPaused(true); }} />
       </BottomSheet>
 
-      <BottomSheet
-        visible={showStopSummary}
-        dismissible={false}
-        onClose={() => {}}
-        title="Entrenamiento en pausa"
-        subtitle="Guardamos tu progreso. Podés retomarlo cuando quieras hoy."
-      >
-        <View style={styles.modalStats}>
-          <View style={styles.modalStatBox}>
-            <Text style={styles.modalStatValue}>{Math.min(intervalIdx, intervals.length)}</Text>
-            <Text style={styles.modalStatLabel}>Tramos completados</Text>
-          </View>
-          <View style={styles.modalStatBox}>
-            <Text style={styles.modalStatValue}>{formatDuration(elapsed)}</Text>
-            <Text style={styles.modalStatLabel}>Tiempo total</Text>
-          </View>
-        </View>
+      <BottomSheet visible={showStopSummary} dismissible={false} onClose={() => {}}>
+        <SessionSummary
+          variant="paused"
+          title="Entrenamiento en pausa"
+          subtitle="Guardamos tu progreso. Podés retomarlo cuando quieras hoy."
+          stats={[
+            { value: String(Math.min(intervalIdx, intervals.length)), label: 'Tramos completados' },
+            { value: formatDuration(elapsed), label: 'Tiempo total' },
+          ]}
+        />
         <Button label="Reanudar" onPress={handleResumeFromSummary} />
         <Button
           label="Volver a inicio"
@@ -409,9 +400,4 @@ const styles = StyleSheet.create({
   countdownOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: TRACK_BG, alignItems: 'center', justifyContent: 'center', gap: spacing[3], zIndex: 10 },
   countdownLabel: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 16, letterSpacing: 2, color: TRACK_MUTED, textTransform: 'uppercase' },
   countdownNum: { fontFamily: 'JetBrainsMono-Medium', fontSize: 120, lineHeight: 134, color: colors.surface, fontVariant: ['tabular-nums'] },
-
-  modalStats: { flexDirection: 'row', gap: spacing[3] },
-  modalStatBox: { flex: 1, gap: 6, backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4] },
-  modalStatValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.ink[900] },
-  modalStatLabel: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 10.5, color: colors.ink[500], textTransform: 'uppercase', letterSpacing: 0.5 },
 });
