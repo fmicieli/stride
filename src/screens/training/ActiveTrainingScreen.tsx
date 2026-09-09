@@ -97,6 +97,7 @@ export function ActiveTrainingScreen() {
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [showStopSummary, setShowStopSummary] = useState(false);
   const [ready, setReady] = useState(!isResume);
+  const [pendingElapsedRaw, setPendingElapsedRaw] = useState<number | null>(null);
   const countAnim = useRef(new Animated.Value(0)).current;
   const prevIntervalIdxRef = useRef(-1);
   const finishingRef = useRef(false);
@@ -106,16 +107,27 @@ export function ActiveTrainingScreen() {
   const pausedRef = useRef(false);
   const dingRef = useRef<Audio.Sound | null>(null);
 
-  // Resume from where the user left off earlier today
+  // Resume: load raw elapsed from storage, wait for intervals before snapping
   useEffect(() => {
     if (!isResume || resumeLoadedRef.current) return;
     resumeLoadedRef.current = true;
-    pendingRun.get().then((pr) => {
-      if (pr) setElapsed(pr.elapsed);
-      setReady(true);
+    pendingRun.get(user?.uid ?? '').then((pr) => {
+      if (pr) setPendingElapsedRaw(pr.elapsed);
+      else setReady(true);
     });
     primeVoice();
-  }, [isResume]);
+  }, [isResume, user]);
+
+  // Once intervals are loaded, snap elapsed to the START of the interrupted interval
+  useEffect(() => {
+    if (!isResume || pendingElapsedRaw === null || intervals.length === 0) return;
+    const { idx } = getIntervalState(pendingElapsedRaw, intervals);
+    let startOfInterval = 0;
+    for (let i = 0; i < idx; i++) startOfInterval += intervals[i].duration;
+    setElapsed(startOfInterval);
+    setPendingElapsedRaw(null);
+    setReady(true);
+  }, [isResume, pendingElapsedRaw, intervals]);
 
   useFocusEffect(
     useCallback(() => {
@@ -249,7 +261,7 @@ export function ActiveTrainingScreen() {
   // User confirmed leaving before finishing → remember progress for the rest of today
   const handleLeaveIncomplete = async () => {
     pausedRef.current = true;
-    await pendingRun.set(elapsed).catch(() => {});
+    await pendingRun.set(elapsed, user?.uid ?? '').catch(() => {});
     setShowFinishConfirm(false);
     setShowStopSummary(true);
   };

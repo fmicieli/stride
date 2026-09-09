@@ -143,7 +143,7 @@ export function HomeScreen() {
     useCallback(() => {
       if (!user) return;
       setLoading(true);
-      pendingRun.get().then((pr) => setHasPendingRun(!!pr));
+      pendingRun.get(user.uid).then((pr) => setHasPendingRun(!!pr));
       (async () => {
         try {
           const [p, s] = await Promise.all([getPlan(user.uid), getSessions(user.uid)]);

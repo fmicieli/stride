@@ -12,19 +12,19 @@ const KEYS = {
 };
 
 /** A training session the user paused/left without completing. Valid only for the day it was saved. */
-export type PendingRun = { date: string; elapsed: number };
+export type PendingRun = { date: string; elapsed: number; userId: string };
 
 function todayKey(): string {
   return new Date().toISOString().split('T')[0];
 }
 
 export const pendingRun = {
-  async get(): Promise<PendingRun | null> {
+  async get(userId: string): Promise<PendingRun | null> {
     const val = await AsyncStorage.getItem(KEYS.PENDING_RUN);
     if (!val) return null;
     try {
       const parsed = JSON.parse(val) as PendingRun;
-      if (parsed.date !== todayKey()) {
+      if (parsed.date !== todayKey() || parsed.userId !== userId) {
         await AsyncStorage.removeItem(KEYS.PENDING_RUN);
         return null;
       }
@@ -33,8 +33,8 @@ export const pendingRun = {
       return null;
     }
   },
-  async set(elapsed: number): Promise<void> {
-    await AsyncStorage.setItem(KEYS.PENDING_RUN, JSON.stringify({ date: todayKey(), elapsed }));
+  async set(elapsed: number, userId: string): Promise<void> {
+    await AsyncStorage.setItem(KEYS.PENDING_RUN, JSON.stringify({ date: todayKey(), elapsed, userId }));
   },
   async clear(): Promise<void> {
     await AsyncStorage.removeItem(KEYS.PENDING_RUN);
