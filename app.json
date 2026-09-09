@@ -35,7 +35,10 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "output": "single",
-      "bundler": "metro"
+      "bundler": "metro",
+      "lang": "es",
+      "name": "Stride",
+      "shortName": "Stride"
     },
     "experiments": {
       "baseUrl": "/stride"
