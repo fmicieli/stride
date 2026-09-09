@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -10,13 +10,49 @@ import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { TrainingPlan, TrainingSession } from '../types';
 import { ProgressBar } from '../components/ProgressBar';
 import { Button } from '../components/Button';
-import { greetingReady } from '../utils/planGenerator';
+import { Icon } from '../components/Icon';
+import { greetingReady, buildSessionIntervals, SessionInterval } from '../utils/planGenerator';
 import { colors, spacing, radius, borderWidth } from '../theme';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
 const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const DAY_SHORTS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+type PreRunStep = { title: string; detail: string };
+
+const stepMins = (secs: number) => `${Math.max(1, Math.round(secs / 60))} min`;
+
+/** Collapses the flat interval list into the pre-run timeline rows (warm-up, Intervalo N, cool-down). */
+function buildPreRunSteps(intervals: SessionInterval[]): PreRunStep[] {
+  if (intervals.length === 0) return [];
+  if (intervals.length === 1) {
+    return [{ title: 'Trote continuo', detail: stepMins(intervals[0].duration) }];
+  }
+  const steps: PreRunStep[] = [];
+  let intervalNum = 0;
+  for (let i = 0; i < intervals.length; i++) {
+    const it = intervals[i];
+    if (it.label === 'Calentamiento') {
+      steps.push({ title: 'Calentamiento', detail: `${stepMins(it.duration)} caminando` });
+    } else if (it.label === 'Enfriamiento') {
+      steps.push({ title: 'Enfriamiento', detail: `${stepMins(it.duration)} caminando` });
+    } else if (it.type === 'run') {
+      intervalNum += 1;
+      const next = intervals[i + 1];
+      if (next && next.label === 'Descanso') {
+        steps.push({
+          title: `Intervalo ${intervalNum}`,
+          detail: `${stepMins(it.duration)} trote / ${stepMins(next.duration)} caminata`,
+        });
+        i += 1;
+      } else {
+        steps.push({ title: `Intervalo ${intervalNum}`, detail: `${stepMins(it.duration)} trote` });
+      }
+    }
+  }
+  return steps;
+}
 
 function getTodayActivity(plan: TrainingPlan) {
   const todayName = DAY_NAMES[new Date().getDay()];
@@ -75,6 +111,7 @@ export function HomeScreen() {
   const [plan, setPlan] = useState<TrainingPlan | null>(null);
   const [sessions, setSessions] = useState<TrainingSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPreRun, setShowPreRun] = useState(false);
   const didRedirect = React.useRef(false);
 
   useFocusEffect(
@@ -113,6 +150,16 @@ export function HomeScreen() {
   const completedWeeks = plan ? getCompletedWeeks(plan, sessions) : 0;
   const progress = plan ? completedWeeks / plan.totalWeeks : 0;
   const isRunDay = todayActivity?.type === 'run';
+  const preRunSteps =
+    isRunDay && plan
+      ? buildPreRunSteps(
+          buildSessionIntervals(
+            todayActivity?.runTargetMin ?? todayActivity?.duration ?? 20,
+            plan.weeks[0]?.week ?? 1,
+            plan.method,
+          ),
+        )
+      : [];
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -175,7 +222,7 @@ export function HomeScreen() {
             </View>
 
             {isRunDay && (
-              <Button label="Empezar" onPress={() => navigation.navigate('ActiveTraining')} />
+              <Button label="Empezar" onPress={() => setShowPreRun(true)} />
             )}
 
             <View style={styles.section}>
@@ -195,6 +242,64 @@ export function HomeScreen() {
           </View>
         )}
       </ScrollView>
+
+      <Modal
+        visible={showPreRun}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPreRun(false)}
+      >
+        <View style={styles.sheetOverlay}>
+          <TouchableOpacity
+            style={styles.sheetBackdrop}
+            activeOpacity={1}
+            onPress={() => setShowPreRun(false)}
+          />
+          <View style={styles.sheet}>
+            <TouchableOpacity
+              style={styles.sheetClose}
+              onPress={() => setShowPreRun(false)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              activeOpacity={0.7}
+            >
+              <Icon name="close" size={22} color={colors.ink[500]} />
+            </TouchableOpacity>
+
+            <Text style={styles.sheetTitle}>Antes de arrancar</Text>
+            <Text style={styles.sheetSub}>
+              Así está armado tu entrenamiento de hoy. Podés pausarlo en cualquier momento.
+            </Text>
+
+            <ScrollView
+              style={styles.timelineScroll}
+              contentContainerStyle={styles.timeline}
+              showsVerticalScrollIndicator={false}
+            >
+              {preRunSteps.map((s, i) => (
+                <View key={i} style={styles.tlRow}>
+                  <View style={styles.tlGutter}>
+                    <View style={styles.tlDot} />
+                    {i < preRunSteps.length - 1 && <View style={styles.tlLine} />}
+                  </View>
+                  <View style={styles.tlBody}>
+                    <Text style={styles.tlTitle}>{s.title}</Text>
+                    <Text style={styles.tlDetail}>{s.detail}</Text>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+
+            <Button
+              label="Empezar entrenamiento"
+              onPress={() => {
+                setShowPreRun(false);
+                navigation.navigate('ActiveTraining');
+              }}
+              style={styles.sheetCta}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -252,4 +357,39 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingTop: 60, gap: spacing[3] },
   emptyTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
   emptyText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], textAlign: 'center', lineHeight: 20, marginBottom: 8 },
+
+  sheetOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.scrim },
+  sheetBackdrop: { ...StyleSheet.absoluteFillObject },
+  sheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[6],
+    paddingBottom: spacing[8],
+    gap: spacing[3],
+    maxHeight: '86%',
+  },
+  sheetClose: {
+    position: 'absolute',
+    top: spacing[4],
+    right: spacing[4],
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+  sheetTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, lineHeight: 30, color: colors.ink[900], paddingRight: spacing[8] },
+  sheetSub: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500] },
+  timelineScroll: { flexGrow: 0, marginTop: spacing[2] },
+  timeline: { paddingVertical: spacing[2] },
+  tlRow: { flexDirection: 'row', gap: spacing[3] },
+  tlGutter: { alignItems: 'center', width: 16 },
+  tlDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.brand[500], marginTop: 4 },
+  tlLine: { flex: 1, width: 2, backgroundColor: colors.borderSubtle, marginVertical: 4 },
+  tlBody: { flex: 1, paddingBottom: spacing[5] },
+  tlTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 17, lineHeight: 22, color: colors.ink[900] },
+  tlDetail: { fontFamily: 'PlusJakartaSans', fontSize: 14, lineHeight: 20, color: colors.ink[500], marginTop: 2 },
+  sheetCta: { marginTop: spacing[2] },
 });
