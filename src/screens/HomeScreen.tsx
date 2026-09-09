@@ -12,6 +12,8 @@ import { ProgressBar } from '../components/ProgressBar';
 import { Button } from '../components/Button';
 import { BottomSheet } from '../components/BottomSheet';
 import { greetingReady, buildSessionIntervals, SessionInterval } from '../utils/planGenerator';
+import { pendingRun } from '../storage/storage';
+import { primeVoice } from '../utils/voice';
 import { colors, spacing, radius, borderWidth } from '../theme';
 
 type Nav = StackNavigationProp<RootStackParamList>;
@@ -134,12 +136,14 @@ export function HomeScreen() {
   const [sessions, setSessions] = useState<TrainingSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPreRun, setShowPreRun] = useState(false);
+  const [hasPendingRun, setHasPendingRun] = useState(false);
   const didRedirect = React.useRef(false);
 
   useFocusEffect(
     useCallback(() => {
       if (!user) return;
       setLoading(true);
+      pendingRun.get().then((pr) => setHasPendingRun(!!pr));
       (async () => {
         try {
           const [p, s] = await Promise.all([getPlan(user.uid), getSessions(user.uid)]);
@@ -243,9 +247,15 @@ export function HomeScreen() {
               </View>
             </View>
 
-            {isRunDay && (
-              <Button label="Empezar" onPress={() => setShowPreRun(true)} />
-            )}
+            {isRunDay &&
+              (hasPendingRun ? (
+                <Button
+                  label="Reanudar entrenamiento"
+                  onPress={() => navigation.navigate('ActiveTraining', { resume: true })}
+                />
+              ) : (
+                <Button label="Empezar" onPress={() => setShowPreRun(true)} />
+              ))}
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Próximos días</Text>
@@ -275,6 +285,7 @@ export function HomeScreen() {
           <Button
             label="Empezar entrenamiento"
             onPress={() => {
+              primeVoice();
               setShowPreRun(false);
               navigation.navigate('ActiveTraining');
             }}

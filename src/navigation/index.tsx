@@ -60,7 +60,7 @@ export type RootStackParamList = {
   MainTabs: undefined;
   MyPlan: undefined;
   // Training
-  ActiveTraining: undefined;
+  ActiveTraining: { resume?: boolean } | undefined;
   TrainingCompleted: { sessionId: string };
   // Profile
   Profile: undefined;

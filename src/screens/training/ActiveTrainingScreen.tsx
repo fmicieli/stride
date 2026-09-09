@@ -1,15 +1,17 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import * as Haptics from 'expo-haptics';
 import { Audio } from 'expo-av';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
 import { getPlan, saveSession, saveStreak, getSessions } from '../../services/firestore';
+import { pendingRun } from '../../storage/storage';
 import { TrainingPlan, TrainingSession, DayKey } from '../../types';
 import { formatDuration, buildSessionIntervals, SessionInterval } from '../../utils/planGenerator';
+import { say, primeVoice } from '../../utils/voice';
 import { Button } from '../../components/Button';
 import { BottomSheet } from '../../components/BottomSheet';
 import { colors, spacing, radius } from '../../theme';
@@ -65,27 +67,54 @@ function formatCountdown(secs: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-function momentLabel(type?: 'run' | 'walk'): string {
-  if (type === 'walk') return 'Momento de caminar';
-  return 'Momento de trotar';
+function segLabelText(iv?: SessionInterval): string {
+  if (!iv) return '';
+  if (iv.label === 'Calentamiento') return 'Calentamiento';
+  if (iv.label === 'Enfriamiento') return 'Enfriamiento';
+  return iv.type === 'walk' ? 'Momento de caminar' : 'Momento de trotar';
+}
+
+/** Short spoken cue when a segment starts. */
+function cueForInterval(iv?: SessionInterval): string {
+  if (!iv) return '';
+  if (iv.label === 'Calentamiento') return 'Calentamiento';
+  if (iv.label === 'Enfriamiento') return 'Enfriamiento';
+  return iv.type === 'run' ? 'Trotar' : 'Descansar';
 }
 
 export function ActiveTrainingScreen() {
   const navigation = useNavigation<Nav>();
+  const route = useRoute<RouteProp<RootStackParamList, 'ActiveTraining'>>();
+  const isResume = route.params?.resume === true;
   const { user } = useAuth();
   const [plan, setPlan] = useState<TrainingPlan | null>(null);
   const [intervals, setIntervals] = useState<SessionInterval[]>([]);
   const [elapsed, setElapsed] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [phase, setPhase] = useState<'countdown' | 'running'>('countdown');
+  const [phase, setPhase] = useState<'countdown' | 'running'>(isResume ? 'running' : 'countdown');
   const [count, setCount] = useState(3);
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+  const [showStopSummary, setShowStopSummary] = useState(false);
+  const [ready, setReady] = useState(!isResume);
   const countAnim = useRef(new Animated.Value(0)).current;
   const prevIntervalIdxRef = useRef(-1);
   const finishingRef = useRef(false);
+  const resumeLoadedRef = useRef(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pausedRef = useRef(false);
   const dingRef = useRef<Audio.Sound | null>(null);
+
+  // Resume from where the user left off earlier today
+  useEffect(() => {
+    if (!isResume || resumeLoadedRef.current) return;
+    resumeLoadedRef.current = true;
+    pendingRun.get().then((pr) => {
+      if (pr) setElapsed(pr.elapsed);
+      setReady(true);
+    });
+    primeVoice();
+  }, [isResume]);
 
   useFocusEffect(
     useCallback(() => {
@@ -118,15 +147,16 @@ export function ActiveTrainingScreen() {
     };
   }, []);
 
-  // 3·2·1 countdown with a bell on each beat, before the warm-up starts
+  // 3·2·1 countdown with a spoken beat + bell, before the warm-up starts
   useEffect(() => {
     if (phase !== 'countdown' || intervals.length === 0) return;
     let n = 3;
     setCount(n);
 
-    const beat = () => {
+    const beat = (spoken: number) => {
       dingRef.current?.replayAsync().catch(() => {});
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+      say(String(spoken));
       countAnim.setValue(0);
       Animated.timing(countAnim, {
         toValue: 1,
@@ -135,18 +165,19 @@ export function ActiveTrainingScreen() {
         useNativeDriver: true,
       }).start();
     };
-    beat();
+    beat(3);
 
     const id = setInterval(() => {
       n -= 1;
       if (n <= 0) {
         clearInterval(id);
         countAnim.setValue(1);
+        say(cueForInterval(intervals[0]));
         setPhase('running');
         return;
       }
       setCount(n);
-      beat();
+      beat(n);
     }, 900);
 
     const settle = setTimeout(() => setPhase('running'), 900 * 3 + 800);
@@ -157,14 +188,14 @@ export function ActiveTrainingScreen() {
   }, [phase, intervals.length]);
 
   useEffect(() => {
-    if (!plan || phase !== 'running') return;
+    if (!plan || phase !== 'running' || !ready) return;
     timerRef.current = setInterval(() => {
       if (!pausedRef.current) setElapsed((e) => e + 1);
     }, 1000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [plan, phase]);
+  }, [plan, phase, ready]);
 
   const totalDuration = intervals.reduce((s, i) => s + i.duration, 0);
   const overallProgress = totalDuration > 0 ? Math.min(1, elapsed / totalDuration) : 0;
@@ -173,11 +204,13 @@ export function ActiveTrainingScreen() {
   const currentInterval = intervals[intervalIdx];
   const nextInterval = intervals[intervalIdx + 1];
 
+  // Full workout done → save it, clear any pending state, show the summary screen
   const confirmStop = useCallback(async () => {
     if (finishingRef.current) return;
     finishingRef.current = true;
     setPaused(false);
     if (timerRef.current) clearInterval(timerRef.current);
+    pendingRun.clear().catch(() => {});
 
     const sessionId = Date.now().toString();
     if (user) {
@@ -188,7 +221,7 @@ export function ActiveTrainingScreen() {
           id: sessionId, date: today.toISOString(), type: 'Trote con intervalos',
           duration: elapsed, distance: 0, pace: 0,
           week: plan?.weeks[0]?.week ?? 1, day: todayKey,
-          completed: elapsed > 60,
+          completed: true,
         };
         await saveSession(user.uid, session);
         const allSessions = await getSessions(user.uid);
@@ -198,16 +231,48 @@ export function ActiveTrainingScreen() {
     navigation.navigate('TrainingCompleted', { sessionId });
   }, [user, elapsed, plan, navigation]);
 
-  // Chime + haptic on interval advance
+  // "Finalizar entrenamiento" from the pause sheet
+  const handleFinishPressed = () => {
+    if (totalDuration > 0 && overallProgress >= 1) {
+      confirmStop();
+      return;
+    }
+    setPaused(false);
+    setShowFinishConfirm(true);
+  };
+
+  // User confirmed leaving before finishing → remember progress for the rest of today
+  const handleLeaveIncomplete = async () => {
+    pausedRef.current = true;
+    await pendingRun.set(elapsed).catch(() => {});
+    setShowFinishConfirm(false);
+    setShowStopSummary(true);
+  };
+
+  const handleResumeFromSummary = () => {
+    setShowStopSummary(false);
+    setShowFinishConfirm(false);
+    setPaused(false);
+    pausedRef.current = false;
+  };
+
+  // Voice + chime cues: segment change, "10 segundos", "3", "2", "1"
   useEffect(() => {
-    if (intervals.length === 0 || elapsed === 0) return;
-    const { idx } = getIntervalState(elapsed, intervals);
-    if (prevIntervalIdxRef.current >= 0 && idx !== prevIntervalIdxRef.current) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (phase !== 'running' || intervals.length === 0 || elapsed === 0) return;
+    const { idx, countdown: left } = getIntervalState(elapsed, intervals);
+    const firstRun = prevIntervalIdxRef.current < 0;
+
+    if (!firstRun && idx !== prevIntervalIdxRef.current) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       dingRef.current?.replayAsync().catch(() => {});
+      say(cueForInterval(intervals[idx]));
+    } else if (!firstRun) {
+      // final-seconds callouts while a segment runs down
+      if (left === 10) say('10 segundos');
+      else if (left >= 1 && left <= 3) say(String(left));
     }
     prevIntervalIdxRef.current = idx;
-  }, [elapsed, intervals]);
+  }, [elapsed, intervals, phase]);
 
   // Auto-finish when the full session duration is reached
   useEffect(() => {
@@ -238,7 +303,7 @@ export function ActiveTrainingScreen() {
           </Text>
         </View>
 
-        <Text style={styles.segLabel}>{momentLabel(currentInterval?.type)}</Text>
+        <Text style={styles.segLabel}>{segLabelText(currentInterval)}</Text>
 
         <Text style={styles.timer}>{formatCountdown(countdown)}</Text>
 
@@ -265,7 +330,45 @@ export function ActiveTrainingScreen() {
           </View>
         </View>
         <Button label="Reanudar" onPress={handleResume} />
-        <Button label="Finalizar entrenamiento" variant="tertiaryDanger" onPress={confirmStop} />
+        <Button label="Finalizar entrenamiento" variant="tertiaryDanger" onPress={handleFinishPressed} />
+      </BottomSheet>
+
+      <BottomSheet
+        visible={showFinishConfirm}
+        onClose={() => { setShowFinishConfirm(false); setPaused(true); }}
+        title="No terminaste el entrenamiento"
+        subtitle="¿Querés finalizarlo igual? Vas a poder retomarlo más tarde durante el día."
+      >
+        <Button label="Sí, finalizar" variant="tertiaryDanger" onPress={handleLeaveIncomplete} />
+        <Button label="Seguir entrenando" onPress={() => { setShowFinishConfirm(false); setPaused(true); }} />
+      </BottomSheet>
+
+      <BottomSheet
+        visible={showStopSummary}
+        dismissible={false}
+        onClose={() => {}}
+        title="Entrenamiento en pausa"
+        subtitle="Guardamos tu progreso. Podés retomarlo cuando quieras hoy."
+      >
+        <View style={styles.modalStats}>
+          <View style={styles.modalStatBox}>
+            <Text style={styles.modalStatValue}>{Math.min(intervalIdx, intervals.length)}</Text>
+            <Text style={styles.modalStatLabel}>Tramos completados</Text>
+          </View>
+          <View style={styles.modalStatBox}>
+            <Text style={styles.modalStatValue}>{formatDuration(elapsed)}</Text>
+            <Text style={styles.modalStatLabel}>Tiempo total</Text>
+          </View>
+        </View>
+        <Button label="Reanudar" onPress={handleResumeFromSummary} />
+        <Button
+          label="Volver a inicio"
+          variant="tertiary"
+          onPress={() => {
+            setShowStopSummary(false);
+            navigation.navigate('MainTabs');
+          }}
+        />
       </BottomSheet>
 
       {phase === 'countdown' && (

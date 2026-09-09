@@ -8,6 +8,37 @@ const KEYS = {
   STREAK: '@runapp:streak',
   LAST_SESSION: '@runapp:last_session',
   ONBOARDING_DONE: '@runapp:onboarding_done',
+  PENDING_RUN: '@runapp:pending_run',
+};
+
+/** A training session the user paused/left without completing. Valid only for the day it was saved. */
+export type PendingRun = { date: string; elapsed: number };
+
+function todayKey(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+export const pendingRun = {
+  async get(): Promise<PendingRun | null> {
+    const val = await AsyncStorage.getItem(KEYS.PENDING_RUN);
+    if (!val) return null;
+    try {
+      const parsed = JSON.parse(val) as PendingRun;
+      if (parsed.date !== todayKey()) {
+        await AsyncStorage.removeItem(KEYS.PENDING_RUN);
+        return null;
+      }
+      return parsed;
+    } catch {
+      return null;
+    }
+  },
+  async set(elapsed: number): Promise<void> {
+    await AsyncStorage.setItem(KEYS.PENDING_RUN, JSON.stringify({ date: todayKey(), elapsed }));
+  },
+  async clear(): Promise<void> {
+    await AsyncStorage.removeItem(KEYS.PENDING_RUN);
+  },
 };
 
 export const storage = {
