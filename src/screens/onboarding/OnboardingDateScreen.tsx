@@ -86,34 +86,30 @@ export function OnboardingDateScreen() {
 
         <View style={styles.pickerContainer}>
           {Platform.OS === 'web' ? (
-            // @ts-ignore — web-only HTML input
-            <input
-              type="date"
-              defaultValue={toDateString(minDate)}
-              min={toDateString(minDate)}
-              onChange={handleWebChange}
-              style={{
-                display: 'block',
-                width: '100%',
-                maxWidth: '100%',
-                minWidth: 0,
-                margin: 0,
-                height: 48,
-                border: `1.5px solid ${colors.borderDefault}`,
-                borderRadius: 12,
-                paddingLeft: 14,
-                paddingRight: 14,
-                fontSize: 16,
-                fontFamily: 'PlusJakartaSans, system-ui, -apple-system, sans-serif',
-                color: colors.ink[900],
-                backgroundColor: colors.surface,
-                cursor: 'pointer',
-                outline: 'none',
-                boxSizing: 'border-box',
-                WebkitAppearance: 'none',
-                appearance: 'none',
-              }}
-            />
+            <View style={styles.webField}>
+              <Text style={styles.webFieldText}>{formatDateDisplay(date)}</Text>
+              <Icon name="calendar" size={20} color={colors.ink[500]} />
+              {/* @ts-ignore — real input, transparent, on top of the styled field */}
+              <input
+                type="date"
+                defaultValue={toDateString(minDate)}
+                min={toDateString(minDate)}
+                onChange={handleWebChange}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  margin: 0,
+                  padding: 0,
+                  border: 'none',
+                  opacity: 0,
+                  cursor: 'pointer',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </View>
           ) : (
             (() => {
               const DateTimePicker = require('@react-native-community/datetimepicker').default;
@@ -134,7 +130,9 @@ export function OnboardingDateScreen() {
           )}
         </View>
 
-        <Text style={styles.dateDisplay}>{formatDateDisplay(date)}</Text>
+        {Platform.OS !== 'web' && (
+          <Text style={styles.dateDisplay}>{formatDateDisplay(date)}</Text>
+        )}
         <Text style={[styles.weeksInfo, isAtMinimum && styles.weeksMinimum]}>
           {isAtMinimum
             ? `Esta es la fecha más pronta posible para tu meta. No se recomienda acortar el plazo.`
@@ -160,6 +158,19 @@ const styles = StyleSheet.create({
   subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500], marginBottom: spacing[7] },
   pickerContainer: { width: '100%', alignSelf: 'stretch', marginVertical: spacing[4] },
   picker: { width: '100%' },
+  webField: {
+    width: '100%',
+    height: 52,
+    borderWidth: 1.5,
+    borderColor: colors.borderDefault,
+    borderRadius: 12,
+    paddingHorizontal: spacing[4],
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surface,
+  },
+  webFieldText: { fontFamily: 'PlusJakartaSans', fontSize: 16, color: colors.ink[900] },
   dateDisplay: {
     fontFamily: 'PlusJakartaSans-SemiBold',
     fontSize: 20,

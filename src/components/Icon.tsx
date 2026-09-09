@@ -9,6 +9,7 @@ export type IconName =
   | 'chevron-left'
   | 'check'
   | 'close'
+  | 'calendar'
   | 'bell'
   | 'pin'
   | 'trophy';
@@ -63,6 +64,14 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M6 6l12 12M18 6L6 18" />
     </>
   ),
+  calendar: (
+    <>
+      {/* @ts-ignore */}
+      <path d="M5 6.5h14a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8.5a2 2 0 0 1 2-2Z" />
+      {/* @ts-ignore */}
+      <path d="M3 11h18M8 3.5v4M16 3.5v4" />
+    </>
+  ),
   bell: (
     <>
       {/* @ts-ignore */}
@@ -98,6 +107,7 @@ const FALLBACK: Record<IconName, string> = {
   'chevron-left': '‹',
   check: '✓',
   close: '✕',
+  calendar: '📅',
   bell: '🔔',
   pin: '📍',
   trophy: '🏆',
