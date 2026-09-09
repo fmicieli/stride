@@ -5,6 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
 import { OnboardingLayout } from '../../components/OnboardingLayout';
 import { useOnboarding } from '../../utils/onboardingContext';
+import { weeksUntil } from '../../utils/planGenerator';
 import { colors, spacing, radius, borderWidth } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'OnboardingProjection'>;
@@ -22,14 +23,14 @@ const TODAY_MIN: Record<string, number> = {
   '15to21': 32,
 };
 
-const GOAL: Record<string, { label: string; weeks: number }> = {
-  '20min': { label: '20 min', weeks: 6 },
-  '30min': { label: '30 min', weeks: 8 },
-  '1hour': { label: '1 hora', weeks: 14 },
-  '5K': { label: '5K', weeks: 8 },
-  '10K': { label: '10K', weeks: 12 },
-  '21K': { label: '21K', weeks: 16 },
-  '42K': { label: '42K', weeks: 20 },
+const GOAL_LABEL: Record<string, string> = {
+  '20min': '20 min',
+  '30min': '30 min',
+  '1hour': '1 hora',
+  '5K': '5K',
+  '10K': '10K',
+  '21K': '21K',
+  '42K': '42K',
 };
 
 function Curve() {
@@ -63,23 +64,24 @@ export function OnboardingProjectionScreen() {
   const { data } = useOnboarding();
 
   const today = (data.level && TODAY_MIN[data.level]) || 15;
-  const goal = (data.goal && GOAL[data.goal]) || GOAL['5K'];
+  const goalLabel = (data.goal && GOAL_LABEL[data.goal]) || '5K';
+  const weeks = data.targetDate ? Math.max(4, weeksUntil(data.targetDate)) : 8;
 
   return (
     <OnboardingLayout
-      step={4}
+      step={5}
       totalSteps={6}
       title="Así podría verse tu progreso"
       subtitle="Proyección gratuita, calculada con tus propios números — no con una tabla genérica."
       canContinue
-      onContinue={() => navigation.navigate('OnboardingDate')}
+      onContinue={() => navigation.navigate('PlanLoading')}
     >
       <View style={styles.card}>
         <Curve />
         <View style={styles.row}>
           <Text style={styles.today}>Hoy · {today} min</Text>
           <Text style={styles.meta}>
-            Meta · {goal.label} · {goal.weeks} semanas
+            Meta · {goalLabel} · {weeks} semanas
           </Text>
         </View>
       </View>

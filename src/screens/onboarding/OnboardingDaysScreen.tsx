@@ -33,7 +33,7 @@ export function OnboardingDaysScreen() {
 
   const handleContinue = () => {
     setDays(selected);
-    navigation.navigate('OnboardingProjection');
+    navigation.navigate('OnboardingDate');
   };
 
   return (

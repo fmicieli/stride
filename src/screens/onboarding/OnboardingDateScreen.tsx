@@ -54,7 +54,7 @@ export function OnboardingDateScreen() {
 
   const handleContinue = () => {
     setTargetDate(date.toISOString());
-    navigation.navigate('PlanLoading');
+    navigation.navigate('OnboardingProjection');
   };
 
   const handleWebChange = (e: any) => {
@@ -72,7 +72,7 @@ export function OnboardingDateScreen() {
         </TouchableOpacity>
       </View>
       <View style={styles.progressContainer}>
-        <ProgressSteps step={5} totalSteps={6} />
+        <ProgressSteps step={4} totalSteps={6} />
       </View>
 
       <ScrollView

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Modal, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -9,6 +9,8 @@ import { useOnboarding } from '../utils/onboardingContext';
 import { getPlan, deletePlan } from '../services/firestore';
 import { TrainingPlan } from '../types';
 import { Button } from '../components/Button';
+import { Icon } from '../components/Icon';
+import { ProgressSteps } from '../components/ProgressSteps';
 import { colors, spacing, radius } from '../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'PlanGenerated'>;
@@ -59,6 +61,14 @@ export function PlanGeneratedScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.appHeader}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <Icon name="chevron-left" size={22} color={colors.ink[900]} />
+        </TouchableOpacity>
+        <ProgressSteps step={6} totalSteps={6} />
+        <View style={styles.backButton} />
+      </View>
+
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Tu plan semanal, listo</Text>
         <Text style={styles.headerSubtitle}>
@@ -115,7 +125,9 @@ export function PlanGeneratedScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[4], gap: spacing[2] },
+  appHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 60, paddingHorizontal: spacing[4] },
+  backButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  header: { paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: spacing[4], gap: spacing[2] },
   headerTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 28, color: colors.ink[900] },
   headerSubtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500] },
   scroll: { flex: 1 },
