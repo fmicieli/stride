@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -11,6 +11,7 @@ import { getPlan, saveSession, saveStreak, getSessions } from '../../services/fi
 import { TrainingPlan, TrainingSession, DayKey } from '../../types';
 import { formatDuration, buildSessionIntervals, SessionInterval } from '../../utils/planGenerator';
 import { Button } from '../../components/Button';
+import { BottomSheet } from '../../components/BottomSheet';
 import { colors, spacing, radius } from '../../theme';
 
 const DING = require('../../../assets/ding.wav');
@@ -76,6 +77,9 @@ export function ActiveTrainingScreen() {
   const [intervals, setIntervals] = useState<SessionInterval[]>([]);
   const [elapsed, setElapsed] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [phase, setPhase] = useState<'countdown' | 'running'>('countdown');
+  const [count, setCount] = useState(3);
+  const countAnim = useRef(new Animated.Value(0)).current;
   const prevIntervalIdxRef = useRef(-1);
   const finishingRef = useRef(false);
 
@@ -114,15 +118,53 @@ export function ActiveTrainingScreen() {
     };
   }, []);
 
+  // 3·2·1 countdown with a bell on each beat, before the warm-up starts
   useEffect(() => {
-    if (!plan) return;
+    if (phase !== 'countdown' || intervals.length === 0) return;
+    let n = 3;
+    setCount(n);
+
+    const beat = () => {
+      dingRef.current?.replayAsync().catch(() => {});
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+      countAnim.setValue(0);
+      Animated.timing(countAnim, {
+        toValue: 1,
+        duration: 420,
+        easing: Easing.out(Easing.back(1.7)),
+        useNativeDriver: true,
+      }).start();
+    };
+    beat();
+
+    const id = setInterval(() => {
+      n -= 1;
+      if (n <= 0) {
+        clearInterval(id);
+        countAnim.setValue(1);
+        setPhase('running');
+        return;
+      }
+      setCount(n);
+      beat();
+    }, 900);
+
+    const settle = setTimeout(() => setPhase('running'), 900 * 3 + 800);
+    return () => {
+      clearInterval(id);
+      clearTimeout(settle);
+    };
+  }, [phase, intervals.length]);
+
+  useEffect(() => {
+    if (!plan || phase !== 'running') return;
     timerRef.current = setInterval(() => {
       if (!pausedRef.current) setElapsed((e) => e + 1);
     }, 1000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [plan]);
+  }, [plan, phase]);
 
   const totalDuration = intervals.reduce((s, i) => s + i.duration, 0);
   const overallProgress = totalDuration > 0 ? Math.min(1, elapsed / totalDuration) : 0;
@@ -209,27 +251,41 @@ export function ActiveTrainingScreen() {
         </TouchableOpacity>
       </View>
 
-      <Modal visible={paused} transparent animationType="slide" onRequestClose={handleResume}>
-        <View style={styles.sheetOverlay}>
-          <View style={styles.sheet}>
-            <Text style={styles.modalTitle}>Entrenamiento en pausa</Text>
-            <View style={styles.modalStats}>
-              <View style={styles.modalStatBox}>
-                <Text style={styles.modalStatValue}>{formatDuration(elapsed)}</Text>
-                <Text style={styles.modalStatLabel}>Tiempo total</Text>
-              </View>
-              <View style={styles.modalStatBox}>
-                <Text style={styles.modalStatValue}>
-                  {Math.min(intervalIdx + 1, intervals.length || 1)} de {intervals.length || 1}
-                </Text>
-                <Text style={styles.modalStatLabel}>Intervalo</Text>
-              </View>
-            </View>
-            <Button label="Reanudar" onPress={handleResume} />
-            <Button label="Finalizar entrenamiento" variant="tertiaryDanger" onPress={confirmStop} />
+      <BottomSheet visible={paused} onClose={handleResume} title="Entrenamiento en pausa">
+        <View style={styles.modalStats}>
+          <View style={styles.modalStatBox}>
+            <Text style={styles.modalStatValue}>{formatDuration(elapsed)}</Text>
+            <Text style={styles.modalStatLabel}>Tiempo total</Text>
+          </View>
+          <View style={styles.modalStatBox}>
+            <Text style={styles.modalStatValue}>
+              {Math.min(intervalIdx + 1, intervals.length || 1)} de {intervals.length || 1}
+            </Text>
+            <Text style={styles.modalStatLabel}>Intervalo</Text>
           </View>
         </View>
-      </Modal>
+        <Button label="Reanudar" onPress={handleResume} />
+        <Button label="Finalizar entrenamiento" variant="tertiaryDanger" onPress={confirmStop} />
+      </BottomSheet>
+
+      {phase === 'countdown' && (
+        <View style={styles.countdownOverlay}>
+          <Text style={styles.countdownLabel}>Preparate</Text>
+          <Animated.Text
+            style={[
+              styles.countdownNum,
+              {
+                opacity: countAnim,
+                transform: [
+                  { scale: countAnim.interpolate({ inputRange: [0, 1], outputRange: [1.8, 1] }) },
+                ],
+              },
+            ]}
+          >
+            {count}
+          </Animated.Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -247,9 +303,10 @@ const styles = StyleSheet.create({
   footer: { paddingBottom: spacing[8], paddingTop: spacing[4], alignItems: 'center' },
   ctrlPrimary: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.brand[500], alignItems: 'center', justifyContent: 'center' },
 
-  sheetOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.scrim },
-  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, padding: spacing[6], paddingBottom: spacing[10], gap: spacing[4], alignItems: 'stretch' },
-  modalTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 18, color: colors.ink[900], textAlign: 'center' },
+  countdownOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: TRACK_BG, alignItems: 'center', justifyContent: 'center', gap: spacing[3], zIndex: 10 },
+  countdownLabel: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 16, letterSpacing: 2, color: TRACK_MUTED, textTransform: 'uppercase' },
+  countdownNum: { fontFamily: 'JetBrainsMono-Medium', fontSize: 120, lineHeight: 134, color: colors.surface, fontVariant: ['tabular-nums'] },
+
   modalStats: { flexDirection: 'row', gap: spacing[3] },
   modalStatBox: { flex: 1, gap: 6, backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[4] },
   modalStatValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.ink[900] },

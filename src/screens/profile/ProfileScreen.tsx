@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, TextInput, Alert, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { deletePlan } from '../../services/firestore';
 import { logout, deleteAccount } from '../../services/auth';
 import { Button } from '../../components/Button';
+import { BottomSheet } from '../../components/BottomSheet';
 import { Icon } from '../../components/Icon';
 import { colors, spacing, radius, controlSize } from '../../theme';
 
@@ -92,60 +93,51 @@ export function ProfileScreen() {
         </View>
       </ScrollView>
 
-      <Modal visible={activeModal === 'changeGoal'} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>¿Querés cambiar tu objetivo?</Text>
-            <Text style={styles.modalText}>Tu historial se mantiene, pero tu plan actual se va a reemplazar.</Text>
-            <View style={styles.modalButtons}>
-              <Button label={loading ? 'Procesando...' : 'Sí, cambiar objetivo'} onPress={handleChangeGoal} disabled={loading} loading={loading} />
-              <Button label="Cancelar" variant="ghost" onPress={() => setActiveModal(null)} disabled={loading} />
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <BottomSheet
+        visible={activeModal === 'changeGoal'}
+        onClose={() => setActiveModal(null)}
+        title="¿Querés cambiar tu objetivo?"
+        subtitle="Tu historial se mantiene, pero tu plan actual se va a reemplazar."
+      >
+        <Button label={loading ? 'Procesando...' : 'Sí, cambiar objetivo'} onPress={handleChangeGoal} disabled={loading} loading={loading} />
+        <Button label="Cancelar" variant="ghost" onPress={() => setActiveModal(null)} disabled={loading} />
+      </BottomSheet>
 
-      <Modal visible={activeModal === 'logout'} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>¿Querés cerrar sesión?</Text>
-            <View style={styles.modalButtons}>
-              <Button label={loading ? 'Saliendo...' : 'Cerrar sesión'} onPress={handleLogout} disabled={loading} loading={loading} />
-              <Button label="Cancelar" variant="ghost" onPress={() => setActiveModal(null)} disabled={loading} />
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <BottomSheet
+        visible={activeModal === 'logout'}
+        onClose={() => setActiveModal(null)}
+        title="¿Querés cerrar sesión?"
+      >
+        <Button label={loading ? 'Saliendo...' : 'Cerrar sesión'} onPress={handleLogout} disabled={loading} loading={loading} />
+        <Button label="Cancelar" variant="ghost" onPress={() => setActiveModal(null)} disabled={loading} />
+      </BottomSheet>
 
-      <Modal visible={activeModal === 'deleteAccount'} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>¿Querés eliminar tu cuenta?</Text>
-            <Text style={styles.modalText}>Esta acción es permanente. Perderás tu plan, historial y todos tus datos.</Text>
-            <TextInput
-              style={[
-                styles.passwordInput,
-                pwFocused && styles.passwordInputFocused,
-                Platform.OS === 'web' ? ({ outlineStyle: 'none' } as any) : null,
-              ]}
-              placeholder="Ingresá tu contraseña"
-              placeholderTextColor={colors.ink[300]}
-              secureTextEntry
-              value={deletePassword}
-              onChangeText={setDeletePassword}
-              onFocus={() => setPwFocused(true)}
-              onBlur={() => setPwFocused(false)}
-              autoCapitalize="none"
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity style={[styles.destructiveButton, loading && styles.disabled]} activeOpacity={0.8} onPress={handleDeleteAccount} disabled={loading}>
-                <Text style={styles.destructiveButtonText}>{loading ? 'Eliminando...' : 'Eliminar cuenta'}</Text>
-              </TouchableOpacity>
-              <Button label="Cancelar" variant="ghost" onPress={() => { setActiveModal(null); setDeletePassword(''); }} disabled={loading} />
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <BottomSheet
+        visible={activeModal === 'deleteAccount'}
+        onClose={() => { setActiveModal(null); setDeletePassword(''); }}
+        title="¿Querés eliminar tu cuenta?"
+        subtitle="Esta acción es permanente. Perderás tu plan, historial y todos tus datos."
+      >
+        <TextInput
+          style={[
+            styles.passwordInput,
+            pwFocused && styles.passwordInputFocused,
+            Platform.OS === 'web' ? ({ outlineStyle: 'none' } as any) : null,
+          ]}
+          placeholder="Ingresá tu contraseña"
+          placeholderTextColor={colors.ink[300]}
+          secureTextEntry
+          value={deletePassword}
+          onChangeText={setDeletePassword}
+          onFocus={() => setPwFocused(true)}
+          onBlur={() => setPwFocused(false)}
+          autoCapitalize="none"
+        />
+        <TouchableOpacity style={[styles.destructiveButton, loading && styles.disabled]} activeOpacity={0.8} onPress={handleDeleteAccount} disabled={loading}>
+          <Text style={styles.destructiveButtonText}>{loading ? 'Eliminando...' : 'Eliminar cuenta'}</Text>
+        </TouchableOpacity>
+        <Button label="Cancelar" variant="ghost" onPress={() => { setActiveModal(null); setDeletePassword(''); }} disabled={loading} />
+      </BottomSheet>
     </SafeAreaView>
   );
 }
@@ -163,13 +155,8 @@ const styles = StyleSheet.create({
   settingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
   settingsLabel: { fontFamily: 'PlusJakartaSans', fontSize: 16, color: colors.ink[900] },
   destructiveText: { color: colors.error.text },
-  modalOverlay: { flex: 1, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[4] },
-  modalBox: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing[6], width: '100%' },
-  modalTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 18, color: colors.ink[900], marginBottom: 8, textAlign: 'center' },
-  modalText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], marginBottom: spacing[2], lineHeight: 20, textAlign: 'center' },
-  passwordInput: { borderWidth: 1.5, borderColor: colors.borderDefault, borderRadius: radius.sm, height: controlSize.md, paddingHorizontal: spacing[3], fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900], marginBottom: spacing[4], marginTop: spacing[4] },
+  passwordInput: { borderWidth: 1.5, borderColor: colors.borderDefault, borderRadius: radius.sm, height: controlSize.md, paddingHorizontal: spacing[3], fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900] },
   passwordInputFocused: { borderColor: colors.brand[500] },
-  modalButtons: { gap: spacing[3], marginTop: spacing[6] },
   destructiveButton: { backgroundColor: colors.error.solid, borderRadius: radius.full, height: controlSize.lg, alignItems: 'center', justifyContent: 'center' },
   destructiveButtonText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.surface, fontSize: 15 },
   disabled: { opacity: 0.4 },

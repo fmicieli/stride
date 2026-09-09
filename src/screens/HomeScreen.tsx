@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -10,7 +10,7 @@ import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { TrainingPlan, TrainingSession } from '../types';
 import { ProgressBar } from '../components/ProgressBar';
 import { Button } from '../components/Button';
-import { Icon } from '../components/Icon';
+import { BottomSheet } from '../components/BottomSheet';
 import { greetingReady, buildSessionIntervals, SessionInterval } from '../utils/planGenerator';
 import { colors, spacing, radius, borderWidth } from '../theme';
 
@@ -243,63 +243,39 @@ export function HomeScreen() {
         )}
       </ScrollView>
 
-      <Modal
+      <BottomSheet
         visible={showPreRun}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowPreRun(false)}
+        onClose={() => setShowPreRun(false)}
+        title="Antes de arrancar"
+        subtitle="Así está armado tu entrenamiento de hoy. Podés pausarlo en cualquier momento."
       >
-        <View style={styles.sheetOverlay}>
-          <TouchableOpacity
-            style={styles.sheetBackdrop}
-            activeOpacity={1}
-            onPress={() => setShowPreRun(false)}
-          />
-          <View style={styles.sheet}>
-            <TouchableOpacity
-              style={styles.sheetClose}
-              onPress={() => setShowPreRun(false)}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              activeOpacity={0.7}
-            >
-              <Icon name="close" size={22} color={colors.ink[500]} />
-            </TouchableOpacity>
+        <ScrollView
+          style={styles.timelineScroll}
+          contentContainerStyle={styles.timeline}
+          showsVerticalScrollIndicator={false}
+        >
+          {preRunSteps.map((s, i) => (
+            <View key={i} style={styles.tlRow}>
+              <View style={styles.tlGutter}>
+                <View style={styles.tlDot} />
+                {i < preRunSteps.length - 1 && <View style={styles.tlLine} />}
+              </View>
+              <View style={styles.tlBody}>
+                <Text style={styles.tlTitle}>{s.title}</Text>
+                <Text style={styles.tlDetail}>{s.detail}</Text>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
 
-            <Text style={styles.sheetTitle}>Antes de arrancar</Text>
-            <Text style={styles.sheetSub}>
-              Así está armado tu entrenamiento de hoy. Podés pausarlo en cualquier momento.
-            </Text>
-
-            <ScrollView
-              style={styles.timelineScroll}
-              contentContainerStyle={styles.timeline}
-              showsVerticalScrollIndicator={false}
-            >
-              {preRunSteps.map((s, i) => (
-                <View key={i} style={styles.tlRow}>
-                  <View style={styles.tlGutter}>
-                    <View style={styles.tlDot} />
-                    {i < preRunSteps.length - 1 && <View style={styles.tlLine} />}
-                  </View>
-                  <View style={styles.tlBody}>
-                    <Text style={styles.tlTitle}>{s.title}</Text>
-                    <Text style={styles.tlDetail}>{s.detail}</Text>
-                  </View>
-                </View>
-              ))}
-            </ScrollView>
-
-            <Button
-              label="Empezar entrenamiento"
-              onPress={() => {
-                setShowPreRun(false);
-                navigation.navigate('ActiveTraining');
-              }}
-              style={styles.sheetCta}
-            />
-          </View>
-        </View>
-      </Modal>
+        <Button
+          label="Empezar entrenamiento"
+          onPress={() => {
+            setShowPreRun(false);
+            navigation.navigate('ActiveTraining');
+          }}
+        />
+      </BottomSheet>
     </SafeAreaView>
   );
 }
@@ -358,30 +334,6 @@ const styles = StyleSheet.create({
   emptyTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
   emptyText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], textAlign: 'center', lineHeight: 20, marginBottom: 8 },
 
-  sheetOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.scrim },
-  sheetBackdrop: { ...StyleSheet.absoluteFillObject },
-  sheet: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[6],
-    paddingBottom: spacing[8],
-    gap: spacing[3],
-    maxHeight: '86%',
-  },
-  sheetClose: {
-    position: 'absolute',
-    top: spacing[4],
-    right: spacing[4],
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 2,
-  },
-  sheetTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, lineHeight: 30, color: colors.ink[900], paddingRight: spacing[8] },
-  sheetSub: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500] },
   timelineScroll: { flexGrow: 0, marginTop: spacing[2] },
   timeline: { paddingVertical: spacing[2] },
   tlRow: { flexDirection: 'row', gap: spacing[3] },
@@ -391,5 +343,4 @@ const styles = StyleSheet.create({
   tlBody: { flex: 1, paddingBottom: spacing[5] },
   tlTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 17, lineHeight: 22, color: colors.ink[900] },
   tlDetail: { fontFamily: 'PlusJakartaSans', fontSize: 14, lineHeight: 20, color: colors.ink[500], marginTop: 2 },
-  sheetCta: { marginTop: spacing[2] },
 });

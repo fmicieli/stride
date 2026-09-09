@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Modal, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -9,6 +9,7 @@ import { useOnboarding } from '../utils/onboardingContext';
 import { getPlan, deletePlan } from '../services/firestore';
 import { TrainingPlan } from '../types';
 import { Button } from '../components/Button';
+import { BottomSheet } from '../components/BottomSheet';
 import { Icon } from '../components/Icon';
 import { ProgressSteps } from '../components/ProgressSteps';
 import { colors, spacing, radius } from '../theme';
@@ -102,22 +103,19 @@ export function PlanGeneratedScreen() {
         <Button label="Volver a empezar desde cero" variant="tertiary" onPress={() => setShowRestartModal(true)} />
       </View>
 
-      <Modal visible={showRestartModal} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>¿Segura que querés volver a empezar?</Text>
-            <Text style={styles.modalText}>Tu plan actual se eliminará y tendrás que configurar uno nuevo.</Text>
-            <View style={styles.modalButtons}>
-              <Button
-                label={restarting ? 'Eliminando...' : 'Sí, empezar de nuevo'}
-                onPress={handleRestart}
-                disabled={restarting}
-              />
-              <Button label="Cancelar" variant="ghost" onPress={() => setShowRestartModal(false)} disabled={restarting} />
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <BottomSheet
+        visible={showRestartModal}
+        onClose={() => setShowRestartModal(false)}
+        title="¿Segura que querés volver a empezar?"
+        subtitle="Tu plan actual se eliminará y tendrás que configurar uno nuevo."
+      >
+        <Button
+          label={restarting ? 'Eliminando...' : 'Sí, empezar de nuevo'}
+          onPress={handleRestart}
+          disabled={restarting}
+        />
+        <Button label="Cancelar" variant="ghost" onPress={() => setShowRestartModal(false)} disabled={restarting} />
+      </BottomSheet>
     </SafeAreaView>
   );
 }
@@ -156,9 +154,4 @@ const styles = StyleSheet.create({
   planDay: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: colors.ink[900] },
   planActivity: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.ink[500] },
 
-  modalOverlay: { flex: 1, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[4] },
-  modalBox: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing[6], width: '100%' },
-  modalTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900], marginBottom: 6, textAlign: 'center' },
-  modalText: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[500], lineHeight: 22, marginBottom: spacing[2], textAlign: 'center' },
-  modalButtons: { gap: spacing[3], marginTop: spacing[6] },
 });
