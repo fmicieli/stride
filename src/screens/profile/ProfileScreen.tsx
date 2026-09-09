@@ -63,10 +63,6 @@ export function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Perfil</Text>
-      </View>
-
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.avatarSection}>
           <View style={styles.avatar}>
@@ -74,6 +70,7 @@ export function ProfileScreen() {
           </View>
           <Text style={styles.displayName}>{displayName}</Text>
           <Text style={styles.email}>{profile?.email || user?.email || ''}</Text>
+          {/* "Editar Perfil" — pendiente para la próxima versión
           <Button
             label="Editar Perfil"
             variant="secondary"
@@ -82,6 +79,7 @@ export function ProfileScreen() {
             onPress={() => navigation.navigate('EditProfile')}
             style={styles.editBtn}
           />
+          */}
         </View>
 
         <View style={styles.settingsList}>
@@ -154,15 +152,13 @@ export function ProfileScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
-  header: { alignItems: 'center', paddingHorizontal: spacing[4], paddingVertical: spacing[3] },
-  headerTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 18, color: colors.ink[900] },
   content: { paddingBottom: spacing[10] },
-  avatarSection: { alignItems: 'center', paddingTop: spacing[6], paddingBottom: spacing[6], gap: 8 },
+  avatarSection: { alignItems: 'center', paddingTop: spacing[8], paddingBottom: spacing[6], gap: 8 },
   avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: colors.surfaceMuted, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   avatarText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 34, color: colors.ink[900] },
   displayName: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.ink[900] },
   email: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[400] },
-  editBtn: { marginTop: 8 },
+  editBtn: { marginTop: 8, alignSelf: 'center' },
   settingsList: { borderTopWidth: 1, borderTopColor: colors.surfaceMuted },
   settingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
   settingsLabel: { fontFamily: 'PlusJakartaSans', fontSize: 16, color: colors.ink[900] },
