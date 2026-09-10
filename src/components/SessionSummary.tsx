@@ -52,9 +52,9 @@ export function SessionSummary({ variant, title, subtitle, stats }: Props) {
       <Glyph variant={variant} />
       <Text style={styles.title}>{title}</Text>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-      <View style={styles.statGrid}>
+      <View style={[styles.statGrid, stats.length > 2 && styles.statGridWrap]}>
         {stats.map((s, i) => (
-          <View key={i} style={styles.statBox}>
+          <View key={i} style={[styles.statBox, stats.length > 2 && styles.statBoxHalf]}>
             <Text style={styles.statValue}>{s.value}</Text>
             <Text style={styles.statLabel}>{s.label}</Text>
           </View>
@@ -84,6 +84,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   statGrid: { flexDirection: 'row', alignSelf: 'stretch', gap: spacing[3], marginTop: spacing[1] },
+  statGridWrap: { flexWrap: 'wrap' },
   statBox: {
     flex: 1,
     backgroundColor: colors.surfaceMuted,
@@ -92,6 +93,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
+  statBoxHalf: { flexBasis: '45%', flexGrow: 1 },
   statValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900] },
   statLabel: {
     fontFamily: 'PlusJakartaSans-SemiBold',

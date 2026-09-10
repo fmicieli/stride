@@ -7,7 +7,7 @@ import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
 import { getSessions, getPlan } from '../../services/firestore';
 import { TrainingSession, TrainingPlan } from '../../types';
-import { formatDuration, buildSessionIntervals } from '../../utils/planGenerator';
+import { formatDuration, buildSessionIntervals, computeKm } from '../../utils/planGenerator';
 import { DayKey } from '../../types';
 import { Button } from '../../components/Button';
 import { SessionSummary } from '../../components/SessionSummary';
@@ -72,10 +72,20 @@ export function TrainingCompletedScreen() {
           variant="complete"
           title="¡Entrenamiento completo!"
           subtitle={getSubtitle(plan)}
-          stats={[
-            { value: formatDuration(session?.duration ?? 0), label: 'Tiempo total' },
-            { value: `${countIntervals(plan)} de ${countIntervals(plan)}`, label: 'Intervalos' },
-          ]}
+          stats={(() => {
+            const dur = session?.duration ?? 0;
+            const todayName = DAY_NAMES[new Date().getDay()];
+            const day = plan?.weeks[0]?.days.find((d) => d.day === todayName);
+            const runTarget = day?.runTargetMin ?? day?.duration ?? 20;
+            const ivs = plan ? buildSessionIntervals(runTarget, plan.weeks[0]?.week ?? 1, plan.method) : [];
+            const km = computeKm(dur, ivs);
+            return [
+              { value: formatDuration(dur), label: 'Tiempo total' },
+              { value: `${km.kmRun} km`, label: 'Km trotados' },
+              { value: `${km.kmWalk} km`, label: 'Km caminados' },
+              { value: `${km.tramosRun} de ${km.tramosTotal}`, label: 'Tramos compl.' },
+            ];
+          })()}
         />
       </ScrollView>
       <View style={styles.footer}>

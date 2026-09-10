@@ -226,6 +226,33 @@ export function formatPace(secondsPerKm: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
+export function computeKm(
+  elapsed: number,
+  intervals: SessionInterval[],
+): { kmRun: number; kmWalk: number; tramosRun: number; tramosTotal: number } {
+  let runSec = 0, walkSec = 0, tramosRun = 0;
+  let t = 0;
+  const runIntervals = intervals.filter((iv) => iv.type === 'run').length;
+  for (const iv of intervals) {
+    if (t >= elapsed) break;
+    const taken = Math.min(iv.duration, elapsed - t);
+    const done = taken >= iv.duration;
+    if (iv.type === 'run') {
+      runSec += taken;
+      if (done) tramosRun++;
+    } else {
+      walkSec += taken;
+    }
+    t += iv.duration;
+  }
+  return {
+    kmRun: Math.round(runSec / 360 * 10) / 10,
+    kmWalk: Math.round(walkSec / 720 * 10) / 10,
+    tramosRun,
+    tramosTotal: runIntervals,
+  };
+}
+
 export function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);

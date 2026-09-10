@@ -10,7 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getPlan, saveSession, saveStreak, getSessions } from '../../services/firestore';
 import { pendingRun } from '../../storage/storage';
 import { TrainingPlan, TrainingSession, DayKey } from '../../types';
-import { formatDuration, buildSessionIntervals, SessionInterval } from '../../utils/planGenerator';
+import { formatDuration, buildSessionIntervals, SessionInterval, computeKm } from '../../utils/planGenerator';
 import { say, primeVoice, ringBell } from '../../utils/voice';
 import { Button } from '../../components/Button';
 import { BottomSheet } from '../../components/BottomSheet';
@@ -389,10 +389,15 @@ export function ActiveTrainingScreen() {
               variant="paused"
               title="Entrenamiento en pausa"
               subtitle="Guardamos tu progreso. Podés retomarlo cuando quieras hoy."
-              stats={[
-                { value: formatDuration(elapsed), label: 'Tiempo total' },
-                intervalsStat,
-              ]}
+              stats={(() => {
+                const km = computeKm(elapsed, intervals);
+                return [
+                  { value: formatDuration(elapsed), label: 'Tiempo total' },
+                  { value: `${km.kmRun} km`, label: 'Km trotados' },
+                  { value: `${km.kmWalk} km`, label: 'Km caminados' },
+                  { value: `${km.tramosRun} de ${km.tramosTotal}`, label: 'Tramos compl.' },
+                ];
+              })()}
             />
           </ScrollView>
           <View style={styles.stopFooter}>
