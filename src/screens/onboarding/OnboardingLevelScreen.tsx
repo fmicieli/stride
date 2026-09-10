@@ -11,10 +11,10 @@ type Nav = StackNavigationProp<RootStackParamList, 'OnboardingLevel'>;
 
 const TIME_OPTIONS: { label: string; value: LevelTime }[] = [
   { label: 'Nunca corrí', value: 'never' },
-  { label: 'Estoy empezando con intervalos (trote/caminata)', value: 'intervals' },
-  { label: 'Puedo correr hasta 15 min sin parar', value: 'up15' },
-  { label: 'Puedo correr entre 15 y 30 min', value: '15to30' },
-  { label: 'Corro más de 30 min sin parar', value: 'over30' },
+  { label: 'Empezando con intervalos (trote/caminata)', value: 'intervals' },
+  { label: 'Hasta 15 min sin parar', value: 'up15' },
+  { label: 'Entre 15 y 30 min', value: '15to30' },
+  { label: 'Más de 30 min sin parar', value: 'over30' },
 ];
 
 const DISTANCE_OPTIONS: { label: string; value: LevelDistance }[] = [
