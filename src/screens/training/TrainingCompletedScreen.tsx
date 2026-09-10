@@ -79,11 +79,11 @@ export function TrainingCompletedScreen() {
             const runTarget = day?.runTargetMin ?? day?.duration ?? 20;
             const ivs = plan ? buildSessionIntervals(runTarget, plan.weeks[0]?.week ?? 1, plan.method) : [];
             const km = computeKm(dur, ivs);
+            const totalKm = Math.round((km.kmRun + km.kmWalk) * 10) / 10;
             return [
               { value: formatDuration(dur), label: 'Tiempo total' },
-              { value: `${km.kmRun} km`, label: 'Km trotados' },
-              { value: `${km.kmWalk} km`, label: 'Km caminados' },
-              { value: `${km.tramosRun} de ${km.tramosTotal}`, label: 'Tramos compl.' },
+              { value: `${totalKm} km`, label: 'Km en esta sesión' },
+              { value: `${km.tramosRun} de ${km.tramosTotal}`, label: 'Intervalos compl.' },
             ];
           })()}
         />

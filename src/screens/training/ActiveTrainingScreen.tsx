@@ -363,10 +363,15 @@ export function ActiveTrainingScreen() {
           variant="paused"
           title="Entrenamiento en pausa"
           subtitle="Tomate el tiempo que necesites. Cuando quieras, seguimos."
-          stats={[
-            { value: formatDuration(elapsed), label: 'Tiempo total' },
-            intervalsStat,
-          ]}
+          stats={(() => {
+            const km = computeKm(elapsed, intervals);
+            const totalKm = Math.round((km.kmRun + km.kmWalk) * 10) / 10;
+            return [
+              { value: formatDuration(elapsed), label: 'Tiempo total' },
+              { value: `${totalKm} km`, label: 'Km en esta sesión' },
+              { value: `${km.tramosRun} de ${km.tramosTotal}`, label: 'Intervalos compl.' },
+            ];
+          })()}
         />
         <Button label="Reanudar" onPress={handleResume} />
         <Button label="Finalizar entrenamiento" variant="tertiaryDanger" onPress={handleFinishPressed} />
@@ -391,11 +396,11 @@ export function ActiveTrainingScreen() {
               subtitle="Guardamos tu progreso. Podés retomarlo cuando quieras hoy."
               stats={(() => {
                 const km = computeKm(elapsed, intervals);
+                const totalKm = Math.round((km.kmRun + km.kmWalk) * 10) / 10;
                 return [
                   { value: formatDuration(elapsed), label: 'Tiempo total' },
-                  { value: `${km.kmRun} km`, label: 'Km trotados' },
-                  { value: `${km.kmWalk} km`, label: 'Km caminados' },
-                  { value: `${km.tramosRun} de ${km.tramosTotal}`, label: 'Tramos compl.' },
+                  { value: `${totalKm} km`, label: 'Km en esta sesión' },
+                  { value: `${km.tramosRun} de ${km.tramosTotal}`, label: 'Intervalos compl.' },
                 ];
               })()}
             />
