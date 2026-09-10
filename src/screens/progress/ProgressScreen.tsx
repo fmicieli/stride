@@ -164,8 +164,8 @@ export function ProgressScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[10], gap: spacing[3] },
-  pageHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing[1] },
+  content: { paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[10], gap: spacing[7] },
+  pageHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   pageTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.ink[900] },
   trophyBtn: { width: 34, height: 34, borderRadius: 999, backgroundColor: colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
   splitStat: {
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   splitNumber: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 28, color: colors.ink[900] },
   splitLabel: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.ink[500] },
   splitDivider: { width: 1, height: 40, backgroundColor: colors.borderDefault, marginHorizontal: spacing[4] },
-  planProgress: { gap: 8, marginTop: spacing[2] },
+  planProgress: { gap: 8 },
   sectionTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 16, color: colors.ink[900] },
   progressTrack: { height: 8, backgroundColor: colors.surfaceSunken, borderRadius: 4, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: colors.brand[500], borderRadius: 4 },
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   historyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   verTodo: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.brand[600] },
   verTodoDisabled: { color: colors.ink[300] },
-  sessionsList: { gap: 8 },
+  sessionsList: { gap: spacing[3] },
   sessionCard: {
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.sm,
