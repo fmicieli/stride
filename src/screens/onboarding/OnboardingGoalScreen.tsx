@@ -10,13 +10,13 @@ import { Goal, GoalMode } from '../../types';
 type Nav = StackNavigationProp<RootStackParamList, 'OnboardingGoal'>;
 
 const GOAL_OPTIONS: { label: string; value: Goal; mode: GoalMode }[] = [
-  { label: '20 min seguidos', value: '20min', mode: 'time' },
-  { label: '5K', value: '5K', mode: 'distance' },
-  { label: '30 min seguidos', value: '30min', mode: 'time' },
-  { label: '10K', value: '10K', mode: 'distance' },
-  { label: '1 hora seguida', value: '1hour', mode: 'time' },
-  { label: '21K', value: '21K', mode: 'distance' },
-  { label: '42K', value: '42K', mode: 'distance' },
+  { label: 'Correr 20 min seguidos', value: '20min', mode: 'time' },
+  { label: 'Correr 5K', value: '5K', mode: 'distance' },
+  { label: 'Correr 30 min seguidos', value: '30min', mode: 'time' },
+  { label: 'Correr 10K', value: '10K', mode: 'distance' },
+  { label: 'Correr 1 hora seguida', value: '1hour', mode: 'time' },
+  { label: 'Correr 21K (medio maratón)', value: '21K', mode: 'distance' },
+  { label: 'Correr 42K (maratón)', value: '42K', mode: 'distance' },
 ];
 
 export function OnboardingGoalScreen() {
