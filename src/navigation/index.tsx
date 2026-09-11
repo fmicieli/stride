@@ -76,8 +76,6 @@ const Tab = createBottomTabNavigator();
 // Room for icon + label; the device's bottom inset is reserved on top of this.
 const TAB_BAR_CONTENT_HEIGHT = 76;
 
-// Hoy / Progreso / Logros got the dark glass redesign; Perfil stays on the
-// original light theme, so it gets its own tab bar treatment below.
 const DARK_ACCENT = '#8FE05A';
 const DARK_INACTIVE = '#9A9A9F';
 
@@ -129,23 +127,7 @@ function MainTabs() {
       <Tab.Screen name="Hoy" component={HomeScreen} />
       <Tab.Screen name="Progreso" component={ProgressScreen} />
       <Tab.Screen name="Logros" component={LogrosScreen} />
-      <Tab.Screen
-        name="Perfil"
-        component={ProfileScreen}
-        options={{
-          tabBarActiveTintColor: '#1B6E52',
-          tabBarInactiveTintColor: '#8A8A8A',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="Perfil" focused={focused} activeColor="#1B6E52" inactiveColor="#8A8A8A" />
-          ),
-          tabBarStyle: {
-            ...baseTabBarStyle,
-            borderTopWidth: 1,
-            borderTopColor: '#F0F0F0',
-            backgroundColor: '#FFFFFF',
-          },
-        }}
-      />
+      <Tab.Screen name="Perfil" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
