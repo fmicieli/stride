@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   },
   rachaText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, color: dg.ink900 },
 
-  heroCard: { borderRadius: 20, padding: spacing[5], gap: spacing[4] },
+  heroCard: { borderRadius: 20, padding: spacing[5], gap: spacing[5] },
   heroHead: { gap: 4 },
   badge: { alignSelf: 'flex-start', backgroundColor: 'rgba(143,224,90,0.16)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 6 },
   badgeText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 12, color: dg.accent },
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   weekLine: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 15, color: dg.ink900 },
   weekSub: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 12, color: dg.ink500 },
 
-  cta: { height: 52, borderRadius: 999, backgroundColor: dg.accent, alignItems: 'center', justifyContent: 'center' },
+  cta: { height: 52, borderRadius: 999, backgroundColor: dg.accent, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
   ctaText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 16, color: dg.ctaText },
 
   statRow: { flexDirection: 'row', gap: spacing[3] },
