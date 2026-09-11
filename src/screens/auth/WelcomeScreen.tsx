@@ -1,40 +1,36 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Animated, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
 import { StrideLogo } from '../../components/StrideLogo';
 import { Button } from '../../components/Button';
-import { colors, spacing } from '../../theme';
+import { dg } from '../../components/darkGlassTokens';
+import { spacing } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Welcome'>;
 
 export function WelcomeScreen() {
   const navigation = useNavigation<Nav>();
-  const sloganOpacity = useRef(new Animated.Value(0)).current;
   const footerOpacity = useRef(new Animated.Value(0)).current;
   const footerShift = useRef(new Animated.Value(10)).current;
 
   useEffect(() => {
-    // Let the logo entrance play, then fade in the slogan and the buttons.
-    const delay = Platform.OS === 'web' ? 1600 : 350;
+    // Let the logo entrance play, then fade in the buttons.
+    const delay = Platform.OS === 'web' ? 1200 : 350;
     const t = setTimeout(() => {
-      Animated.sequence([
-        Animated.timing(sloganOpacity, { toValue: 1, duration: 320, useNativeDriver: false }),
-        Animated.parallel([
-          Animated.timing(footerOpacity, { toValue: 1, duration: 380, useNativeDriver: false }),
-          Animated.timing(footerShift, { toValue: 0, duration: 380, useNativeDriver: false }),
-        ]),
+      Animated.parallel([
+        Animated.timing(footerOpacity, { toValue: 1, duration: 380, useNativeDriver: false }),
+        Animated.timing(footerShift, { toValue: 0, duration: 380, useNativeDriver: false }),
       ]).start();
     }, delay);
     // Safety net: if the animation loop is throttled (hidden tab), snap to the
-    // final state so the slogan and buttons are never left invisible.
+    // final state so the buttons are never left invisible.
     const settle = setTimeout(() => {
-      sloganOpacity.setValue(1);
       footerOpacity.setValue(1);
       footerShift.setValue(0);
-    }, delay + 2600);
+    }, delay + 2200);
     return () => {
       clearTimeout(t);
       clearTimeout(settle);
@@ -42,54 +38,58 @@ export function WelcomeScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={styles.content}>
-        <StrideLogo width={225} animated />
-        <Animated.Text style={[styles.slogan, { opacity: sloganOpacity }]}>
-          Tu entrenamiento, a tu ritmo
-        </Animated.Text>
+    <View style={styles.root}>
+      <View style={styles.hero}>
+        <Image source={require('../../../assets/welcome-hero.jpg')} style={styles.heroImage} resizeMode="cover" />
+        <View style={styles.heroOverlay} pointerEvents="none" />
+        <View style={styles.logoWrap}>
+          <StrideLogo width={225} color="#FFFFFF" animated />
+        </View>
+        <View style={styles.fade} pointerEvents="none" />
       </View>
 
-      <Animated.View
-        style={[styles.footer, { opacity: footerOpacity, transform: [{ translateY: footerShift }] }]}
-      >
-        <Button label="Empezar" onPress={() => navigation.navigate('OnboardingGoal')} />
-        <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.loginLink}>Ya tengo cuenta</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    </SafeAreaView>
+      <SafeAreaView style={styles.safeFooter} edges={['bottom']}>
+        <Animated.View
+          style={[styles.footer, { opacity: footerOpacity, transform: [{ translateY: footerShift }] }]}
+        >
+          <Button label="Continuar" dark onPress={() => navigation.navigate('OnboardingGoal')} />
+          <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.loginLink}>Ya tengo cuenta</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing[4],
-    gap: spacing[3],
-  },
-  slogan: {
-    fontFamily: 'PlusJakartaSans-Medium',
-    fontSize: 15,
-    color: colors.ink[500],
-    textAlign: 'center',
-  },
+  root: { flex: 1, backgroundColor: '#0D0D0F' },
+  hero: { flex: 1 },
+  heroImage: { ...StyleSheet.absoluteFillObject },
+  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10,10,12,0.45)' },
+  logoWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  fade:
+    Platform.OS === 'web'
+      ? ({
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 110,
+          backgroundImage: 'linear-gradient(to bottom, rgba(13,13,15,0), rgba(13,13,15,1))',
+        } as any)
+      : { position: 'absolute', left: 0, right: 0, bottom: 0, height: 70, backgroundColor: 'rgba(13,13,15,0.85)' },
+  safeFooter: { backgroundColor: '#0D0D0F' },
   footer: {
     paddingHorizontal: spacing[4],
-    paddingBottom: spacing[6],
-    paddingTop: spacing[4],
+    paddingBottom: spacing[4],
+    paddingTop: spacing[2],
     gap: spacing[3],
     alignItems: 'center',
   },
   loginLink: {
     fontFamily: 'PlusJakartaSans-Medium',
     fontSize: 15,
-    color: colors.ink[600],
+    color: dg.ink500,
   },
 });
