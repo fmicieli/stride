@@ -97,9 +97,9 @@ const styles = StyleSheet.create({
   safeFooter: { backgroundColor: '#0D0D0F' },
   footer: {
     paddingHorizontal: spacing[4],
-    paddingBottom: spacing[4],
+    paddingBottom: spacing[6],
     paddingTop: spacing[2],
-    gap: spacing[3],
+    gap: spacing[4],
     alignItems: 'center',
   },
   loginLink: {

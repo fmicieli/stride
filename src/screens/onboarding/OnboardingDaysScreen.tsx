@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     borderWidth: borderWidth.hairline,
     borderColor: colors.borderDefault,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
