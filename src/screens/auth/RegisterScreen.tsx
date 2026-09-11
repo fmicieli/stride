@@ -20,7 +20,9 @@ import { useOnboarding } from '../../utils/onboardingContext';
 import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
 import { GoogleGlyph } from '../../components/GoogleGlyph';
-import { colors, spacing, radius, controlSize } from '../../theme';
+import { DarkGlassBackground } from '../../components/DarkGlassBackground';
+import { dg } from '../../components/darkGlassTokens';
+import { spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Register'>;
 
@@ -40,6 +42,7 @@ export function RegisterScreen() {
   const [touched, setTouched] = useState({ name: false, email: false, password: false, confirmPassword: false });
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [focused, setFocused] = useState<string | null>(null);
 
   const emailError = touched.email && email.length > 0 && !isValidEmail(email) ? 'Ingresá un email válido' : null;
   const passwordError = touched.password && password.length > 0 && password.length < 8 ? 'Mínimo 8 caracteres' : null;
@@ -93,130 +96,141 @@ export function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Icon name="chevron-left" size={22} color={colors.ink[900]} />
-          </TouchableOpacity>
-          <View style={{ width: 40 }} />
-        </View>
-
-        <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <Text style={styles.title}>Creá tu cuenta</Text>
-          <Text style={styles.subtitle}>Solo para guardar tu progreso. No pedimos tarjeta de crédito.</Text>
-          {[
-            { label: 'Nombre', value: name, setter: setName, placeholder: 'Tu nombre', field: 'name' as const, capitalize: 'words' as const },
-          ].map(({ label, value, setter, placeholder, field, capitalize }) => (
-            <View key={field} style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>{label}</Text>
-              <TextInput
-                style={styles.input}
-                value={value}
-                onChangeText={setter}
-                placeholder={placeholder}
-                placeholderTextColor={colors.ink[300]}
-                autoCapitalize={capitalize}
-                onBlur={() => setTouched((t) => ({ ...t, [field]: true }))}
-              />
-            </View>
-          ))}
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Email</Text>
-            <TextInput
-              style={[styles.input, emailError ? styles.inputError : null]}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="tu@email.com"
-              placeholderTextColor={colors.ink[300]}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-            />
-            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+    <View style={styles.root}>
+      <DarkGlassBackground glow="topRight" glowSize={260} glowOpacity={0.18} />
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Icon name="chevron-left" size={22} color={dg.ink900} />
+            </TouchableOpacity>
+            <View style={{ width: 40 }} />
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Contraseña</Text>
-            <View style={[styles.passwordRow, passwordError ? styles.inputError : null]}>
+          <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+            <Text style={styles.title}>Creá tu cuenta</Text>
+            <Text style={styles.subtitle}>Solo para guardar tu progreso. No pedimos tarjeta de crédito.</Text>
+
+            {[
+              { label: 'Nombre', value: name, setter: setName, placeholder: 'Tu nombre', field: 'name' as const, capitalize: 'words' as const },
+            ].map(({ label, value, setter, placeholder, field, capitalize }) => (
+              <View key={field} style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>{label}</Text>
+                <TextInput
+                  style={[styles.input, focused === field && styles.inputFocused]}
+                  value={value}
+                  onChangeText={setter}
+                  placeholder={placeholder}
+                  placeholderTextColor={dg.ink300}
+                  autoCapitalize={capitalize}
+                  onFocus={() => setFocused(field)}
+                  onBlur={() => { setFocused(null); setTouched((t) => ({ ...t, [field]: true })); }}
+                />
+              </View>
+            ))}
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email</Text>
               <TextInput
-                style={styles.passwordInput}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Mínimo 8 caracteres"
-                placeholderTextColor={colors.ink[300]}
-                secureTextEntry={!showPassword}
+                style={[styles.input, emailError ? styles.inputError : focused === 'email' && styles.inputFocused]}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="tu@email.com"
+                placeholderTextColor={dg.ink300}
+                keyboardType="email-address"
                 autoCapitalize="none"
-                onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                autoCorrect={false}
+                onFocus={() => setFocused('email')}
+                onBlur={() => { setFocused(null); setTouched((t) => ({ ...t, email: true })); }}
               />
-              <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.eyeButton}>
-                <Icon name={showPassword ? 'eye-off' : 'eye'} size={18} color={colors.ink[400]} />
-              </TouchableOpacity>
+              {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
             </View>
-            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
-          </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Confirmar contraseña</Text>
-            <View style={[styles.passwordRow, confirmError ? styles.inputError : null]}>
-              <TextInput
-                style={styles.passwordInput}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Repetí tu contraseña"
-                placeholderTextColor={colors.ink[300]}
-                secureTextEntry={!showConfirm}
-                autoCapitalize="none"
-                onBlur={() => setTouched((t) => ({ ...t, confirmPassword: true }))}
-              />
-              <TouchableOpacity onPress={() => setShowConfirm((v) => !v)} style={styles.eyeButton}>
-                <Icon name={showConfirm ? 'eye-off' : 'eye'} size={18} color={colors.ink[400]} />
-              </TouchableOpacity>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Contraseña</Text>
+              <View style={[styles.passwordRow, passwordError ? styles.inputError : focused === 'password' && styles.inputFocused]}>
+                <TextInput
+                  style={styles.passwordInput}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Mínimo 8 caracteres"
+                  placeholderTextColor={dg.ink300}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  onFocus={() => setFocused('password')}
+                  onBlur={() => { setFocused(null); setTouched((t) => ({ ...t, password: true })); }}
+                />
+                <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.eyeButton}>
+                  <Icon name={showPassword ? 'eye-off' : 'eye'} size={18} color={dg.ink500} />
+                </TouchableOpacity>
+              </View>
+              {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
             </View>
-            {confirmError ? <Text style={styles.errorText}>{confirmError}</Text> : null}
-          </View>
 
-          <Button
-            label={loading ? 'Creando cuenta...' : 'Crear cuenta'}
-            onPress={handleRegister}
-            disabled={hasErrors || loading}
-            loading={loading}
-            style={styles.ctaSpacing}
-          />
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Confirmar contraseña</Text>
+              <View style={[styles.passwordRow, confirmError ? styles.inputError : focused === 'confirm' && styles.inputFocused]}>
+                <TextInput
+                  style={styles.passwordInput}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Repetí tu contraseña"
+                  placeholderTextColor={dg.ink300}
+                  secureTextEntry={!showConfirm}
+                  autoCapitalize="none"
+                  onFocus={() => setFocused('confirm')}
+                  onBlur={() => { setFocused(null); setTouched((t) => ({ ...t, confirmPassword: true })); }}
+                />
+                <TouchableOpacity onPress={() => setShowConfirm((v) => !v)} style={styles.eyeButton}>
+                  <Icon name={showConfirm ? 'eye-off' : 'eye'} size={18} color={dg.ink500} />
+                </TouchableOpacity>
+              </View>
+              {confirmError ? <Text style={styles.errorText}>{confirmError}</Text> : null}
+            </View>
 
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>o continuar con</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {Platform.OS === 'web' && (
             <Button
-              variant="secondary"
-              label="Continuar con Google"
-              iconLeft={<GoogleGlyph />}
-              loading={googleLoading}
-              onPress={handleGoogleRegister}
+              label={loading ? 'Creando cuenta...' : 'Crear cuenta'}
+              onPress={handleRegister}
+              disabled={hasErrors || loading}
+              loading={loading}
+              dark
+              style={styles.ctaSpacing}
             />
-          )}
 
-          <Text style={styles.footerNote}>Sin tarjeta. Sin período de prueba que vencer.</Text>
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>o continuar con</Text>
+              <View style={styles.dividerLine} />
+            </View>
 
-          <TouchableOpacity style={styles.linkButton} activeOpacity={0.7} onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.linkText}>
-              {'¿Ya tenés cuenta? '}<Text style={styles.linkBold}>Iniciá sesión</Text>
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            {Platform.OS === 'web' && (
+              <Button
+                variant="secondary"
+                label="Continuar con Google"
+                iconLeft={<GoogleGlyph />}
+                loading={googleLoading}
+                onPress={handleGoogleRegister}
+                dark
+              />
+            )}
+
+            <Text style={styles.footerNote}>Sin tarjeta. Sin período de prueba que vencer.</Text>
+
+            <TouchableOpacity style={styles.linkButton} activeOpacity={0.7} onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.linkText}>
+                {'¿Ya tenés cuenta? '}<Text style={styles.linkBold}>Iniciá sesión</Text>
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.surface },
+  root: { flex: 1, backgroundColor: '#0D0D0F' },
+  safe: { flex: 1 },
   flex: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -228,49 +242,50 @@ const styles = StyleSheet.create({
   },
   backButton: { width: 40, height: 40, alignItems: 'flex-start', justifyContent: 'center' },
   scrollContent: { paddingHorizontal: spacing[4], paddingBottom: spacing[8], gap: spacing[4], paddingTop: spacing[2] },
-  title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.ink[900] },
-  subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[500], lineHeight: 22, marginTop: -spacing[2] },
+  title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: dg.ink900 },
+  subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: dg.ink500, lineHeight: 22, marginTop: -spacing[2] },
   inputGroup: { gap: spacing[2] },
   inputLabel: {
     fontFamily: 'PlusJakartaSans-SemiBold',
     fontSize: 13,
-    color: colors.ink[700],
+    color: dg.ink700,
   },
   input: {
     borderWidth: 1.5,
-    borderColor: colors.borderDefault,
+    borderColor: dg.border,
     borderRadius: radius.sm,
     height: controlSize.md,
     paddingHorizontal: spacing[3],
     fontFamily: 'PlusJakartaSans',
     fontSize: 15,
-    color: colors.ink[900],
-    backgroundColor: colors.surface,
+    color: dg.ink900,
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  inputError: { borderColor: colors.error.solid },
+  inputFocused: { borderColor: dg.accent },
+  inputError: { borderColor: dg.danger },
   passwordRow: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: colors.borderDefault,
+    borderColor: dg.border,
     borderRadius: radius.sm,
     height: controlSize.md,
     paddingHorizontal: spacing[3],
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  passwordInput: { flex: 1, fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900] },
+  passwordInput: { flex: 1, fontFamily: 'PlusJakartaSans', fontSize: 15, color: dg.ink900 },
   eyeButton: { padding: 4 },
   errorText: {
     fontFamily: 'PlusJakartaSans',
     fontSize: 12,
-    color: colors.error.text,
+    color: dg.danger,
   },
   ctaSpacing: { marginTop: spacing[2] },
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
-  dividerLine: { flex: 1, height: 1, backgroundColor: colors.borderDefault },
-  dividerText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[400] },
-  footerNote: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[300], textAlign: 'center' },
+  dividerLine: { flex: 1, height: 1, backgroundColor: dg.border },
+  dividerText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: dg.ink400 },
+  footerNote: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: dg.ink300, textAlign: 'center' },
   linkButton: { alignItems: 'center', paddingVertical: spacing[2] },
-  linkText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500] },
-  linkBold: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.ink[900] },
+  linkText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: dg.ink500 },
+  linkBold: { fontFamily: 'PlusJakartaSans-SemiBold', color: dg.ink900 },
 });

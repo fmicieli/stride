@@ -5,7 +5,9 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation';
 import { Button } from '../../components/Button';
-import { colors, spacing } from '../../theme';
+import { DarkGlassBackground } from '../../components/DarkGlassBackground';
+import { dg } from '../../components/darkGlassTokens';
+import { spacing } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'ForgotPasswordConfirm'>;
 type Route = RouteProp<RootStackParamList, 'ForgotPasswordConfirm'>;
@@ -16,28 +18,32 @@ export function ForgotPasswordConfirmScreen() {
   const { email } = route.params;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={styles.container}>
-        <View style={styles.iconContainer}>
-          <Text style={styles.icon}>✉</Text>
+    <View style={styles.root}>
+      <DarkGlassBackground glow="topLeft" glowSize={220} glowOpacity={0.16} />
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <View style={styles.container}>
+          <View style={styles.iconContainer}>
+            <Text style={styles.icon}>✉</Text>
+          </View>
+          <Text style={styles.title}>Revisá tu email</Text>
+          <Text style={styles.description}>
+            {'Te enviamos un link a '}<Text style={styles.emailHighlight}>{email}</Text>
+          </Text>
+          <Button label="Volver al inicio" onPress={() => navigation.navigate('Welcome')} dark style={styles.cta} />
         </View>
-        <Text style={styles.title}>Revisá tu email</Text>
-        <Text style={styles.description}>
-          {'Te enviamos un link a '}<Text style={styles.emailHighlight}>{email}</Text>
-        </Text>
-        <Button label="Volver al inicio" onPress={() => navigation.navigate('Welcome')} style={styles.cta} />
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.surface },
+  root: { flex: 1, backgroundColor: '#0D0D0F' },
+  safe: { flex: 1 },
   container: { flex: 1, paddingHorizontal: spacing[4], alignItems: 'center', justifyContent: 'center', gap: spacing[5], paddingBottom: spacing[10] },
-  iconContainer: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.brand[50], alignItems: 'center', justifyContent: 'center', marginBottom: spacing[2] },
+  iconContainer: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(143,224,90,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: spacing[2] },
   icon: { fontSize: 36 },
-  title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, lineHeight: 30, color: colors.ink[900], textAlign: 'center' },
-  description: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: colors.ink[500], textAlign: 'center', paddingHorizontal: spacing[4] },
-  emailHighlight: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.ink[900] },
+  title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, lineHeight: 30, color: dg.ink900, textAlign: 'center' },
+  description: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: dg.ink500, textAlign: 'center', paddingHorizontal: spacing[4] },
+  emailHighlight: { fontFamily: 'PlusJakartaSans-SemiBold', color: dg.ink900 },
   cta: { alignSelf: 'stretch', marginTop: spacing[3] },
 });
