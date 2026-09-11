@@ -10,6 +10,7 @@ export const dg = {
   border: '#4A4A4E',
   track: '#2A2A2D',
   ctaText: '#0D0D0F',
+  danger: '#FF6B6B',
   gold1: '#FFE8A8',
   gold2: '#D9A441',
   goldBorder: '#B9820F',

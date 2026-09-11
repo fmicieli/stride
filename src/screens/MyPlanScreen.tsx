@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Animated, View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
@@ -35,6 +35,16 @@ function WeekCard({
 }: {
   week: WeekPlan; expanded: boolean; onToggle: () => void; state: WeekState;
 }) {
+  const rotate = useRef(new Animated.Value(expanded ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(rotate, {
+      toValue: expanded ? 1 : 0,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
+  }, [expanded]);
+
   return (
     <GlassCard
       variant="secondary"
@@ -45,7 +55,13 @@ function WeekCard({
           <Text style={styles.weekTitle}>Semana {week.week}</Text>
           {state === 'completed' && <Icon name="check" size={16} color={dg.accent} />}
         </View>
-        <Icon name="chevron" size={16} color={dg.ink500} />
+        <Animated.View
+          style={{
+            transform: [{ rotate: rotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '90deg'] }) }],
+          }}
+        >
+          <Icon name="chevron" size={16} color={dg.ink500} />
+        </Animated.View>
       </TouchableOpacity>
       {expanded && <View style={styles.weekHairline} />}
       {expanded && (
