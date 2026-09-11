@@ -358,8 +358,9 @@ export function ActiveTrainingScreen() {
         </TouchableOpacity>
       </View>
 
-      <BottomSheet visible={paused} onClose={handleResume}>
+      <BottomSheet visible={paused} onClose={handleResume} dark>
         <SessionSummary
+          dark
           variant="paused"
           title="Entrenamiento en pausa"
           subtitle="Tomate el tiempo que necesites. Cuando quieras, seguimos."
@@ -382,6 +383,7 @@ export function ActiveTrainingScreen() {
         onClose={() => { setShowFinishConfirm(false); setPaused(true); }}
         title="No terminaste el entrenamiento"
         subtitle="¿Querés finalizarlo igual? Vas a poder retomarlo más tarde durante el día."
+        dark
       >
         <Button label="Sí, finalizar" variant="tertiaryDanger" onPress={handleLeaveIncomplete} />
         <Button label="Seguir entrenando" onPress={() => { setShowFinishConfirm(false); setPaused(true); }} />

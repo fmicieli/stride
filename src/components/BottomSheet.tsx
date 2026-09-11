@@ -14,6 +14,8 @@ interface Props {
   scrollBody?: boolean;
   /** Pinned below the (optionally scrolling) body — always visible. */
   footer?: React.ReactNode;
+  /** Dark surface for use over dark screens (e.g. the training tracker). */
+  dark?: boolean;
   children: React.ReactNode;
 }
 
@@ -29,6 +31,7 @@ export function BottomSheet({
   dismissible = true,
   scrollBody = false,
   footer,
+  dark = false,
   children,
 }: Props) {
   return (
@@ -39,7 +42,7 @@ export function BottomSheet({
           activeOpacity={1}
           onPress={dismissible ? onClose : undefined}
         />
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, dark && styles.sheetDark]}>
           {dismissible && (
             <TouchableOpacity
               style={styles.close}
@@ -47,11 +50,11 @@ export function BottomSheet({
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               activeOpacity={0.7}
             >
-              <Icon name="close" size={22} color={colors.ink[500]} />
+              <Icon name="close" size={22} color={dark ? '#FFFFFF' : colors.ink[500]} />
             </TouchableOpacity>
           )}
-          {title ? <Text style={styles.title}>{title}</Text> : null}
-          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+          {title ? <Text style={[styles.title, dark && styles.titleDark]}>{title}</Text> : null}
+          {subtitle ? <Text style={[styles.subtitle, dark && styles.subtitleDark]}>{subtitle}</Text> : null}
 
           {scrollBody ? (
             <ScrollView
@@ -89,6 +92,7 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 16,
   },
+  sheetDark: { backgroundColor: '#0D0D0F' },
   close: {
     position: 'absolute',
     top: spacing[4],
@@ -106,12 +110,14 @@ const styles = StyleSheet.create({
     color: colors.ink[900],
     paddingRight: spacing[8],
   },
+  titleDark: { color: '#FFFFFF' },
   subtitle: {
     fontFamily: 'PlusJakartaSans',
     fontSize: 15,
     lineHeight: 22,
     color: colors.ink[500],
   },
+  subtitleDark: { color: '#9A9A9F' },
   body: { gap: spacing[4], marginTop: spacing[2] },
   scrollBody: { flexShrink: 1, marginTop: spacing[2] },
   scrollBodyContent: { paddingBottom: spacing[2] },
