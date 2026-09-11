@@ -11,6 +11,9 @@ import { spacing } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Welcome'>;
 
+const heroSource = require('../../../assets/welcome-hero.jpg');
+const heroUri = typeof heroSource === 'string' ? heroSource : heroSource.uri;
+
 export function WelcomeScreen() {
   const navigation = useNavigation<Nav>();
   const footerOpacity = useRef(new Animated.Value(0)).current;
@@ -40,7 +43,11 @@ export function WelcomeScreen() {
   return (
     <View style={styles.root}>
       <View style={styles.hero}>
-        <Image source={require('../../../assets/welcome-hero.jpg')} style={styles.heroImage} resizeMode="cover" />
+        {Platform.OS === 'web' ? (
+          <View style={styles.heroImageWeb} />
+        ) : (
+          <Image source={heroSource} style={styles.heroImage} resizeMode="cover" />
+        )}
         <View style={styles.heroOverlay} pointerEvents="none" />
         <View style={styles.logoWrap}>
           <StrideLogo width={225} color="#FFFFFF" animated />
@@ -64,8 +71,16 @@ export function WelcomeScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0D0D0F' },
-  hero: { flex: 1 },
+  hero: { flex: 1, overflow: 'hidden' },
   heroImage: { ...StyleSheet.absoluteFillObject },
+  heroImageWeb: {
+    ...StyleSheet.absoluteFillObject,
+    ...({
+      backgroundImage: `url(${heroUri})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    } as any),
+  },
   heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10,10,12,0.45)' },
   logoWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   fade:
