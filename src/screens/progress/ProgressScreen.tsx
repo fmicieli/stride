@@ -13,6 +13,7 @@ import { Icon } from '../../components/Icon';
 import { DarkGlassBackground } from '../../components/DarkGlassBackground';
 import { GlassCard } from '../../components/GlassCard';
 import { ProgressRing } from '../../components/ProgressRing';
+import { FadeInUp } from '../../components/FadeInUp';
 import { dg } from '../../components/darkGlassTokens';
 import { spacing } from '../../theme';
 
@@ -103,73 +104,81 @@ export function ProgressScreen() {
             </View>
           </View>
 
-          <GlassCard variant="primary" style={styles.heroCard}>
-            <ProgressRing
-              size={88}
-              strokeWidth={8}
-              progress={progress}
-              trackColor={dg.track}
-              arcColor={dg.accent}
-              centerLabel={`${completedWeeks}/${plan?.totalWeeks ?? 0}`}
-              centerSub="SEMANAS"
-            />
-            <View style={styles.heroDivider} />
-            <View style={styles.heroRight}>
-              <Text style={styles.rachaLabel}>RACHA ACTUAL</Text>
-              <Text style={styles.rachaValue}>{streak} días</Text>
-              <View style={styles.dotsRow}>
-                {DAY_LETTERS.map((l, i) => (
-                  <DayDot key={i} letter={l} state={weekDots[i]} />
-                ))}
+          <FadeInUp>
+            <GlassCard variant="primary" style={styles.heroCard}>
+              <ProgressRing
+                size={88}
+                strokeWidth={8}
+                progress={progress}
+                trackColor={dg.track}
+                arcColor={dg.accent}
+                centerLabel={`${completedWeeks}/${plan?.totalWeeks ?? 0}`}
+                centerSub="SEMANAS"
+              />
+              <View style={styles.heroDivider} />
+              <View style={styles.heroRight}>
+                <Text style={styles.rachaLabel}>RACHA ACTUAL</Text>
+                <Text style={styles.rachaValue}>{streak} días</Text>
+                <View style={styles.dotsRow}>
+                  {DAY_LETTERS.map((l, i) => (
+                    <DayDot key={i} letter={l} state={weekDots[i]} />
+                  ))}
+                </View>
               </View>
-            </View>
-          </GlassCard>
-
-          <View style={styles.statGrid}>
-            <GlassCard variant="secondary" style={styles.statBox}>
-              <View style={styles.statIconWrap}><Icon name="route" size={16} color={dg.accent} /></View>
-              <Text style={styles.statValue}>{totalSessions}</Text>
-              <Text style={styles.statLabel}>ENTRENAMIENTOS</Text>
             </GlassCard>
-            <GlassCard variant="secondary" style={styles.statBox}>
-              <View style={styles.statIconWrap}><Icon name="clock" size={16} color={dg.accent} /></View>
-              <Text style={styles.statValue}>{formatDuration(totalTime)}</Text>
-              <Text style={styles.statLabel}>TIEMPO TOTAL</Text>
-            </GlassCard>
-          </View>
+          </FadeInUp>
 
-          <View style={styles.historySection}>
-            <View style={styles.historyHeader}>
-              <Text style={styles.sectionTitle}>Historial</Text>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                disabled={sessions.length === 0}
-                onPress={() => navigation.navigate('Historial')}
-              >
-                <Text style={[styles.verTodo, sessions.length === 0 && styles.verTodoDisabled]}>Ver todo</Text>
-              </TouchableOpacity>
-            </View>
-
-            {sessions.length === 0 ? (
-              <GlassCard variant="secondary" style={styles.emptyHistory}>
-                <Text style={styles.emptyText}>Aún no completaste ningún entrenamiento</Text>
-                <Text style={styles.emptySubtext}>¡Arrancá hoy!</Text>
+          <FadeInUp delay={80}>
+            <View style={styles.statGrid}>
+              <GlassCard variant="secondary" style={styles.statBox}>
+                <View style={styles.statIconWrap}><Icon name="route" size={16} color={dg.accent} /></View>
+                <Text style={styles.statValue}>{totalSessions}</Text>
+                <Text style={styles.statLabel}>ENTRENAMIENTOS</Text>
               </GlassCard>
-            ) : (
-              <View style={styles.sessionsList}>
-                {recentSessions.map((s) => (
-                  <GlassCard key={s.id} variant="secondary" style={styles.sessionCard}>
-                    <View style={styles.sessionIconWrap}><Icon name="run" size={17} color={dg.accent} /></View>
-                    <View style={styles.sessionText}>
-                      <Text style={styles.sessionDate}>{formatSessionDate(s.date)}</Text>
-                      <Text style={styles.sessionType}>{s.type || 'Trote con intervalos'}</Text>
-                      <Text style={styles.sessionStat}>{formatSessionMinutes(s.duration)}</Text>
-                    </View>
-                  </GlassCard>
-                ))}
+              <GlassCard variant="secondary" style={styles.statBox}>
+                <View style={styles.statIconWrap}><Icon name="clock" size={16} color={dg.accent} /></View>
+                <Text style={styles.statValue}>{formatDuration(totalTime)}</Text>
+                <Text style={styles.statLabel}>TIEMPO TOTAL</Text>
+              </GlassCard>
+            </View>
+          </FadeInUp>
+
+          <FadeInUp delay={150}>
+            <View style={styles.historySection}>
+              <View style={styles.historyHeader}>
+                <Text style={styles.sectionTitle}>Historial</Text>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  disabled={sessions.length === 0}
+                  onPress={() => navigation.navigate('Historial')}
+                >
+                  <Text style={[styles.verTodo, sessions.length === 0 && styles.verTodoDisabled]}>Ver todo</Text>
+                </TouchableOpacity>
               </View>
-            )}
-          </View>
+
+              {sessions.length === 0 ? (
+                <GlassCard variant="secondary" style={styles.emptyHistory}>
+                  <Text style={styles.emptyText}>Aún no completaste ningún entrenamiento</Text>
+                  <Text style={styles.emptySubtext}>¡Arrancá hoy!</Text>
+                </GlassCard>
+              ) : (
+                <View style={styles.sessionsList}>
+                  {recentSessions.map((s, i) => (
+                    <FadeInUp key={s.id} delay={200 + i * 50}>
+                      <GlassCard variant="secondary" style={styles.sessionCard}>
+                        <View style={styles.sessionIconWrap}><Icon name="run" size={17} color={dg.accent} /></View>
+                        <View style={styles.sessionText}>
+                          <Text style={styles.sessionDate}>{formatSessionDate(s.date)}</Text>
+                          <Text style={styles.sessionType}>{s.type || 'Trote con intervalos'}</Text>
+                          <Text style={styles.sessionStat}>{formatSessionMinutes(s.duration)}</Text>
+                        </View>
+                      </GlassCard>
+                    </FadeInUp>
+                  ))}
+                </View>
+              )}
+            </View>
+          </FadeInUp>
         </ScrollView>
       </SafeAreaView>
     </View>

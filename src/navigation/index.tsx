@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { TabIcon } from '../components/TabIcon';
@@ -108,11 +108,21 @@ function MainTabs() {
         tabBarIconStyle: { marginTop: 2 },
         // Constant content room (icon + label) with the device's bottom inset
         // reserved underneath, so nothing clips on any screen height.
+        // Matches the Figma "glass" tab bar: translucent dark fill, blurred
+        // backdrop (web), top border and a soft shadow lifting it upward.
         tabBarStyle: {
           ...baseTabBarStyle,
           borderTopWidth: 1,
           borderTopColor: 'rgba(255,255,255,0.10)',
           backgroundColor: 'rgba(10,10,12,0.88)',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -6 },
+          shadowOpacity: 0.2,
+          shadowRadius: 12,
+          elevation: 8,
+          ...(Platform.OS === 'web'
+            ? ({ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' } as any)
+            : null),
         },
       })}
     >

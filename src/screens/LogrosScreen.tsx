@@ -10,6 +10,7 @@ import { Icon, IconName } from '../components/Icon';
 import { DarkGlassBackground } from '../components/DarkGlassBackground';
 import { GlassCard } from '../components/GlassCard';
 import { ProgressRing } from '../components/ProgressRing';
+import { FadeInUp } from '../components/FadeInUp';
 import { dg } from '../components/darkGlassTokens';
 import { spacing } from '../theme';
 
@@ -108,29 +109,37 @@ export function LogrosScreen() {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Text style={styles.pageTitle}>Logros</Text>
 
-          <GlassCard variant="primary" style={styles.heroCard}>
-            <ProgressRing
-              size={88}
-              strokeWidth={8}
-              progress={achievements.length ? unlocked.length / achievements.length : 0}
-              trackColor={dg.track}
-              arcColor={dg.accent}
-              centerLabel={`${unlocked.length}/${achievements.length}`}
-            />
-            <Text style={styles.heroSub}>{unlocked.length} de {achievements.length} logros desbloqueados</Text>
-          </GlassCard>
+          <FadeInUp>
+            <GlassCard variant="primary" style={styles.heroCard}>
+              <ProgressRing
+                size={88}
+                strokeWidth={8}
+                progress={achievements.length ? unlocked.length / achievements.length : 0}
+                trackColor={dg.track}
+                arcColor={dg.accent}
+                centerLabel={`${unlocked.length}/${achievements.length}`}
+              />
+              <Text style={styles.heroSub}>{unlocked.length} de {achievements.length} logros desbloqueados</Text>
+            </GlassCard>
+          </FadeInUp>
 
           {unlocked.length > 0 && (
             <View style={styles.medalGrid}>
-              {unlocked.map((a) => <MedalCard key={a.id} achievement={a} />)}
+              {unlocked.map((a, i) => (
+                <FadeInUp key={a.id} delay={100 + i * 60} style={styles.medalCardWrap}>
+                  <MedalCard achievement={a} />
+                </FadeInUp>
+              ))}
             </View>
           )}
 
           {locked.length > 0 && (
-            <View style={styles.nextSection}>
-              <Text style={styles.sectionTitle}>Próximo logro</Text>
-              {locked.slice(0, 2).map((a) => <NextCard key={a.id} achievement={a} />)}
-            </View>
+            <FadeInUp delay={100 + unlocked.length * 60 + 60}>
+              <View style={styles.nextSection}>
+                <Text style={styles.sectionTitle}>Próximo logro</Text>
+                {locked.slice(0, 2).map((a) => <NextCard key={a.id} achievement={a} />)}
+              </View>
+            </FadeInUp>
           )}
         </ScrollView>
       </SafeAreaView>
@@ -149,7 +158,8 @@ const styles = StyleSheet.create({
   heroSub: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 13, color: dg.ink500, textAlign: 'center' },
 
   medalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[3] },
-  medalCard: { flexBasis: '47%', flexGrow: 1, alignItems: 'center', borderRadius: 20, paddingVertical: spacing[5], paddingHorizontal: spacing[3], gap: 8 },
+  medalCardWrap: { flexBasis: '47%', flexGrow: 1 },
+  medalCard: { alignItems: 'center', borderRadius: 20, paddingVertical: spacing[5], paddingHorizontal: spacing[3], gap: 8 },
   medalName: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 14, color: dg.ink900, textAlign: 'center' },
   medalDate: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 11, color: dg.ink500 },
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Platform, Animated, Easing } from 'react-native';
 
 interface Props {
   size: number;
@@ -13,7 +13,10 @@ interface Props {
   subColor?: string;
 }
 
-/** Circular progress indicator — full SVG arc on web, a flat ring fallback on native. */
+/**
+ * Circular progress indicator — animated arc draw-in on web (real SVG +
+ * CSS transition), a soft fade/scale-in on native (flat ring, no true arc).
+ */
 export function ProgressRing({
   size,
   strokeWidth = 8,
@@ -28,8 +31,27 @@ export function ProgressRing({
   const r = (size - strokeWidth) / 2;
   const c = size / 2;
   const circumference = 2 * Math.PI * r;
-  const pct = Math.max(0, Math.min(1, progress));
-  const dash = circumference * pct;
+  const target = Math.max(0, Math.min(1, progress));
+
+  // Web: animate from 0 to the real value right after first paint, and again
+  // whenever `progress` changes — driven by a CSS transition on the arc.
+  const [webProgress, setWebProgress] = useState(0);
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    setWebProgress(0);
+    const raf = requestAnimationFrame(() => setWebProgress(target));
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
+  const dash = circumference * webProgress;
+
+  // Native: no true arc, so give the ring a small entrance instead.
+  const mount = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    const anim = Animated.timing(mount, { toValue: 1, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    anim.start();
+    return () => anim.stop();
+  }, [mount]);
 
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
@@ -38,26 +60,31 @@ export function ProgressRing({
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: 'absolute' }}>
           {/* @ts-ignore */}
           <circle cx={c} cy={c} r={r} stroke={trackColor} strokeWidth={strokeWidth} fill="none" />
-          {pct > 0.002 && (
-            // @ts-ignore
-            <circle
-              cx={c}
-              cy={c}
-              r={r}
-              stroke={arcColor}
-              strokeWidth={strokeWidth}
-              fill="none"
-              strokeDasharray={`${dash} ${circumference}`}
-              strokeLinecap="round"
-              transform={`rotate(-90 ${c} ${c})`}
-            />
-          )}
+          {/* @ts-ignore */}
+          <circle
+            cx={c}
+            cy={c}
+            r={r}
+            stroke={arcColor}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={`${dash} ${circumference}`}
+            strokeLinecap="round"
+            transform={`rotate(-90 ${c} ${c})`}
+            style={{ transition: 'stroke-dasharray 900ms cubic-bezier(0.4,0,0.2,1)' }}
+          />
         </svg>
       ) : (
-        <View
+        <Animated.View
           style={[
             StyleSheet.absoluteFillObject,
-            { borderRadius: size / 2, borderWidth: strokeWidth, borderColor: trackColor },
+            {
+              borderRadius: size / 2,
+              borderWidth: strokeWidth,
+              borderColor: trackColor,
+              opacity: mount,
+              transform: [{ scale: mount.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) }],
+            },
           ]}
         />
       )}

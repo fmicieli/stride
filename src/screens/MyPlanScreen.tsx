@@ -10,6 +10,7 @@ import { Icon } from '../components/Icon';
 import { DarkGlassBackground } from '../components/DarkGlassBackground';
 import { GlassCard } from '../components/GlassCard';
 import { ProgressRing } from '../components/ProgressRing';
+import { FadeInUp } from '../components/FadeInUp';
 import { dg } from '../components/darkGlassTokens';
 import { spacing } from '../theme';
 
@@ -137,49 +138,56 @@ export function MyPlanScreen() {
           <View style={styles.backBtn} />
         </View>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <GlassCard variant="primary" style={styles.goalCard}>
-            <View style={styles.goalText}>
-              <Text style={styles.goalLabel}>Tu meta</Text>
-              <Text style={styles.goalTitle}>{getGoalShortLabel(plan.goal)}</Text>
-              <Text style={styles.goalDate}>Fecha objetivo: {formatTargetDate(plan.targetDate)}</Text>
-            </View>
-            <ProgressRing
-              size={56}
-              strokeWidth={6}
-              progress={progress}
-              trackColor={dg.track}
-              arcColor={dg.accent}
-              centerLabel={`${currentWeek}/${plan.totalWeeks}`}
-            />
-          </GlassCard>
+          <FadeInUp>
+            <GlassCard variant="primary" style={styles.goalCard}>
+              <View style={styles.goalText}>
+                <Text style={styles.goalLabel}>Tu meta</Text>
+                <Text style={styles.goalTitle}>{getGoalShortLabel(plan.goal)}</Text>
+                <Text style={styles.goalDate} numberOfLines={2}>Fecha objetivo: {formatTargetDate(plan.targetDate)}</Text>
+              </View>
+              <View style={styles.goalRing}>
+                <ProgressRing
+                  size={56}
+                  strokeWidth={6}
+                  progress={progress}
+                  trackColor={dg.track}
+                  arcColor={dg.accent}
+                  centerLabel={`${currentWeek}/${plan.totalWeeks}`}
+                />
+              </View>
+            </GlassCard>
+          </FadeInUp>
 
-          <View style={styles.chipsRow}>
-            <View style={styles.chip}>
-              <Icon name="clock" size={13} color={dg.accent} />
-              <Text style={styles.chipText}>{plan.totalWeeks} semanas</Text>
+          <FadeInUp delay={80}>
+            <View style={styles.chipsRow}>
+              <View style={styles.chip}>
+                <Icon name="clock" size={13} color={dg.accent} />
+                <Text style={styles.chipText}>{plan.totalWeeks} semanas</Text>
+              </View>
+              <View style={styles.chip}>
+                <Icon name="flag" size={13} color={dg.accent} />
+                <Text style={styles.chipText}>Semana {currentWeek}</Text>
+              </View>
+              <View style={styles.chip}>
+                <Icon name="trend" size={13} color={dg.accent} />
+                <Text style={styles.chipText}>{pct}% avance</Text>
+              </View>
             </View>
-            <View style={styles.chip}>
-              <Icon name="flag" size={13} color={dg.accent} />
-              <Text style={styles.chipText}>Semana {currentWeek}</Text>
-            </View>
-            <View style={styles.chip}>
-              <Icon name="trend" size={13} color={dg.accent} />
-              <Text style={styles.chipText}>{pct}% avance</Text>
-            </View>
-          </View>
+          </FadeInUp>
 
           <View style={styles.weeks}>
-            {plan.weeks.map((week) => {
+            {plan.weeks.map((week, i) => {
               const completed = isWeekCompleted(week, sessions);
               const state: WeekState = completed ? 'completed' : week.week === currentWeek ? 'current' : 'future';
               return (
-                <WeekCard
-                  key={week.week}
-                  week={week}
-                  expanded={expandedWeek === week.week}
-                  onToggle={() => setExpandedWeek(expandedWeek === week.week ? null : week.week)}
-                  state={state}
-                />
+                <FadeInUp key={week.week} delay={140 + i * 50}>
+                  <WeekCard
+                    week={week}
+                    expanded={expandedWeek === week.week}
+                    onToggle={() => setExpandedWeek(expandedWeek === week.week ? null : week.week)}
+                    state={state}
+                  />
+                </FadeInUp>
               );
             })}
           </View>
@@ -199,10 +207,14 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[10], gap: spacing[6] },
 
   goalCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: 20, padding: spacing[5] },
-  goalText: { flex: 1, gap: 4, paddingRight: spacing[3] },
+  // minWidth: 0 keeps the text column from pushing past its flex share on
+  // web (react-native-web flex children default to a content-based min-width,
+  // which was letting the date run under the ring instead of wrapping).
+  goalText: { flex: 1, minWidth: 0, gap: 4, paddingRight: spacing[3] },
+  goalRing: { flexShrink: 0 },
   goalLabel: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: dg.ink500 },
   goalTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: dg.ink900 },
-  goalDate: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: dg.ink500 },
+  goalDate: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: dg.ink500, lineHeight: 18 },
 
   chipsRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   chip: {

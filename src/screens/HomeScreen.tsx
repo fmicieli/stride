@@ -13,6 +13,7 @@ import { BottomSheet } from '../components/BottomSheet';
 import { DarkGlassBackground } from '../components/DarkGlassBackground';
 import { GlassCard } from '../components/GlassCard';
 import { ProgressRing } from '../components/ProgressRing';
+import { FadeInUp } from '../components/FadeInUp';
 import { Icon } from '../components/Icon';
 import { dg } from '../components/darkGlassTokens';
 import { greetingReady, buildSessionIntervals, SessionInterval } from '../utils/planGenerator';
@@ -224,6 +225,7 @@ export function HomeScreen() {
 
           {plan ? (
             <>
+              <FadeInUp>
               <GlassCard variant="primary" style={styles.heroCard}>
                 {isRunDay ? (
                   <View style={styles.heroHead}>
@@ -279,28 +281,33 @@ export function HomeScreen() {
                   </TouchableOpacity>
                 )}
               </GlassCard>
+              </FadeInUp>
 
-              <View style={styles.statRow}>
-                <GlassCard variant="secondary" style={styles.statCard}>
-                  <View style={styles.statIconWrap}><Icon name="flame" size={16} color={dg.accent} /></View>
-                  <Text style={styles.statValue}>{streak} días</Text>
-                  <Text style={styles.statLabel}>RACHA ACTUAL</Text>
-                </GlassCard>
-                <GlassCard variant="secondary" style={styles.statCard}>
-                  <View style={styles.statIconWrap}><Icon name="clock" size={16} color={dg.accent} /></View>
-                  <Text style={styles.statValue}>{weeklyMinutes} min</Text>
-                  <Text style={styles.statLabel}>TIEMPO ESTA SEMANA</Text>
-                </GlassCard>
-              </View>
+              <FadeInUp delay={80}>
+                <View style={styles.statRow}>
+                  <GlassCard variant="secondary" style={styles.statCard}>
+                    <View style={styles.statIconWrap}><Icon name="flame" size={16} color={dg.accent} /></View>
+                    <Text style={styles.statValue}>{streak} días</Text>
+                    <Text style={styles.statLabel}>RACHA ACTUAL</Text>
+                  </GlassCard>
+                  <GlassCard variant="secondary" style={styles.statCard}>
+                    <View style={styles.statIconWrap}><Icon name="clock" size={16} color={dg.accent} /></View>
+                    <Text style={styles.statValue}>{weeklyMinutes} min</Text>
+                    <Text style={styles.statLabel}>TIEMPO ESTA SEMANA</Text>
+                  </GlassCard>
+                </View>
+              </FadeInUp>
 
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Próximos días</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.daysList}>
-                  {nextDays.map((d, i) => (
-                    <DayChip key={i} label={d.label} isRun={d.isRun} isToday={d.isToday} />
-                  ))}
-                </ScrollView>
-              </View>
+              <FadeInUp delay={150}>
+                <View style={styles.section}>
+                  <Text style={styles.sectionLabel}>Próximos días</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.daysList}>
+                    {nextDays.map((d, i) => (
+                      <DayChip key={i} label={d.label} isRun={d.isRun} isToday={d.isToday} />
+                    ))}
+                  </ScrollView>
+                </View>
+              </FadeInUp>
             </>
           ) : (
             <View style={styles.emptyState}>
