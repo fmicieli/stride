@@ -10,8 +10,9 @@ function getAudioCtx(): AudioContext | null {
     if (!webAudioCtx || webAudioCtx.state === 'closed') {
       webAudioCtx = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
     }
-    if (webAudioCtx.state === 'suspended') webAudioCtx.resume().catch(() => {});
-    return webAudioCtx;
+    const ctx = webAudioCtx as AudioContext;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    return ctx;
   } catch { return null; }
 }
 

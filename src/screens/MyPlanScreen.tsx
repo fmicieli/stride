@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
@@ -7,7 +7,11 @@ import { getPlan, getSessions } from '../services/firestore';
 import { TrainingPlan, TrainingSession, WeekPlan } from '../types';
 import { getGoalShortLabel, formatTargetDate } from '../utils/planGenerator';
 import { Icon } from '../components/Icon';
-import { colors, spacing, radius } from '../theme';
+import { DarkGlassBackground } from '../components/DarkGlassBackground';
+import { GlassCard } from '../components/GlassCard';
+import { ProgressRing } from '../components/ProgressRing';
+import { dg } from '../components/darkGlassTokens';
+import { spacing } from '../theme';
 
 function isWeekCompleted(week: WeekPlan, sessions: TrainingSession[]): boolean {
   const runDays = week.days.filter((d) => d.type === 'run').length;
@@ -21,64 +25,48 @@ function getCurrentWeek(plan: TrainingPlan, sessions: TrainingSession[]): number
   return plan.totalWeeks;
 }
 
-function CheckIcon() {
-  if (Platform.OS === 'web') {
-    return (
-      // @ts-ignore
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* @ts-ignore */}
-        <path d="M 3.5 9 L 6.5 12 L 14.5 4" stroke="#1E8563" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    );
-  }
-  return <Text style={{ fontSize: 14, color: '#1E8563' }}>✓</Text>;
-}
-
-function ChevronIcon({ expanded }: { expanded: boolean }) {
-  if (Platform.OS === 'web') {
-    return (
-      // @ts-ignore
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
-        {/* @ts-ignore */}
-        <path d="M 6.5 3.5 L 11.5 9 L 6.5 14.5" stroke="#777777" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    );
-  }
-  return <Text style={{ fontSize: 14, color: '#777777' }}>{expanded ? '∧' : '›'}</Text>;
-}
-
 const TODAY_KEY = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][new Date().getDay()];
 
-function WeekCard({ week, expanded, onToggle, completed, isCurrentWeek }: { week: WeekPlan; expanded: boolean; onToggle: () => void; completed: boolean; isCurrentWeek: boolean }) {
+type WeekState = 'completed' | 'current' | 'future';
+
+function WeekCard({
+  week, expanded, onToggle, state,
+}: {
+  week: WeekPlan; expanded: boolean; onToggle: () => void; state: WeekState;
+}) {
   return (
-    <View style={[styles.weekCard, isCurrentWeek && styles.weekCardCurrent]}>
+    <GlassCard
+      variant="secondary"
+      style={[styles.weekCard, state === 'current' && styles.weekCardCurrent, state === 'completed' && styles.weekCardCompleted]}
+    >
       <TouchableOpacity style={styles.weekHeader} onPress={onToggle} activeOpacity={0.8}>
         <View style={styles.weekTitleRow}>
           <Text style={styles.weekTitle}>Semana {week.week}</Text>
-          {completed && <CheckIcon />}
+          {state === 'completed' && <Icon name="check" size={16} color={dg.accent} />}
         </View>
-        <ChevronIcon expanded={expanded} />
+        <Icon name="chevron" size={16} color={dg.ink500} />
       </TouchableOpacity>
       {expanded && <View style={styles.weekHairline} />}
       {expanded && (
         <View style={styles.weekDays}>
           {week.days.map((day) => {
-            const isToday = isCurrentWeek && day.day === TODAY_KEY;
-            const activity =
-              day.type === 'run'
-                ? `Trote con intervalos${isToday ? ' · hoy' : ''}`
-                : 'Descanso';
+            const isToday = state === 'current' && day.day === TODAY_KEY;
+            const isRun = day.type === 'run';
+            const activity = isRun ? `Trote con intervalos${isToday ? ' · hoy' : ''}` : 'Descanso';
             return (
               <View key={day.day} style={styles.dayRow}>
-                <Text style={[styles.dayName, day.type === 'rest' && styles.restText]}>{day.dayShort}</Text>
-                <Text style={[styles.dayActivity, day.type === 'rest' && styles.restText, isToday && styles.todayText]}>{activity}</Text>
-                <Text style={[styles.dayDuration, day.type === 'rest' && styles.restText]}>{day.type === 'run' && day.duration ? `${day.duration} min` : ''}</Text>
+                <View style={[styles.dayIconWrap, isRun ? styles.dayIconRun : styles.dayIconRest]}>
+                  <Icon name={isRun ? 'run' : 'moon'} size={11} color={isRun ? dg.accent : dg.ink500} />
+                </View>
+                <Text style={[styles.dayName, !isRun && styles.restText, isToday && styles.todayText]}>{day.dayShort}</Text>
+                <Text style={[styles.dayActivity, !isRun && styles.restText, isToday && styles.todayText]}>{activity}</Text>
+                <Text style={[styles.dayDuration, !isRun && styles.restText]}>{isRun && day.duration ? `${day.duration} min` : ''}</Text>
               </View>
             );
           })}
         </View>
       )}
-    </View>
+    </GlassCard>
   );
 }
 
@@ -107,107 +95,143 @@ export function MyPlanScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={styles.center}><ActivityIndicator color={colors.brand[500]} /></View>
-      </SafeAreaView>
+      <View style={styles.root}>
+        <DarkGlassBackground glow="topRight" glowSize={260} glowOpacity={0.18} />
+        <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+          <View style={styles.center}><ActivityIndicator color={dg.accent} /></View>
+        </SafeAreaView>
+      </View>
     );
   }
 
   if (!plan) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}><Icon name="chevron-left" size={22} color={colors.ink[900]} /></TouchableOpacity>
-        <Text style={styles.headerTitle}>Mi plan</Text>
-        <View style={styles.backBtn} />
+      <View style={styles.root}>
+        <DarkGlassBackground glow="topRight" glowSize={260} glowOpacity={0.18} />
+        <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}><Icon name="chevron-left" size={22} color={dg.ink900} /></TouchableOpacity>
+            <Text style={styles.headerTitle}>Mi plan</Text>
+            <View style={styles.backBtn} />
+          </View>
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>Sin plan activo</Text>
+            <Text style={styles.emptyText}>Tu plan aparecerá aquí una vez que lo configures</Text>
+          </View>
+        </SafeAreaView>
       </View>
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>Sin plan activo</Text>
-          <Text style={styles.emptyText}>Tu plan aparecerá aquí una vez que lo configures</Text>
-        </View>
-      </SafeAreaView>
     );
   }
 
+  const currentWeek = getCurrentWeek(plan, sessions);
+  const progress = Math.min(1, (currentWeek - 1) / plan.totalWeeks);
+  const pct = Math.round(progress * 100);
+
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}><Icon name="chevron-left" size={22} color={colors.ink[900]} /></TouchableOpacity>
-        <Text style={styles.headerTitle}>Mi plan</Text>
-        <View style={styles.backBtn} />
-      </View>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.goalCard}>
-          <Text style={styles.goalLabel}>Tu meta</Text>
-          <Text style={styles.goalTitle}>{getGoalShortLabel(plan.goal)}</Text>
-          <Text style={styles.goalDate}>Fecha objetivo: {formatTargetDate(plan.targetDate)}</Text>
+    <View style={styles.root}>
+      <DarkGlassBackground glow="topRight" glowSize={260} glowOpacity={0.18} />
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}><Icon name="chevron-left" size={22} color={dg.ink900} /></TouchableOpacity>
+          <Text style={styles.headerTitle}>Mi plan</Text>
+          <View style={styles.backBtn} />
         </View>
-
-        <View style={styles.chipsRow}>
-          {[
-            `${plan.totalWeeks} semanas`,
-            `Semana ${getCurrentWeek(plan, sessions)} actual`,
-            `${Math.round((getCurrentWeek(plan, sessions) - 1) / plan.totalWeeks * 100)}% avance`,
-          ].map((c) => (
-            <View key={c} style={styles.chip}><Text style={styles.chipText}>{c}</Text></View>
-          ))}
-        </View>
-
-        <View style={styles.weeks}>
-          {plan.weeks.map((week) => (
-            <WeekCard
-              key={week.week}
-              week={week}
-              expanded={expandedWeek === week.week}
-              onToggle={() => setExpandedWeek(expandedWeek === week.week ? null : week.week)}
-              completed={isWeekCompleted(week, sessions)}
-              isCurrentWeek={week.week === getCurrentWeek(plan, sessions)}
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <GlassCard variant="primary" style={styles.goalCard}>
+            <View style={styles.goalText}>
+              <Text style={styles.goalLabel}>Tu meta</Text>
+              <Text style={styles.goalTitle}>{getGoalShortLabel(plan.goal)}</Text>
+              <Text style={styles.goalDate}>Fecha objetivo: {formatTargetDate(plan.targetDate)}</Text>
+            </View>
+            <ProgressRing
+              size={56}
+              strokeWidth={6}
+              progress={progress}
+              trackColor={dg.track}
+              arcColor={dg.accent}
+              centerLabel={`${currentWeek}/${plan.totalWeeks}`}
             />
-          ))}
-        </View>
-      </ScrollView>
+          </GlassCard>
 
-      <View style={styles.planFooter}>
-        <Text style={styles.planFooterText}>
-          + {plan.totalWeeks - getCurrentWeek(plan, sessions)} semanas más hasta tu meta
-        </Text>
-      </View>
-    </SafeAreaView>
+          <View style={styles.chipsRow}>
+            <View style={styles.chip}>
+              <Icon name="clock" size={13} color={dg.accent} />
+              <Text style={styles.chipText}>{plan.totalWeeks} semanas</Text>
+            </View>
+            <View style={styles.chip}>
+              <Icon name="flag" size={13} color={dg.accent} />
+              <Text style={styles.chipText}>Semana {currentWeek}</Text>
+            </View>
+            <View style={styles.chip}>
+              <Icon name="trend" size={13} color={dg.accent} />
+              <Text style={styles.chipText}>{pct}% avance</Text>
+            </View>
+          </View>
+
+          <View style={styles.weeks}>
+            {plan.weeks.map((week) => {
+              const completed = isWeekCompleted(week, sessions);
+              const state: WeekState = completed ? 'completed' : week.week === currentWeek ? 'current' : 'future';
+              return (
+                <WeekCard
+                  key={week.week}
+                  week={week}
+                  expanded={expandedWeek === week.week}
+                  onToggle={() => setExpandedWeek(expandedWeek === week.week ? null : week.week)}
+                  state={state}
+                />
+              );
+            })}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.surface },
+  root: { flex: 1, backgroundColor: '#0D0D0F' },
+  safe: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[3] },
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.ink[900] },
-  content: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[10] },
-  goalCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.lg, padding: spacing[5], marginBottom: spacing[4] },
-  goalLabel: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.ink[500], marginBottom: 6 },
-  goalTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.ink[900], marginBottom: 6 },
-  planFooter: { paddingHorizontal: spacing[4], paddingVertical: spacing[6], alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.surfaceMuted },
-  planFooterText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[500] },
-  goalDate: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500] },
-  chipsRow: { flexDirection: 'row', gap: 8, marginBottom: spacing[6], flexWrap: 'wrap' },
-  chip: { backgroundColor: colors.surfaceMuted, borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14 },
-  chipText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[700] },
+  headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: dg.ink900 },
+  content: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[10], gap: spacing[6] },
+
+  goalCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: 20, padding: spacing[5] },
+  goalText: { flex: 1, gap: 4, paddingRight: spacing[3] },
+  goalLabel: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: dg.ink500 },
+  goalTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: dg.ink900 },
+  goalDate: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: dg.ink500 },
+
+  chipsRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  chip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 999, paddingVertical: 7, paddingHorizontal: 12,
+  },
+  chipText: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 12.5, color: dg.ink900 },
+
   weeks: { gap: spacing[3] },
-  weekCard: { backgroundColor: colors.surfaceMuted, borderRadius: radius.lg, overflow: 'hidden' },
-  weekCardCurrent: { backgroundColor: colors.brand[50] },
+  weekCard: { borderRadius: 18, overflow: 'hidden' },
+  weekCardCurrent: { borderColor: dg.accent, borderWidth: 1.5, backgroundColor: 'rgba(143,224,90,0.08)' },
+  weekCardCompleted: { opacity: 0.78 },
   weekHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing[5], paddingVertical: spacing[4] },
   weekTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  weekTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: colors.ink[900] },
-  weekHairline: { height: 1, backgroundColor: colors.borderSubtle, marginHorizontal: spacing[5] },
-  completedBadge: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 14, color: colors.brand[500] },
+  weekTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: dg.ink900 },
+  weekHairline: { height: 1, backgroundColor: 'rgba(255,255,255,0.10)', marginHorizontal: spacing[5] },
   weekDays: { paddingHorizontal: spacing[5], paddingTop: spacing[3], paddingBottom: spacing[4], gap: 10 },
-  dayRow: { flexDirection: 'row', alignItems: 'center' },
-  dayName: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: colors.ink[900], width: 40 },
-  dayActivity: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[900], flex: 1 },
-  dayDuration: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.ink[500], textAlign: 'right', width: 56 },
-  restText: { color: colors.ink[300] },
-  todayText: { fontFamily: 'PlusJakartaSans-SemiBold', color: colors.ink[900] },
+  dayRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dayIconWrap: { width: 20, height: 20, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  dayIconRun: { backgroundColor: 'rgba(143,224,90,0.14)' },
+  dayIconRest: { backgroundColor: 'rgba(255,255,255,0.06)' },
+  dayName: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: dg.ink900, width: 34 },
+  dayActivity: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: dg.ink900, flex: 1 },
+  dayDuration: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: dg.ink500, textAlign: 'right', width: 56 },
+  restText: { color: dg.ink500 },
+  todayText: { fontFamily: 'PlusJakartaSans-SemiBold', color: dg.ink900 },
+
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: spacing[3] },
-  emptyTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: colors.ink[900] },
-  emptyText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500], textAlign: 'center', lineHeight: 20 },
+  emptyTitle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: dg.ink900 },
+  emptyText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: dg.ink500, textAlign: 'center', lineHeight: 20 },
 });

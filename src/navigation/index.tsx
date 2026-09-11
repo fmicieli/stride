@@ -29,6 +29,7 @@ import { PlanLoadingScreen } from '../screens/PlanLoadingScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MyPlanScreen } from '../screens/MyPlanScreen';
 import { ProgressScreen } from '../screens/progress/ProgressScreen';
+import { LogrosScreen } from '../screens/LogrosScreen';
 
 // Training
 import { ActiveTrainingScreen } from '../screens/training/ActiveTrainingScreen';
@@ -39,7 +40,6 @@ import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { ChangePasswordScreen } from '../screens/profile/ChangePasswordScreen';
 import { HistorialScreen } from '../screens/profile/HistorialScreen';
-import { LogrosScreen } from '../screens/profile/LogrosScreen';
 
 export type RootStackParamList = {
   // Auth
@@ -68,7 +68,6 @@ export type RootStackParamList = {
   EditProfile: undefined;
   ChangePassword: undefined;
   Historial: undefined;
-  Logros: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -77,8 +76,19 @@ const Tab = createBottomTabNavigator();
 // Room for icon + label; the device's bottom inset is reserved on top of this.
 const TAB_BAR_CONTENT_HEIGHT = 76;
 
+// Hoy / Progreso / Logros got the dark glass redesign; Perfil stays on the
+// original light theme, so it gets its own tab bar treatment below.
+const DARK_ACCENT = '#8FE05A';
+const DARK_INACTIVE = '#9A9A9F';
+
 function MainTabs() {
   const insets = useSafeAreaInsets();
+  const baseTabBarStyle = {
+    height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
+    paddingTop: 10,
+    paddingBottom: 12 + insets.bottom,
+    paddingHorizontal: 16,
+  };
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -87,31 +97,45 @@ function MainTabs() {
           <TabIcon
             name={route.name}
             focused={focused}
-            activeColor="#1B6E52"
-            inactiveColor="#8A8A8A"
+            activeColor={DARK_ACCENT}
+            inactiveColor={DARK_INACTIVE}
           />
         ),
-        tabBarActiveTintColor: '#1B6E52',
-        tabBarInactiveTintColor: '#8A8A8A',
+        tabBarActiveTintColor: DARK_ACCENT,
+        tabBarInactiveTintColor: DARK_INACTIVE,
         tabBarShowLabel: true,
         tabBarLabelStyle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 11, marginTop: 2 },
         tabBarIconStyle: { marginTop: 2 },
         // Constant content room (icon + label) with the device's bottom inset
         // reserved underneath, so nothing clips on any screen height.
         tabBarStyle: {
+          ...baseTabBarStyle,
           borderTopWidth: 1,
-          borderTopColor: '#F0F0F0',
-          backgroundColor: '#FFFFFF',
-          height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
-          paddingTop: 10,
-          paddingBottom: 12 + insets.bottom,
-          paddingHorizontal: 16,
+          borderTopColor: 'rgba(255,255,255,0.10)',
+          backgroundColor: 'rgba(10,10,12,0.88)',
         },
       })}
     >
       <Tab.Screen name="Hoy" component={HomeScreen} />
       <Tab.Screen name="Progreso" component={ProgressScreen} />
-      <Tab.Screen name="Perfil" component={ProfileScreen} />
+      <Tab.Screen name="Logros" component={LogrosScreen} />
+      <Tab.Screen
+        name="Perfil"
+        component={ProfileScreen}
+        options={{
+          tabBarActiveTintColor: '#1B6E52',
+          tabBarInactiveTintColor: '#8A8A8A',
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name="Perfil" focused={focused} activeColor="#1B6E52" inactiveColor="#8A8A8A" />
+          ),
+          tabBarStyle: {
+            ...baseTabBarStyle,
+            borderTopWidth: 1,
+            borderTopColor: '#F0F0F0',
+            backgroundColor: '#FFFFFF',
+          },
+        }}
+      />
     </Tab.Navigator>
   );
 }
@@ -157,7 +181,6 @@ export function AppNavigator() {
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
         <Stack.Screen name="Historial" component={HistorialScreen} />
-        <Stack.Screen name="Logros" component={LogrosScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

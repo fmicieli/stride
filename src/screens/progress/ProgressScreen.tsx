@@ -8,10 +8,17 @@ import { useAuth } from '../../context/AuthContext';
 import { getPlan, getSessions } from '../../services/firestore';
 import { TrainingPlan, TrainingSession, WeekPlan } from '../../types';
 import { formatDuration } from '../../utils/planGenerator';
+import { getStreakFromSessions, getWeekDots, DayDotState } from '../../utils/stats';
 import { Icon } from '../../components/Icon';
-import { colors, spacing, radius } from '../../theme';
+import { DarkGlassBackground } from '../../components/DarkGlassBackground';
+import { GlassCard } from '../../components/GlassCard';
+import { ProgressRing } from '../../components/ProgressRing';
+import { dg } from '../../components/darkGlassTokens';
+import { spacing } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList>;
+
+const DAY_LETTERS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
 function isWeekCompleted(week: WeekPlan, sessions: TrainingSession[]): boolean {
   const runDays = week.days.filter((d) => d.type === 'run').length;
@@ -30,19 +37,22 @@ function formatSessionMinutes(seconds: number): string {
   return `${Math.round(seconds / 60)} min`;
 }
 
-function getStreakFromSessions(sessions: TrainingSession[]): number {
-  if (sessions.length === 0) return 0;
-  const sorted = [...sessions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  let streak = 0;
-  let prev = new Date();
-  prev.setHours(0, 0, 0, 0);
-  for (const s of sorted) {
-    const d = new Date(s.date);
-    d.setHours(0, 0, 0, 0);
-    const diff = Math.round((prev.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
-    if (diff <= 1) { streak++; prev = d; } else break;
-  }
-  return streak;
+function DayDot({ letter, state }: { letter: string; state: DayDotState }) {
+  return (
+    <View style={styles.dotCol}>
+      <Text style={[styles.dotLetter, state === 'today' && styles.dotLetterToday, state === 'done' && styles.dotLetterDone]}>
+        {letter}
+      </Text>
+      <View
+        style={[
+          styles.dot,
+          state === 'done' && styles.dotDone,
+          state === 'today' && styles.dotToday,
+          state === 'future' && styles.dotFuture,
+        ]}
+      />
+    </View>
+  );
 }
 
 export function ProgressScreen() {
@@ -67,145 +77,151 @@ export function ProgressScreen() {
   const totalSessions = sessions.filter((s) => s.completed).length;
   const totalTime = sessions.reduce((sum, s) => sum + s.duration, 0);
   const progress = plan ? Math.min(1, completedWeeks / plan.totalWeeks) : 0;
-  const currentWeek = completedWeeks + 1;
   const recentSessions = sessions.slice(0, 3);
+  const weekDots = getWeekDots(sessions);
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={styles.center}><ActivityIndicator color={colors.brand[500]} /></View>
-      </SafeAreaView>
+      <View style={styles.root}>
+        <DarkGlassBackground glow="topLeft" glowSize={260} glowOpacity={0.18} />
+        <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+          <View style={styles.center}><ActivityIndicator color={dg.accent} /></View>
+        </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.pageHead}>
-          <Text style={styles.pageTitle}>Tu progreso</Text>
-          <TouchableOpacity style={styles.trophyBtn} activeOpacity={0.7} onPress={() => navigation.navigate('Logros')}>
-            <Icon name="trophy" size={20} color={colors.ink[900]} />
-          </TouchableOpacity>
-        </View>
-
-        {/* SplitStat */}
-        <View style={styles.splitStat}>
-          <View style={styles.splitHalf}>
-            <Text style={styles.splitNumber}>{completedWeeks}</Text>
-            <Text style={styles.splitLabel}>Semanas completadas</Text>
-          </View>
-          <View style={styles.splitDivider} />
-          <View style={styles.splitHalf}>
-            <Text style={styles.splitNumber}>{streak}</Text>
-            <Text style={styles.splitLabel}>Racha actual</Text>
-          </View>
-        </View>
-
-        {/* Plan progress */}
-        {plan && (
-          <View style={styles.planProgress}>
-            <View style={styles.planLabelRow}>
-              <Text style={styles.planLabel}>Semana {currentWeek} de {plan.totalWeeks}</Text>
-              <Text style={styles.planPct}>{Math.round(progress * 100)}%</Text>
-            </View>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` as any }]} />
+    <View style={styles.root}>
+      <DarkGlassBackground glow="topLeft" glowSize={260} glowOpacity={0.18} />
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.pageHead}>
+            <Text style={styles.pageTitle}>Tu progreso</Text>
+            <View style={styles.trendBtn}>
+              <Icon name="trend" size={18} color={dg.accent} />
             </View>
           </View>
-        )}
 
-        {/* StatGrid */}
-        <View style={styles.statGrid}>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{totalSessions}</Text>
-            <Text style={styles.statLabel}>Entrenamientos</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{formatDuration(totalTime)}</Text>
-            <Text style={styles.statLabel}>Tiempo total</Text>
-          </View>
-        </View>
-
-        {/* History */}
-        <View style={styles.historySection}>
-          <View style={styles.historyHeader}>
-            <Text style={styles.sectionTitle}>Historial</Text>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              disabled={sessions.length === 0}
-              onPress={() => navigation.navigate('Historial')}
-            >
-              <Text style={[styles.verTodo, sessions.length === 0 && styles.verTodoDisabled]}>Ver todo</Text>
-            </TouchableOpacity>
-          </View>
-
-          {sessions.length === 0 ? (
-            <View style={styles.emptyHistory}>
-              <Text style={styles.emptyText}>Aún no completaste ningún entrenamiento</Text>
-              <Text style={styles.emptySubtext}>¡Arrancá hoy!</Text>
+          <GlassCard variant="primary" style={styles.heroCard}>
+            <ProgressRing
+              size={88}
+              strokeWidth={8}
+              progress={progress}
+              trackColor={dg.track}
+              arcColor={dg.accent}
+              centerLabel={`${completedWeeks}/${plan?.totalWeeks ?? 0}`}
+              centerSub="SEMANAS"
+            />
+            <View style={styles.heroDivider} />
+            <View style={styles.heroRight}>
+              <Text style={styles.rachaLabel}>RACHA ACTUAL</Text>
+              <Text style={styles.rachaValue}>{streak} días</Text>
+              <View style={styles.dotsRow}>
+                {DAY_LETTERS.map((l, i) => (
+                  <DayDot key={i} letter={l} state={weekDots[i]} />
+                ))}
+              </View>
             </View>
-          ) : (
-            <View style={styles.sessionsList}>
-              {recentSessions.map((s) => (
-                <View key={s.id} style={styles.sessionCard}>
-                  <Text style={styles.sessionDate}>{formatSessionDate(s.date)}</Text>
-                  <Text style={styles.sessionType}>{s.type || 'Trote con intervalos'}</Text>
-                  <Text style={styles.sessionStat}>{formatSessionMinutes(s.duration)}</Text>
-                </View>
-              ))}
+          </GlassCard>
+
+          <View style={styles.statGrid}>
+            <GlassCard variant="secondary" style={styles.statBox}>
+              <View style={styles.statIconWrap}><Icon name="route" size={16} color={dg.accent} /></View>
+              <Text style={styles.statValue}>{totalSessions}</Text>
+              <Text style={styles.statLabel}>ENTRENAMIENTOS</Text>
+            </GlassCard>
+            <GlassCard variant="secondary" style={styles.statBox}>
+              <View style={styles.statIconWrap}><Icon name="clock" size={16} color={dg.accent} /></View>
+              <Text style={styles.statValue}>{formatDuration(totalTime)}</Text>
+              <Text style={styles.statLabel}>TIEMPO TOTAL</Text>
+            </GlassCard>
+          </View>
+
+          <View style={styles.historySection}>
+            <View style={styles.historyHeader}>
+              <Text style={styles.sectionTitle}>Historial</Text>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                disabled={sessions.length === 0}
+                onPress={() => navigation.navigate('Historial')}
+              >
+                <Text style={[styles.verTodo, sessions.length === 0 && styles.verTodoDisabled]}>Ver todo</Text>
+              </TouchableOpacity>
             </View>
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+
+            {sessions.length === 0 ? (
+              <GlassCard variant="secondary" style={styles.emptyHistory}>
+                <Text style={styles.emptyText}>Aún no completaste ningún entrenamiento</Text>
+                <Text style={styles.emptySubtext}>¡Arrancá hoy!</Text>
+              </GlassCard>
+            ) : (
+              <View style={styles.sessionsList}>
+                {recentSessions.map((s) => (
+                  <GlassCard key={s.id} variant="secondary" style={styles.sessionCard}>
+                    <View style={styles.sessionIconWrap}><Icon name="run" size={17} color={dg.accent} /></View>
+                    <View style={styles.sessionText}>
+                      <Text style={styles.sessionDate}>{formatSessionDate(s.date)}</Text>
+                      <Text style={styles.sessionType}>{s.type || 'Trote con intervalos'}</Text>
+                      <Text style={styles.sessionStat}>{formatSessionMinutes(s.duration)}</Text>
+                    </View>
+                  </GlassCard>
+                ))}
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.surface },
+  root: { flex: 1, backgroundColor: '#0D0D0F' },
+  safe: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: spacing[4], paddingTop: spacing[5], paddingBottom: spacing[10], gap: spacing[7] },
   pageHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  pageTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.ink[900] },
-  trophyBtn: { width: 34, height: 34, borderRadius: 999, backgroundColor: colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
-  splitStat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.sm,
-    paddingVertical: spacing[5],
-    paddingHorizontal: spacing[5],
+  pageTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: dg.ink900 },
+  trendBtn: { width: 36, height: 36, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
+
+  heroCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 20, padding: spacing[5], gap: spacing[4] },
+  heroDivider: { width: 1, alignSelf: 'stretch', backgroundColor: 'rgba(255,255,255,0.10)' },
+  heroRight: { flex: 1, gap: 4 },
+  rachaLabel: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 10, color: dg.ink500, letterSpacing: 0.5 },
+  rachaValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: dg.ink900 },
+  dotsRow: { flexDirection: 'row', gap: 6, marginTop: 10 },
+  dotCol: { alignItems: 'center', gap: 6, width: 20 },
+  dotLetter: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 10, color: dg.ink300 },
+  dotLetterDone: { color: dg.ink500 },
+  dotLetterToday: { fontFamily: 'PlusJakartaSans-Bold', color: dg.ink900 },
+  dot: { width: 10, height: 10, borderRadius: 999 },
+  dotDone: { backgroundColor: dg.accent, opacity: 0.35 },
+  dotToday: {
+    width: 12, height: 12, borderRadius: 999, backgroundColor: dg.accent,
+    shadowColor: dg.accent, shadowOpacity: 0.6, shadowRadius: 6, shadowOffset: { width: 0, height: 0 }, elevation: 4,
   },
-  splitHalf: { flex: 1, gap: 4 },
-  splitNumber: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 28, color: colors.ink[900] },
-  splitLabel: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.ink[500] },
-  splitDivider: { width: 1, height: 40, backgroundColor: colors.borderDefault, marginHorizontal: spacing[4] },
-  planProgress: { gap: 8 },
-  sectionTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 16, color: colors.ink[900] },
-  progressTrack: { height: 8, backgroundColor: colors.surfaceSunken, borderRadius: 4, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: colors.brand[500], borderRadius: 4 },
-  planLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  planLabel: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.ink[900] },
-  planPct: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, color: colors.ink[700] },
+  dotFuture: { backgroundColor: 'transparent', borderWidth: 1.3, borderColor: dg.border },
+
   statGrid: { flexDirection: 'row', gap: spacing[3] },
-  statBox: { flex: 1, backgroundColor: colors.surfaceMuted, borderRadius: radius.md, padding: spacing[4], gap: 4 },
-  statValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 28, color: colors.ink[900] },
-  statLabel: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 10.5, color: colors.ink[500], textTransform: 'uppercase', letterSpacing: 0.5 },
+  statBox: { flex: 1, borderRadius: 16, padding: spacing[4], gap: 6 },
+  statIconWrap: { width: 32, height: 32, borderRadius: 999, backgroundColor: 'rgba(143,224,90,0.14)', alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  statValue: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: dg.ink900 },
+  statLabel: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 10.5, color: dg.ink500, textTransform: 'uppercase', letterSpacing: 0.5 },
+
   historySection: { gap: spacing[3] },
   historyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  verTodo: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.brand[600] },
-  verTodoDisabled: { color: colors.ink[300] },
+  sectionTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 16, color: dg.ink900 },
+  verTodo: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 13, color: dg.accent },
+  verTodoDisabled: { color: dg.ink300 },
   sessionsList: { gap: spacing[3] },
-  sessionCard: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.sm,
-    padding: spacing[4],
-    gap: 4,
-  },
-  sessionDate: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: colors.ink[400], letterSpacing: 0.3 },
-  sessionType: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: colors.ink[900] },
-  sessionStat: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: colors.ink[400], letterSpacing: 0.3, fontVariant: ['tabular-nums'], marginTop: 2 },
-  emptyHistory: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, padding: spacing[6], alignItems: 'center', gap: 6 },
-  emptyText: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: colors.ink[400], textAlign: 'center' },
-  emptySubtext: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[300] },
+  sessionCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 20, padding: spacing[4], gap: spacing[3] },
+  sessionIconWrap: { width: 40, height: 40, borderRadius: 999, backgroundColor: 'rgba(143,224,90,0.14)', alignItems: 'center', justifyContent: 'center' },
+  sessionText: { flex: 1, gap: 2 },
+  sessionDate: { fontFamily: 'PlusJakartaSans', fontSize: 12, color: dg.ink500, letterSpacing: 0.3 },
+  sessionType: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15, color: dg.ink900 },
+  sessionStat: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: dg.ink500 },
+  emptyHistory: { borderRadius: 20, padding: spacing[6], alignItems: 'center', gap: 6 },
+  emptyText: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: dg.ink500, textAlign: 'center' },
+  emptySubtext: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: dg.ink300 },
 });

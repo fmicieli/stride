@@ -12,7 +12,15 @@ export type IconName =
   | 'calendar'
   | 'bell'
   | 'pin'
-  | 'trophy';
+  | 'trophy'
+  | 'flame'
+  | 'clock'
+  | 'route'
+  | 'flag'
+  | 'trend'
+  | 'run'
+  | 'moon'
+  | 'star';
 
 interface Props {
   name: IconName;
@@ -98,6 +106,68 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M7 5H4v2a4 4 0 0 0 3.5 4M17 5h3v2a4 4 0 0 1-3.5 4" />
     </>
   ),
+  flame: (
+    <>
+      {/* @ts-ignore */}
+      <path d="M12 2.5c1.2 4-2.8 5.6-2.8 9.7A2.8 2.8 0 0 0 12 15a2.8 2.8 0 0 0 2.8-2.8c0-1.2-.6-2-.6-2s2.3 1.3 2.3 4.6A4.5 4.5 0 0 1 12 19.5a4.5 4.5 0 0 1-4.5-4.5C7.5 9.5 12 7.5 12 2.5Z" fill="currentColor" stroke="none" />
+    </>
+  ),
+  clock: (
+    <>
+      {/* @ts-ignore */}
+      <circle cx="12" cy="12" r="9" />
+      {/* @ts-ignore */}
+      <path d="M12 7.5V12l3.2 2" />
+    </>
+  ),
+  route: (
+    <>
+      {/* @ts-ignore */}
+      <path d="M4.5 18 9.5 7.5 14 15.5 19.5 5.5" />
+    </>
+  ),
+  flag: (
+    <>
+      {/* @ts-ignore */}
+      <path d="M6 3v18" />
+      {/* @ts-ignore */}
+      <path d="M6 4h11l-2.5 3.5L17 11H6" />
+    </>
+  ),
+  trend: (
+    <>
+      {/* @ts-ignore */}
+      <path d="M4 16.5 10 10.5 13.5 13.5 20 6.5" />
+      {/* @ts-ignore */}
+      <path d="M14.5 6.5H20V12" />
+    </>
+  ),
+  run: (
+    <>
+      {/* @ts-ignore */}
+      <circle cx="13.5" cy="4.6" r="1.6" fill="currentColor" stroke="none" />
+      {/* @ts-ignore */}
+      <path d="M9 21l2-5 2.2-2-1-3.4L9.5 12l-2.8 2.2" />
+      {/* @ts-ignore */}
+      <path d="M11.2 10.2 13 9l1.8 2.6 3 1" />
+    </>
+  ),
+  moon: (
+    <>
+      {/* @ts-ignore */}
+      <path d="M15 3.2a8.8 8.8 0 1 0 5.8 15.4A9 9 0 0 1 15 3.2Z" fill="currentColor" stroke="none" />
+    </>
+  ),
+  star: (
+    <>
+      {/* @ts-ignore */}
+      <path
+        d="M12 2.5l2.9 6 6.6.7-4.9 4.4 1.4 6.5L12 16.7l-5.9 3.4 1.4-6.5-4.9-4.4 6.6-.7L12 2.5Z"
+        fill="currentColor"
+        stroke="none"
+      />
+    </>
+  ),
 };
 
 const FALLBACK: Record<IconName, string> = {
@@ -111,6 +181,14 @@ const FALLBACK: Record<IconName, string> = {
   bell: '🔔',
   pin: '📍',
   trophy: '🏆',
+  flame: '🔥',
+  clock: '🕐',
+  route: '↗',
+  flag: '🚩',
+  trend: '📈',
+  run: '🏃',
+  moon: '🌙',
+  star: '⭐',
 };
 
 export function Icon({ name, size = 20, color = colors.ink[700] }: Props) {
@@ -123,6 +201,7 @@ export function Icon({ name, size = 20, color = colors.ink[700] }: Props) {
         viewBox="0 0 24 24"
         fill="none"
         stroke={color}
+        style={{ color }}
         strokeWidth={1.75}
         strokeLinecap="round"
         strokeLinejoin="round"

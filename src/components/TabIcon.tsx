@@ -42,6 +42,19 @@ export function TabIcon({ name, focused, activeColor, inactiveColor }: Props) {
         </svg>
       );
     }
+    if (name === 'Logros') {
+      return (
+        // @ts-ignore
+        <svg width={size} height={size} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* @ts-ignore */}
+          <path d="M6.67 3.33h6.67v3.33a3.33 3.33 0 0 1-6.67 0V3.33Z" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+          {/* @ts-ignore */}
+          <path d="M8.33 10.83v2.5h3.33v-2.5M7.5 16.67h5" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+          {/* @ts-ignore */}
+          <path d="M6.67 4.17H4.17v1.67c0 1.67 1.11 3.06 2.5 3.33M13.33 4.17h2.5v1.67c0 1.67-1.11 3.06-2.5 3.33" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      );
+    }
     if (name === 'Perfil') {
       return (
         // @ts-ignore
@@ -57,7 +70,7 @@ export function TabIcon({ name, focused, activeColor, inactiveColor }: Props) {
     }
   }
 
-  const fallbacks: Record<string, string> = { Hoy: '⌂', Progreso: '▦', Perfil: '○' };
+  const fallbacks: Record<string, string> = { Hoy: '⌂', Progreso: '▦', Logros: '🏆', Perfil: '○' };
   return (
     <Text style={{ fontSize: 18, color, lineHeight: 22 }}>
       {fallbacks[name] ?? '•'}
