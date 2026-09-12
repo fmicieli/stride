@@ -8,9 +8,14 @@ import { useOnboarding } from '../utils/onboardingContext';
 import { useAuth } from '../context/AuthContext';
 import { generatePlan } from '../utils/planGenerator';
 import { savePlan, saveUserProfile } from '../services/firestore';
-import { colors, spacing } from '../theme';
+import { spacing } from '../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'PlanLoading'>;
+
+const BG = '#0D0D0F';
+const DOT_COLOR = '#8FE05A';
+const TEXT = '#FFFFFF';
+const TEXT_MUTED = '#9A9A9F';
 
 export function PlanLoadingScreen() {
   const navigation = useNavigation<Nav>();
@@ -62,25 +67,28 @@ export function PlanLoadingScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={styles.container}>
-        <View style={styles.dotsRow}>
-          <Animated.View style={[styles.dot, dotStyle(dot1)]} />
-          <Animated.View style={[styles.dot, dotStyle(dot2)]} />
-          <Animated.View style={[styles.dot, dotStyle(dot3)]} />
+    <View style={styles.root}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <View style={styles.container}>
+          <View style={styles.dotsRow}>
+            <Animated.View style={[styles.dot, dotStyle(dot1)]} />
+            <Animated.View style={[styles.dot, dotStyle(dot2)]} />
+            <Animated.View style={[styles.dot, dotStyle(dot3)]} />
+          </View>
+          <Text style={styles.title}>Creando tu plan...</Text>
+          <Text style={styles.subtitle}>Esto puede tardar unos segundos</Text>
         </View>
-        <Text style={styles.title}>Creando tu plan...</Text>
-        <Text style={styles.subtitle}>Esto puede tardar unos segundos</Text>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.surface },
+  root: { flex: 1, backgroundColor: BG },
+  safe: { flex: 1 },
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[4] },
   dotsRow: { flexDirection: 'row', gap: 10, marginBottom: spacing[7] },
-  dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.brand[500] },
-  title: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 18, color: colors.ink[900], marginBottom: spacing[2] },
-  subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[400] },
+  dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: DOT_COLOR },
+  title: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 18, color: TEXT, marginBottom: spacing[2] },
+  subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: TEXT_MUTED },
 });

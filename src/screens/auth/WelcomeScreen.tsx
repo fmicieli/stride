@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: spacing[4],
     paddingBottom: spacing[6],
-    paddingTop: spacing[2],
+    paddingTop: spacing[4],
     gap: spacing[4],
     alignItems: 'center',
   },

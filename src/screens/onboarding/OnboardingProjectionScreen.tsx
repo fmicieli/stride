@@ -6,9 +6,16 @@ import { RootStackParamList } from '../../navigation';
 import { OnboardingLayout } from '../../components/OnboardingLayout';
 import { useOnboarding } from '../../utils/onboardingContext';
 import { weeksUntil } from '../../utils/planGenerator';
-import { colors, spacing, radius, borderWidth } from '../../theme';
+import { spacing, radius } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'OnboardingProjection'>;
+
+const CARD_BG = '#1A1A1D';
+const CARD_BORDER = 'rgba(255,255,255,0.10)';
+const CURVE_COLOR = '#8FE05A';
+const BASELINE_COLOR = 'rgba(255,255,255,0.12)';
+const TEXT_MUTED = '#9A9A9F';
+const TEXT_ACCENT = '#8FE05A';
 
 const TODAY_MIN: Record<string, number> = {
   never: 5,
@@ -46,13 +53,13 @@ function Curve() {
           .stride-dot-end { opacity: 0; transform-box: fill-box; transform-origin: center; animation: strideDotIn 360ms 1050ms cubic-bezier(0.2, 0.9, 0.3, 1.4) forwards; }
         `}</style>
         {/* @ts-ignore */}
-        <line x1="0" y1="132" x2="300" y2="132" stroke={colors.borderSubtle} strokeWidth="1" />
+        <line x1="0" y1="132" x2="300" y2="132" stroke={BASELINE_COLOR} strokeWidth="1" />
         {/* @ts-ignore */}
-        <path className="stride-line" d="M8 124 C 96 116, 150 74, 292 20" stroke={colors.brand[500]} strokeWidth="3" strokeLinecap="round" fill="none" />
+        <path className="stride-line" d="M8 124 C 96 116, 150 74, 292 20" stroke={CURVE_COLOR} strokeWidth="3" strokeLinecap="round" fill="none" />
         {/* @ts-ignore */}
-        <circle cx="8" cy="124" r="6" fill={colors.brand[500]} />
+        <circle cx="8" cy="124" r="6" fill={CURVE_COLOR} />
         {/* @ts-ignore */}
-        <circle className="stride-dot-end" cx="292" cy="20" r="6" fill={colors.brand[500]} />
+        <circle className="stride-dot-end" cx="292" cy="20" r="6" fill={CURVE_COLOR} />
       </svg>
     );
   }
@@ -88,9 +95,7 @@ export function OnboardingProjectionScreen() {
         <Curve />
         <View style={styles.row}>
           <Text style={styles.today}>Hoy · {today} min</Text>
-          <Text style={styles.meta}>
-            Meta · {goalLabel} · {weeks} semanas
-          </Text>
+          <Text style={styles.meta}>Meta · {goalLabel} · {weeks} semanas</Text>
         </View>
       </View>
     </OnboardingLayout>
@@ -99,13 +104,14 @@ export function OnboardingProjectionScreen() {
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: borderWidth.hairline,
-    borderColor: colors.borderDefault,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
     borderRadius: radius.lg,
     padding: spacing[5],
     gap: spacing[4],
+    backgroundColor: CARD_BG,
   },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  today: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: colors.ink[500] },
-  meta: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 14, color: colors.brand[600] },
+  today: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: TEXT_MUTED },
+  meta: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 14, color: TEXT_ACCENT },
 });
