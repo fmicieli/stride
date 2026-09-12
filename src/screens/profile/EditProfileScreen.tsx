@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: TEXT },
   headerSpacer: { width: 40 },
   content: { paddingHorizontal: spacing[4], paddingTop: spacing[6], paddingBottom: spacing[6], gap: spacing[5] },
-  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', backgroundColor: BG },
+  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[7], borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', backgroundColor: BG },
   avatarSection: { alignItems: 'center', marginBottom: 8 },
   avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(143,224,90,0.14)', alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 32, color: ACCENT },

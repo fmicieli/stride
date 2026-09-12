@@ -179,7 +179,6 @@ export function ActiveTrainingScreen() {
       if (Platform.OS === 'web') ringBell(1);
       else dingRef.current?.replayAsync().catch(() => {});
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-      say(String(spoken));
       countAnim.setValue(0);
       Animated.timing(countAnim, {
         toValue: 1,
@@ -196,7 +195,6 @@ export function ActiveTrainingScreen() {
         clearInterval(id);
         countAnim.setValue(1);
         if (Platform.OS === 'web') ringBell(1);
-        say(cueForInterval(intervals[0]));
         setPhase('running');
         return;
       }
@@ -307,7 +305,6 @@ export function ActiveTrainingScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       if (Platform.OS === 'web') ringBell(1);
       else dingRef.current?.replayAsync().catch(() => {});
-      say(cueForInterval(intervals[idx]));
     } else if (!firstRun) {
       // final-seconds callouts while a segment runs down
       if (left === 10) say('10 segundos');
@@ -474,7 +471,7 @@ const styles = StyleSheet.create({
   stopFooter: {
     paddingHorizontal: spacing[4],
     paddingTop: spacing[3],
-    paddingBottom: spacing[4],
+    paddingBottom: spacing[7],
     gap: spacing[2],
     backgroundColor: '#0D0D0F',
   },

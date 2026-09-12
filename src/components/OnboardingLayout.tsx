@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   options: { gap: spacing[3] },
   footer: {
     paddingHorizontal: spacing[4],
-    paddingBottom: spacing[4],
+    paddingBottom: spacing[7],
     paddingTop: spacing[4],
     backgroundColor: BG,
     gap: spacing[2],

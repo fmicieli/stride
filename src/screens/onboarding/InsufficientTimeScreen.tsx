@@ -68,5 +68,5 @@ const styles = StyleSheet.create({
   title: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 24, color: TEXT, textAlign: 'center' },
   body: { fontFamily: 'PlusJakartaSans', fontSize: 16, color: TEXT_MUTED, textAlign: 'center', lineHeight: 24 },
   bold: { fontFamily: 'PlusJakartaSans-SemiBold', color: TEXT },
-  footer: { paddingHorizontal: spacing[4], paddingBottom: spacing[4], paddingTop: spacing[3], backgroundColor: BG },
+  footer: { paddingHorizontal: spacing[4], paddingBottom: spacing[7], paddingTop: spacing[3], backgroundColor: BG },
 });

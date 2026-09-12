@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   headerSubtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: TEXT_MUTED },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: spacing[6] },
-  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], gap: spacing[2], backgroundColor: BG },
+  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[7], gap: spacing[2], backgroundColor: BG },
 
   planCard: {
     borderWidth: 1,

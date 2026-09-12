@@ -146,5 +146,5 @@ const styles = StyleSheet.create({
   webFieldText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: TEXT },
   weeksInfo: { fontFamily: 'PlusJakartaSans', fontSize: 14, lineHeight: 20, color: TEXT_MUTED, textAlign: 'center', marginTop: spacing[2] },
   weeksMinimum: { color: TEXT_WARNING },
-  footer: { paddingHorizontal: spacing[4], paddingBottom: spacing[4], paddingTop: spacing[3], backgroundColor: BG },
+  footer: { paddingHorizontal: spacing[4], paddingBottom: spacing[7], paddingTop: spacing[3], backgroundColor: BG },
 });
