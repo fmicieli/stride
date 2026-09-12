@@ -20,11 +20,18 @@ import { useOnboarding } from '../../utils/onboardingContext';
 import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
 import { GoogleGlyph } from '../../components/GoogleGlyph';
-import { DarkGlassBackground } from '../../components/DarkGlassBackground';
-import { dg } from '../../components/darkGlassTokens';
-import { spacing, radius, controlSize } from '../../theme';
+import { spacing } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Login'>;
+
+const BG = '#0D0D0F';
+const INPUT_BG = '#1A1A1D';
+const BORDER = 'rgba(255,255,255,0.10)';
+const BORDER_FOCUS = '#8FE05A';
+const TEXT = '#FFFFFF';
+const TEXT_MUTED = '#9A9A9F';
+const TEXT_DIM = '#6A6A6E';
+const ACCENT = '#8FE05A';
 
 export function LoginScreen() {
   const navigation = useNavigation<Nav>();
@@ -91,12 +98,11 @@ export function LoginScreen() {
 
   return (
     <View style={styles.root}>
-      <DarkGlassBackground glow="topLeft" glowSize={260} glowOpacity={0.18} />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-            <Text style={styles.title}>Bienvenido de vuelta</Text>
-            <Text style={styles.subtitle}>Iniciá sesión para continuar</Text>
+            <Text style={styles.title}>Inicia sesión</Text>
+            <Text style={styles.subtitle}>Solo para guardar tu progreso. No pedimos tarjeta de crédito.</Text>
 
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Email</Text>
@@ -104,8 +110,8 @@ export function LoginScreen() {
                 style={[styles.input, emailFocused && styles.inputFocused]}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="tu@email.com"
-                placeholderTextColor={dg.ink300}
+                placeholder="tú@email.com"
+                placeholderTextColor={TEXT_DIM}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -122,14 +128,14 @@ export function LoginScreen() {
                   value={password}
                   onChangeText={setPassword}
                   placeholder="••••••••"
-                  placeholderTextColor={dg.ink300}
+                  placeholderTextColor={TEXT_DIM}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                   onFocus={() => setPasswordFocused(true)}
                   onBlur={() => setPasswordFocused(false)}
                 />
                 <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.eyeButton}>
-                  <Icon name={showPassword ? 'eye-off' : 'eye'} size={18} color={dg.ink500} />
+                  <Icon name={showPassword ? 'eye-off' : 'eye'} size={18} color={TEXT_MUTED} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -176,77 +182,45 @@ export function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0D0D0F' },
+  root: { flex: 1, backgroundColor: BG },
   safe: { flex: 1 },
   flex: { flex: 1 },
-  scrollContent: { paddingHorizontal: spacing[4], paddingTop: spacing[6], paddingBottom: spacing[8], gap: spacing[4] },
-  title: {
-    fontFamily: 'PlusJakartaSans-Bold',
-    fontSize: 24,
-    lineHeight: 30,
-    color: dg.ink900,
-    marginTop: spacing[2],
-  },
-  subtitle: {
-    fontFamily: 'PlusJakartaSans',
-    fontSize: 15,
-    lineHeight: 22,
-    color: dg.ink500,
-    marginBottom: spacing[2],
-  },
+  scrollContent: { paddingHorizontal: spacing[4], paddingTop: spacing[7], paddingBottom: spacing[8], gap: spacing[4] },
+  title: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 28, lineHeight: 34, color: TEXT },
+  subtitle: { fontFamily: 'PlusJakartaSans', fontSize: 15, lineHeight: 22, color: TEXT_MUTED, marginTop: -spacing[2], marginBottom: spacing[2] },
   inputGroup: { gap: spacing[2] },
-  inputLabel: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 13,
-    color: dg.ink700,
-  },
+  inputLabel: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 13, color: TEXT_MUTED },
   input: {
-    borderWidth: 1.5,
-    borderColor: dg.border,
-    borderRadius: radius.sm,
-    height: controlSize.md,
-    paddingHorizontal: spacing[3],
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 12,
+    height: 52,
+    paddingHorizontal: spacing[4],
     fontFamily: 'PlusJakartaSans',
     fontSize: 15,
-    color: dg.ink900,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    color: TEXT,
+    backgroundColor: INPUT_BG,
   },
-  inputFocused: { borderColor: dg.accent },
+  inputFocused: { borderColor: BORDER_FOCUS },
   passwordRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: dg.border,
-    borderRadius: radius.sm,
-    height: controlSize.md,
-    paddingHorizontal: spacing[3],
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 12,
+    height: 52,
+    paddingHorizontal: spacing[4],
+    backgroundColor: INPUT_BG,
   },
-  passwordInput: {
-    flex: 1,
-    fontFamily: 'PlusJakartaSans',
-    fontSize: 15,
-    color: dg.ink900,
-  },
+  passwordInput: { flex: 1, fontFamily: 'PlusJakartaSans', fontSize: 15, color: TEXT },
   eyeButton: { padding: 4 },
-  forgotLink: { alignSelf: 'flex-start', paddingVertical: 4 },
-  forgotText: {
-    fontFamily: 'PlusJakartaSans',
-    fontSize: 14,
-    color: dg.accent,
-  },
+  forgotLink: { alignSelf: 'flex-end', paddingVertical: 4, marginTop: -spacing[2] },
+  forgotText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: ACCENT },
   ctaSpacing: { marginTop: spacing[2] },
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
-  dividerLine: { flex: 1, height: 1, backgroundColor: dg.border },
-  dividerText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: dg.ink400 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: BORDER },
+  dividerText: { fontFamily: 'PlusJakartaSans', fontSize: 13, color: TEXT_DIM },
   linkButton: { alignItems: 'center', paddingVertical: spacing[2] },
-  linkText: {
-    fontFamily: 'PlusJakartaSans',
-    fontSize: 14,
-    color: dg.ink500,
-  },
-  linkBold: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    color: dg.ink900,
-  },
+  linkText: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: TEXT_MUTED },
+  linkBold: { fontFamily: 'PlusJakartaSans-SemiBold', color: TEXT },
 });

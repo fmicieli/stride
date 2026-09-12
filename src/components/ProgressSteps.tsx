@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
-import { colors } from '../theme';
 
 interface Props {
   step: number; // 1-based current step
@@ -55,7 +54,7 @@ export function ProgressSteps({ step, totalSteps }: Props) {
             }),
             backgroundColor: d.interpolate({
               inputRange: [0, 1, 2],
-              outputRange: [colors.borderDefault, colors.brand[300], colors.brand[500]],
+              outputRange: ['rgba(255,255,255,0.15)', 'rgba(143,224,90,0.45)', '#8FE05A'],
             }),
           }}
         />

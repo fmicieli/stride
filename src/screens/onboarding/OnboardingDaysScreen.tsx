@@ -6,7 +6,7 @@ import { RootStackParamList } from '../../navigation';
 import { OnboardingLayout } from '../../components/OnboardingLayout';
 import { useOnboarding } from '../../utils/onboardingContext';
 import { DayKey } from '../../types';
-import { colors, radius, borderWidth } from '../../theme';
+import { radius } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'OnboardingDays'>;
 
@@ -19,6 +19,14 @@ const DAYS: { key: DayKey; letter: string }[] = [
   { key: 'Sábado', letter: 'S' },
   { key: 'Domingo', letter: 'D' },
 ];
+
+const CIRCLE_BG = '#1A1A1D';
+const CIRCLE_BORDER = 'rgba(255,255,255,0.10)';
+const CIRCLE_SELECTED_BG = '#8FE05A';
+const CIRCLE_SELECTED_BORDER = '#8FE05A';
+const TEXT = '#FFFFFF';
+const TEXT_MUTED = '#9A9A9F';
+const TEXT_ON_ACCENT = '#0D0D0F';
 
 export function OnboardingDaysScreen() {
   const navigation = useNavigation<Nav>();
@@ -75,22 +83,22 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: radius.full,
-    borderWidth: borderWidth.hairline,
-    borderColor: colors.borderDefault,
-    backgroundColor: colors.surfaceMuted,
+    borderWidth: 1,
+    borderColor: CIRCLE_BORDER,
+    backgroundColor: CIRCLE_BG,
     alignItems: 'center',
     justifyContent: 'center',
   },
   circleOn: {
-    backgroundColor: colors.brand[500],
-    borderColor: colors.brand[500],
+    backgroundColor: CIRCLE_SELECTED_BG,
+    borderColor: CIRCLE_SELECTED_BORDER,
   },
-  letter: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, color: colors.ink[600] },
-  letterOn: { color: colors.surface },
+  letter: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, color: TEXT },
+  letterOn: { color: TEXT_ON_ACCENT },
   counter: {
     fontFamily: 'PlusJakartaSans-Bold',
     fontSize: 13,
-    color: colors.ink[600],
+    color: TEXT_MUTED,
     marginTop: 4,
   },
 });
