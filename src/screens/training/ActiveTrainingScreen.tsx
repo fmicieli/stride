@@ -450,17 +450,17 @@ const styles = StyleSheet.create({
 
   content: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[5], gap: spacing[4] },
   badge: { backgroundColor: TRACK_SUBTLE, borderRadius: radius.full, paddingVertical: 5, paddingHorizontal: spacing[3] },
-  badgeText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, color: colors.surface },
-  segLabel: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 26, lineHeight: 32, color: colors.surface, textAlign: 'center' },
-  timer: { fontFamily: 'JetBrainsMono-Medium', fontSize: 52, lineHeight: 62, color: colors.surface, fontVariant: ['tabular-nums'] },
+  badgeText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, color: '#FFFFFF' },
+  segLabel: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 26, lineHeight: 32, color: '#FFFFFF', textAlign: 'center' },
+  timer: { fontFamily: 'JetBrainsMono-Medium', fontSize: 52, lineHeight: 62, color: '#FFFFFF', fontVariant: ['tabular-nums'] },
   hint: { fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: TRACK_MUTED, textAlign: 'center' },
 
   footer: { paddingBottom: spacing[8], paddingTop: spacing[4], alignItems: 'center' },
-  ctrlPrimary: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.brand[500], alignItems: 'center', justifyContent: 'center' },
+  ctrlPrimary: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#8FE05A', alignItems: 'center', justifyContent: 'center' },
 
   countdownOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: TRACK_BG, alignItems: 'center', justifyContent: 'center', gap: spacing[3], zIndex: 10 },
   countdownLabel: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 16, letterSpacing: 2, color: TRACK_MUTED, textTransform: 'uppercase' },
-  countdownNum: { fontFamily: 'JetBrainsMono-Medium', fontSize: 120, lineHeight: 134, color: colors.surface, fontVariant: ['tabular-nums'] },
+  countdownNum: { fontFamily: 'JetBrainsMono-Medium', fontSize: 120, lineHeight: 134, color: '#FFFFFF', fontVariant: ['tabular-nums'] },
 
   stopScreen: { ...StyleSheet.absoluteFillObject, backgroundColor: '#0D0D0F', zIndex: 20 },
   stopContent: {

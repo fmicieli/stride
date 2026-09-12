@@ -181,7 +181,7 @@ export function AppNavigator() {
 const styles = StyleSheet.create({
   splash: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0D0D0F',
     alignItems: 'center',
     justifyContent: 'center',
   },
