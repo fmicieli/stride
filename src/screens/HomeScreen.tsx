@@ -325,9 +325,11 @@ export function HomeScreen() {
         title="Antes de arrancar"
         subtitle="Así está armado tu entrenamiento de hoy. Podés pausarlo en cualquier momento."
         scrollBody
+        dark
         footer={
           <Button
             label="Empezar entrenamiento"
+            dark
             onPress={() => {
               primeVoice();
               setShowPreRun(false);
@@ -433,9 +435,9 @@ const styles = StyleSheet.create({
 
   tlRow: { flexDirection: 'row', gap: spacing[3] },
   tlGutter: { alignItems: 'center', width: 16 },
-  tlDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#1E8563', marginTop: 4 },
-  tlLine: { flex: 1, width: 2, backgroundColor: '#CCCCCC', marginVertical: 4 },
+  tlDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#8FE05A', marginTop: 4 },
+  tlLine: { flex: 1, width: 2, backgroundColor: 'rgba(255,255,255,0.12)', marginVertical: 4 },
   tlBody: { flex: 1, paddingBottom: spacing[5] },
-  tlTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 17, lineHeight: 22, color: '#111111' },
-  tlDetail: { fontFamily: 'PlusJakartaSans', fontSize: 14, lineHeight: 20, color: '#777777', marginTop: 2 },
+  tlTitle: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 17, lineHeight: 22, color: '#FFFFFF' },
+  tlDetail: { fontFamily: 'PlusJakartaSans', fontSize: 14, lineHeight: 20, color: '#9A9A9F', marginTop: 2 },
 });

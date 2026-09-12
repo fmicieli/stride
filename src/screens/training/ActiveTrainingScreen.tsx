@@ -393,6 +393,7 @@ export function ActiveTrainingScreen() {
         <SafeAreaView style={styles.stopScreen} edges={['top', 'bottom']}>
           <ScrollView contentContainerStyle={styles.stopContent} showsVerticalScrollIndicator={false}>
             <SessionSummary
+              dark
               variant="paused"
               title="Entrenamiento en pausa"
               subtitle="Guardamos tu progreso. Podés retomarlo cuando quieras hoy."
@@ -408,10 +409,11 @@ export function ActiveTrainingScreen() {
             />
           </ScrollView>
           <View style={styles.stopFooter}>
-            <Button label="Reanudar" onPress={handleResumeFromSummary} />
+            <Button label="Reanudar" onPress={handleResumeFromSummary} dark />
             <Button
               label="Volver a inicio"
               variant="tertiary"
+              dark
               onPress={() => {
                 setShowStopSummary(false);
                 navigation.navigate('MainTabs');
@@ -460,7 +462,7 @@ const styles = StyleSheet.create({
   countdownLabel: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 16, letterSpacing: 2, color: TRACK_MUTED, textTransform: 'uppercase' },
   countdownNum: { fontFamily: 'JetBrainsMono-Medium', fontSize: 120, lineHeight: 134, color: colors.surface, fontVariant: ['tabular-nums'] },
 
-  stopScreen: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.surface, zIndex: 20 },
+  stopScreen: { ...StyleSheet.absoluteFillObject, backgroundColor: '#0D0D0F', zIndex: 20 },
   stopContent: {
     flexGrow: 1,
     paddingHorizontal: spacing[4],
@@ -474,6 +476,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing[3],
     paddingBottom: spacing[4],
     gap: spacing[2],
-    backgroundColor: colors.surface,
+    backgroundColor: '#0D0D0F',
   },
 });

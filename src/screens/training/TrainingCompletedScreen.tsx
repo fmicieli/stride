@@ -11,20 +11,15 @@ import { formatDuration, buildSessionIntervals, computeKm } from '../../utils/pl
 import { DayKey } from '../../types';
 import { Button } from '../../components/Button';
 import { SessionSummary } from '../../components/SessionSummary';
-import { colors, spacing } from '../../theme';
+import { spacing } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'TrainingCompleted'>;
 type Route = RouteProp<RootStackParamList, 'TrainingCompleted'>;
 
-const DAY_NAMES: DayKey[] = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+const BG = '#0D0D0F';
+const ACCENT = '#8FE05A';
 
-function countIntervals(plan: TrainingPlan | null): number {
-  if (!plan) return 0;
-  const todayName = DAY_NAMES[new Date().getDay()];
-  const day = plan.weeks[0]?.days.find((d) => d.day === todayName);
-  const runTarget = day?.runTargetMin ?? day?.duration ?? 20;
-  return buildSessionIntervals(runTarget, plan.weeks[0]?.week ?? 1, plan.method).length;
-}
+const DAY_NAMES: DayKey[] = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 function getSubtitle(plan: TrainingPlan | null): string {
   if (!plan) return '¡Gran trabajo!';
@@ -48,6 +43,7 @@ export function TrainingCompletedScreen() {
   const [session, setSession] = useState<TrainingSession | null>(null);
   const [plan, setPlan] = useState<TrainingPlan | null>(null);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     if (!user) return;
     Promise.all([getSessions(user.uid), getPlan(user.uid)]).then(([allSessions, p]) => {
@@ -59,45 +55,51 @@ export function TrainingCompletedScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={styles.center}><ActivityIndicator color={colors.brand[500]} /></View>
-      </SafeAreaView>
+      <View style={styles.root}>
+        <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+          <View style={styles.center}><ActivityIndicator color={ACCENT} /></View>
+        </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SessionSummary
-          variant="complete"
-          title="¡Entrenamiento completo!"
-          subtitle={getSubtitle(plan)}
-          stats={(() => {
-            const dur = session?.duration ?? 0;
-            const todayName = DAY_NAMES[new Date().getDay()];
-            const day = plan?.weeks[0]?.days.find((d) => d.day === todayName);
-            const runTarget = day?.runTargetMin ?? day?.duration ?? 20;
-            const ivs = plan ? buildSessionIntervals(runTarget, plan.weeks[0]?.week ?? 1, plan.method) : [];
-            const km = computeKm(dur, ivs);
-            const totalKm = Math.round((km.kmRun + km.kmWalk) * 10) / 10;
-            return [
-              { value: formatDuration(dur), label: 'Tiempo total' },
-              { value: `${totalKm} km`, label: 'Km en esta sesión' },
-              { value: `${km.tramosRun} de ${km.tramosTotal}`, label: 'Intervalos compl.' },
-            ];
-          })()}
-        />
-      </ScrollView>
-      <View style={styles.footer}>
-        <Button label="Volver a inicio" onPress={() => navigation.navigate('MainTabs')} />
-      </View>
-    </SafeAreaView>
+    <View style={styles.root}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <SessionSummary
+            dark
+            variant="complete"
+            title="¡Entrenamiento completo!"
+            subtitle={getSubtitle(plan)}
+            stats={(() => {
+              const dur = session?.duration ?? 0;
+              const todayName = DAY_NAMES[new Date().getDay()];
+              const day = plan?.weeks[0]?.days.find((d) => d.day === todayName);
+              const runTarget = day?.runTargetMin ?? day?.duration ?? 20;
+              const ivs = plan ? buildSessionIntervals(runTarget, plan.weeks[0]?.week ?? 1, plan.method) : [];
+              const km = computeKm(dur, ivs);
+              const totalKm = Math.round((km.kmRun + km.kmWalk) * 10) / 10;
+              return [
+                { value: formatDuration(dur), label: 'Tiempo total' },
+                { value: `${totalKm} km`, label: 'Km en esta sesión' },
+                { value: `${km.tramosRun} de ${km.tramosTotal}`, label: 'Intervalos compl.' },
+              ];
+            })()}
+          />
+        </ScrollView>
+        <View style={styles.footer}>
+          <Button label="Volver a inicio" onPress={() => navigation.navigate('MainTabs')} dark />
+        </View>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.surface },
+  root: { flex: 1, backgroundColor: BG },
+  safe: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { flexGrow: 1, paddingHorizontal: spacing[4], paddingTop: spacing[6], paddingBottom: spacing[6], alignItems: 'center', justifyContent: 'center', gap: spacing[5] },
-  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], backgroundColor: colors.surface },
+  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[4], backgroundColor: BG },
 });
