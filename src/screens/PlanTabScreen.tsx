@@ -6,6 +6,13 @@ import { storage } from '../storage/storage';
 import { TrainingPlan, WeekPlan } from '../types';
 import { getGoalShortLabel, formatTargetDate } from '../utils/planGenerator';
 
+const BG = '#0D0D0F';
+const CARD_BG = '#1A1A1D';
+const BORDER = 'rgba(255,255,255,0.10)';
+const TEXT = '#FFFFFF';
+const TEXT_MUTED = '#9A9A9F';
+const ACCENT = '#8FE05A';
+
 function WeekCard({ week, defaultExpanded = false }: { week: WeekPlan; defaultExpanded?: boolean }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
 
@@ -78,33 +85,33 @@ export function PlanTabScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: BG },
   header: {
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
-  headerSmall: { fontSize: 14, color: '#888888', marginBottom: 4 },
-  headerTitle: { fontSize: 24, fontWeight: '600', color: '#111111' },
+  headerSmall: { fontSize: 14, color: TEXT_MUTED, marginBottom: 4 },
+  headerTitle: { fontSize: 24, fontWeight: '600', color: TEXT },
   content: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 40 },
-  goalCard: { backgroundColor: '#F2F2F2', borderRadius: 12, padding: 16, marginBottom: 16 },
-  goalLabel: { fontSize: 12, color: '#888888', marginBottom: 6 },
-  goalTitle: { fontSize: 20, fontWeight: '500', color: '#111111', marginBottom: 6 },
-  goalDate: { fontSize: 14, color: '#888888' },
+  goalCard: { backgroundColor: CARD_BG, borderWidth: 1, borderColor: BORDER, borderRadius: 12, padding: 16, marginBottom: 16 },
+  goalLabel: { fontSize: 12, color: TEXT_MUTED, marginBottom: 6 },
+  goalTitle: { fontSize: 20, fontWeight: '500', color: TEXT, marginBottom: 6 },
+  goalDate: { fontSize: 14, color: TEXT_MUTED },
   chipsRow: { flexDirection: 'row', gap: 8, marginBottom: 24, flexWrap: 'wrap' },
-  chip: { backgroundColor: '#F2F2F2', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 16 },
-  chipText: { fontSize: 14, color: '#111111' },
+  chip: { backgroundColor: 'rgba(143,224,90,0.12)', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 16 },
+  chipText: { fontSize: 14, color: ACCENT },
   weeks: { gap: 12 },
-  weekCard: { backgroundColor: '#F2F2F2', borderRadius: 12, overflow: 'hidden' },
+  weekCard: { backgroundColor: CARD_BG, borderWidth: 1, borderColor: BORDER, borderRadius: 12, overflow: 'hidden' },
   weekHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16 },
-  weekTitle: { fontSize: 16, fontWeight: '500', color: '#111111' },
-  chevron: { fontSize: 14, color: '#888888' },
+  weekTitle: { fontSize: 16, fontWeight: '500', color: TEXT },
+  chevron: { fontSize: 14, color: TEXT_MUTED },
   weekDays: { paddingHorizontal: 16, paddingBottom: 12, gap: 8 },
   dayRow: { flexDirection: 'row', alignItems: 'center' },
-  dayName: { fontSize: 14, color: '#111111', width: 36, fontWeight: '500' },
-  dayActivity: { fontSize: 14, color: '#111111', flex: 1 },
-  dayDuration: { fontSize: 14, color: '#111111', textAlign: 'right', width: 60 },
-  restText: { color: '#AAAAAA' },
+  dayName: { fontSize: 14, color: TEXT, width: 36, fontWeight: '500' },
+  dayActivity: { fontSize: 14, color: TEXT, flex: 1 },
+  dayDuration: { fontSize: 14, color: TEXT_MUTED, textAlign: 'right', width: 60 },
+  restText: { color: TEXT_MUTED },
 });
