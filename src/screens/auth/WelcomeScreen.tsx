@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   safeFooter: { backgroundColor: '#0D0D0F' },
   footer: {
     paddingHorizontal: spacing[4],
-    paddingBottom: spacing[7],
+    paddingBottom: spacing[9],
     paddingTop: spacing[4],
     gap: spacing[4],
     alignItems: 'center',
