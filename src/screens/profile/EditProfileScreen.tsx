@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import {
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  KeyboardAvoidingView, Platform, ScrollView, Alert, Image,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../context/AuthContext';
 import { saveUserProfile } from '../../services/firestore';
@@ -25,7 +29,8 @@ export function EditProfileScreen() {
   const { user, profile, refreshProfile } = useAuth();
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [avatar, setAvatar] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
 
@@ -33,18 +38,42 @@ export function EditProfileScreen() {
     if (profile) {
       setName(profile.name || '');
       setLastName(profile.lastName || '');
-      setEmail(profile.email || '');
+      setPhone(profile.phone || '');
+      setAvatar(profile.avatar);
     }
   }, [profile]);
 
   const initial = (name || 'R').charAt(0).toUpperCase();
+  const email = profile?.email || user?.email || '';
+
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso requerido', 'Necesitamos acceso a tu galería para cambiar la foto.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setAvatar(result.assets[0].uri);
+    }
+  };
 
   const handleSave = async () => {
     if (!user) return;
     if (!name.trim()) { Alert.alert('Error', 'El nombre es obligatorio'); return; }
     setSaving(true);
     try {
-      await saveUserProfile(user.uid, { name: name.trim(), lastName: lastName.trim(), email: email.trim() });
+      await saveUserProfile(user.uid, {
+        name: name.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim(),
+        ...(avatar !== profile?.avatar ? { avatar } : {}),
+      });
       await refreshProfile();
       navigation.goBack();
     } catch {
@@ -67,12 +96,23 @@ export function EditProfileScreen() {
 
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+
+            {/* Avatar con botón de cámara */}
             <View style={styles.avatarSection}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{initial}</Text>
-              </View>
+              <TouchableOpacity style={styles.avatarWrap} onPress={handlePickImage} activeOpacity={0.8}>
+                {avatar
+                  ? <Image source={{ uri: avatar }} style={styles.avatarImg} />
+                  : <View style={styles.avatarPlaceholder}>
+                      <Text style={styles.avatarText}>{initial}</Text>
+                    </View>
+                }
+                <View style={styles.cameraBadge}>
+                  <Icon name="camera" size={14} color="#FFFFFF" />
+                </View>
+              </TouchableOpacity>
             </View>
 
+            {/* Nombre */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Nombre</Text>
               <TextInput
@@ -87,6 +127,7 @@ export function EditProfileScreen() {
               />
             </View>
 
+            {/* Apellido */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Apellido</Text>
               <TextInput
@@ -101,21 +142,29 @@ export function EditProfileScreen() {
               />
             </View>
 
+            {/* Email — deshabilitado */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Email</Text>
+              <View style={styles.inputDisabled}>
+                <Text style={styles.inputDisabledText} numberOfLines={1}>{email}</Text>
+              </View>
+            </View>
+
+            {/* Teléfono */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Teléfono celular</Text>
               <TextInput
-                style={[styles.input, focusBorder('email')]}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="tu@email.com"
+                style={[styles.input, focusBorder('phone')]}
+                value={phone}
+                onChangeText={setPhone}
+                placeholder="Tu número de celular"
                 placeholderTextColor={TEXT_MUTED}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                onFocus={() => setFocused('email')}
+                keyboardType="phone-pad"
+                onFocus={() => setFocused('phone')}
                 onBlur={() => setFocused(null)}
               />
             </View>
+
           </ScrollView>
 
           <View style={styles.footer}>
@@ -137,10 +186,23 @@ const styles = StyleSheet.create({
   headerSpacer: { width: 40 },
   content: { paddingHorizontal: spacing[4], paddingTop: spacing[6], paddingBottom: spacing[6], gap: spacing[5] },
   footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[7], borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', backgroundColor: BG },
-  avatarSection: { alignItems: 'center', marginBottom: 8 },
-  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(143,224,90,0.14)', alignItems: 'center', justifyContent: 'center' },
+
+  avatarSection: { alignItems: 'center' },
+  avatarWrap: { position: 'relative', width: 88, height: 88 },
+  avatarImg: { width: 88, height: 88, borderRadius: 44 },
+  avatarPlaceholder: { width: 88, height: 88, borderRadius: 44, backgroundColor: 'rgba(143,224,90,0.14)', alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 32, color: ACCENT },
+  cameraBadge: {
+    position: 'absolute', bottom: 0, right: 0,
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: ACCENT,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: BG,
+  },
+
   inputGroup: { gap: spacing[2] },
   inputLabel: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 13, color: TEXT_MUTED },
   input: { borderWidth: 1, borderColor: BORDER, borderRadius: radius.sm, height: controlSize.md, paddingHorizontal: spacing[3], fontFamily: 'PlusJakartaSans', fontSize: 15, color: TEXT, backgroundColor: INPUT_BG },
+  inputDisabled: { borderWidth: 1, borderColor: BORDER, borderRadius: radius.sm, height: controlSize.md, paddingHorizontal: spacing[3], backgroundColor: 'rgba(255,255,255,0.03)', justifyContent: 'center' },
+  inputDisabledText: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: TEXT_MUTED },
 });
