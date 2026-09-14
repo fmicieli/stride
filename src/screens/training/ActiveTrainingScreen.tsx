@@ -132,7 +132,7 @@ export function ActiveTrainingScreen() {
       return () => {
         if (Platform.OS === 'web') {
           const meta = document.querySelector('meta[name="theme-color"]');
-          if (meta) meta.setAttribute('content', '#1B6E52');
+          if (meta) meta.setAttribute('content', '#0D0D0F');
         }
       };
     }, []),
