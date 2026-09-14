@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   avatarText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 34, color: dg.ink900 },
   displayName: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: dg.ink900 },
   email: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: dg.ink500 },
-  editBtn: { marginTop: spacing[2] },
+  editBtn: { marginTop: spacing[2], alignSelf: 'center' },
   settingsList: { borderRadius: 16, paddingVertical: 4, paddingHorizontal: spacing[4] },
   settingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 18 },
   settingsRowDivider: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },

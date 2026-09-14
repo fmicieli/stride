@@ -74,8 +74,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
 // Room for icon + label; the device's bottom inset is reserved on top of this.
-// Generous enough that descenders (e.g. the "g" in "Progreso") never clip.
-const TAB_BAR_CONTENT_HEIGHT = 82;
+const TAB_BAR_CONTENT_HEIGHT = 76;
 
 const DARK_ACCENT = '#8FE05A';
 const DARK_INACTIVE = '#9A9A9F';
@@ -107,12 +106,18 @@ function MainTabs() {
           fontFamily: 'PlusJakartaSans-SemiBold',
           fontSize: 11,
           lineHeight: 16,
-          marginTop: 4,
+          height: 16,
+          // The label sits in a column flex item; without flexShrink:0 the
+          // flex algorithm can compress its box below its own line-height
+          // (down to ~fontSize), and since RN's Text sets overflow:hidden
+          // for numberOfLines=1, that compressed box clips the real glyph
+          // box — e.g. the "g" in "Progreso" gets cut at the bottom.
+          flexShrink: 0,
+          marginTop: 2,
           // Keep each label on one line — at 4 tabs per row a wrapped second
-          // line has no room and gets clipped by the bar's fixed height.
+          // line has no room and would get clipped the same way.
           ...(Platform.OS === 'web' ? ({ whiteSpace: 'nowrap' } as any) : null),
         },
-        tabBarItemStyle: { paddingVertical: 2 },
         tabBarIconStyle: { marginTop: 2 },
         // Constant content room (icon + label) with the device's bottom inset
         // reserved underneath, so nothing clips on any screen height.
