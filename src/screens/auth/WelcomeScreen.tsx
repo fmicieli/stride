@@ -18,13 +18,20 @@ const posterUri = typeof posterSource === 'string' ? posterSource : posterSource
 const videoSource = require('../../../assets/welcome.mp4');
 const videoUri = typeof videoSource === 'string' ? videoSource : videoSource.uri;
 
+const VIDEO_START_SECONDS = 1;
+
 export function WelcomeScreen() {
   const navigation = useNavigation<Nav>();
   const footerOpacity = useRef(new Animated.Value(0)).current;
   const footerShift = useRef(new Animated.Value(10)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const videoRef = useRef<Video>(null);
 
   useEffect(() => {
-    // Let the logo entrance play, then fade in the buttons.
+    // Fade the logo in right away, then — once its own spin/reveal entrance
+    // has had time to play — fade in the buttons.
+    Animated.timing(logoOpacity, { toValue: 1, duration: 500, useNativeDriver: false }).start();
+
     const delay = Platform.OS === 'web' ? 1200 : 350;
     const t = setTimeout(() => {
       Animated.parallel([
@@ -33,8 +40,9 @@ export function WelcomeScreen() {
       ]).start();
     }, delay);
     // Safety net: if the animation loop is throttled (hidden tab), snap to the
-    // final state so the buttons are never left invisible.
+    // final state so the logo/buttons are never left invisible.
     const settle = setTimeout(() => {
+      logoOpacity.setValue(1);
       footerOpacity.setValue(1);
       footerShift.setValue(0);
     }, delay + 2200);
@@ -44,6 +52,11 @@ export function WelcomeScreen() {
     };
   }, []);
 
+  // Native: skip the first second of the clip once it's loaded.
+  const handleNativeVideoLoad = () => {
+    videoRef.current?.setPositionAsync(VIDEO_START_SECONDS * 1000).catch(() => {});
+  };
+
   return (
     <View style={styles.root}>
       <View style={styles.hero}>
@@ -52,6 +65,10 @@ export function WelcomeScreen() {
           // Plain inline style object — a raw DOM tag needs a real CSS object,
           // not a StyleSheet.create() reference (see OnboardingDateScreen's <input>).
           <video
+            onLoadedMetadata={(e: any) => {
+              // Start a bit into the clip instead of at its first frame.
+              try { e.currentTarget.currentTime = VIDEO_START_SECONDS; } catch {}
+            }}
             src={videoUri}
             poster={posterUri}
             autoPlay
@@ -67,10 +84,15 @@ export function WelcomeScreen() {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
+              // Slightly oversize so the blurred edges are cropped by the
+              // hero's overflow:hidden instead of showing a soft halo.
+              transform: 'scale(1.08)',
+              filter: 'blur(3px)',
             }}
           />
         ) : (
           <Video
+            ref={videoRef}
             source={videoSource}
             posterSource={posterSource}
             usePoster
@@ -79,12 +101,13 @@ export function WelcomeScreen() {
             shouldPlay
             isLooping
             isMuted
+            onLoad={handleNativeVideoLoad}
           />
         )}
         <View style={styles.heroOverlay} pointerEvents="none" />
-        <View style={styles.logoWrap}>
+        <Animated.View style={[styles.logoWrap, { opacity: logoOpacity }]}>
           <StrideLogo width={225} color="#FFFFFF" animated />
-        </View>
+        </Animated.View>
         <View style={styles.fade} pointerEvents="none" />
       </View>
 
@@ -122,7 +145,7 @@ const styles = StyleSheet.create({
   safeFooter: { backgroundColor: '#0D0D0F' },
   footer: {
     paddingHorizontal: spacing[4],
-    paddingBottom: spacing[9],
+    paddingBottom: spacing[6],
     paddingTop: spacing[4],
     gap: spacing[4],
     alignItems: 'center',
