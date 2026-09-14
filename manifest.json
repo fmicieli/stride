@@ -6,8 +6,8 @@
   "scope": "/stride/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FFFFFF",
-  "theme_color": "#1B6E52",
+  "background_color": "#0D0D0F",
+  "theme_color": "#0D0D0F",
   "lang": "es",
   "dir": "ltr",
   "icons": [
