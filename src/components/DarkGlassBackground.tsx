@@ -7,18 +7,19 @@ interface Props {
   glow?: GlowPos;
   glowSize?: number;
   glowOpacity?: number;
-  /** Set false to render only the base gradient, without the corner glow circle. */
+  /** Set true to render the corner glow circle on top of the base gradient. */
   showGlow?: boolean;
 }
 
 const BG_GRADIENT = 'linear-gradient(180deg, #1A1B1F 0%, #0D0D0F 45%, #0A0A0C 100%)';
 
 /**
- * Absolute-fill dark gradient + soft corner glow, meant as the first child of a
- * flex:1 screen container (everything else renders on top of it). Web gets the
- * real CSS gradient/blur; native falls back to a flat dark color + soft tint.
+ * Absolute-fill dark gradient, meant as the first child of a flex:1 screen
+ * container (everything else renders on top of it). Web gets the real CSS
+ * gradient; native falls back to a flat dark color. The corner glow circle
+ * is off by default across the app — pass showGlow to bring it back.
  */
-export function DarkGlassBackground({ glow = 'topRight', glowSize = 280, glowOpacity = 0.2, showGlow = true }: Props) {
+export function DarkGlassBackground({ glow = 'topRight', glowSize = 280, glowOpacity = 0.2, showGlow = false }: Props) {
   const glowPos = glow === 'topLeft' ? { top: 40, left: -70 } : { top: 60, right: -60 };
   return (
     <>

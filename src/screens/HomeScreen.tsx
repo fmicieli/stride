@@ -168,7 +168,7 @@ export function HomeScreen() {
   if (loading) {
     return (
       <View style={styles.root}>
-        <DarkGlassBackground glow="topRight" glowSize={280} glowOpacity={0.2} showGlow={false} />
+        <DarkGlassBackground glow="topRight" glowSize={280} glowOpacity={0.2} />
         <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
           <View style={styles.center}><ActivityIndicator color={dg.accent} /></View>
         </SafeAreaView>
@@ -196,7 +196,7 @@ export function HomeScreen() {
 
   return (
     <View style={styles.root}>
-      <DarkGlassBackground glow="topRight" glowSize={280} glowOpacity={0.2} showGlow={false} />
+      <DarkGlassBackground glow="topRight" glowSize={280} glowOpacity={0.2} />
       <SafeAreaView style={styles.safe} edges={['top']}>
         {!isConnected && (
           <View style={styles.offlineBanner}>
