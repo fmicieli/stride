@@ -7,6 +7,8 @@ interface Props {
   glow?: GlowPos;
   glowSize?: number;
   glowOpacity?: number;
+  /** Set false to render only the base gradient, without the corner glow circle. */
+  showGlow?: boolean;
 }
 
 const BG_GRADIENT = 'linear-gradient(180deg, #1A1B1F 0%, #0D0D0F 45%, #0A0A0C 100%)';
@@ -16,7 +18,7 @@ const BG_GRADIENT = 'linear-gradient(180deg, #1A1B1F 0%, #0D0D0F 45%, #0A0A0C 10
  * flex:1 screen container (everything else renders on top of it). Web gets the
  * real CSS gradient/blur; native falls back to a flat dark color + soft tint.
  */
-export function DarkGlassBackground({ glow = 'topRight', glowSize = 280, glowOpacity = 0.2 }: Props) {
+export function DarkGlassBackground({ glow = 'topRight', glowSize = 280, glowOpacity = 0.2, showGlow = true }: Props) {
   const glowPos = glow === 'topLeft' ? { top: 40, left: -70 } : { top: 60, right: -60 };
   return (
     <>
@@ -27,20 +29,22 @@ export function DarkGlassBackground({ glow = 'topRight', glowSize = 280, glowOpa
           Platform.OS === 'web' ? ({ backgroundImage: BG_GRADIENT } as any) : { backgroundColor: '#0D0D0F' },
         ]}
       />
-      <View
-        pointerEvents="none"
-        style={[
-          styles.glow,
-          { width: glowSize, height: glowSize, borderRadius: glowSize / 2 },
-          glowPos,
-          Platform.OS === 'web'
-            ? ({
-                backgroundImage: `radial-gradient(circle, rgba(143,224,90,${glowOpacity}) 0%, rgba(143,224,90,0) 70%)`,
-                filter: 'blur(10px)',
-              } as any)
-            : { backgroundColor: `rgba(143,224,90,${glowOpacity * 0.5})` },
-        ]}
-      />
+      {showGlow && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.glow,
+            { width: glowSize, height: glowSize, borderRadius: glowSize / 2 },
+            glowPos,
+            Platform.OS === 'web'
+              ? ({
+                  backgroundImage: `radial-gradient(circle, rgba(143,224,90,${glowOpacity}) 0%, rgba(143,224,90,0) 70%)`,
+                  filter: 'blur(10px)',
+                } as any)
+              : { backgroundColor: `rgba(143,224,90,${glowOpacity * 0.5})` },
+          ]}
+        />
+      )}
     </>
   );
 }
