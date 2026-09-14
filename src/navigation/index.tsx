@@ -74,7 +74,8 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
 // Room for icon + label; the device's bottom inset is reserved on top of this.
-const TAB_BAR_CONTENT_HEIGHT = 76;
+// Generous enough that descenders (e.g. the "g" in "Progreso") never clip.
+const TAB_BAR_CONTENT_HEIGHT = 82;
 
 const DARK_ACCENT = '#8FE05A';
 const DARK_INACTIVE = '#9A9A9F';
@@ -102,7 +103,16 @@ function MainTabs() {
         tabBarActiveTintColor: DARK_ACCENT,
         tabBarInactiveTintColor: DARK_INACTIVE,
         tabBarShowLabel: true,
-        tabBarLabelStyle: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 11, marginTop: 2 },
+        tabBarLabelStyle: {
+          fontFamily: 'PlusJakartaSans-SemiBold',
+          fontSize: 11,
+          lineHeight: 16,
+          marginTop: 4,
+          // Keep each label on one line — at 4 tabs per row a wrapped second
+          // line has no room and gets clipped by the bar's fixed height.
+          ...(Platform.OS === 'web' ? ({ whiteSpace: 'nowrap' } as any) : null),
+        },
+        tabBarItemStyle: { paddingVertical: 2 },
         tabBarIconStyle: { marginTop: 2 },
         // Constant content room (icon + label) with the device's bottom inset
         // reserved underneath, so nothing clips on any screen height.

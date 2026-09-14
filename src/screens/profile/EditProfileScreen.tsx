@@ -12,17 +12,19 @@ import { useAuth } from '../../context/AuthContext';
 import { saveUserProfile } from '../../services/firestore';
 import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
+import { DarkGlassBackground } from '../../components/DarkGlassBackground';
+import { dg } from '../../components/darkGlassTokens';
 import { spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'EditProfile'>;
 
 const BG = '#0D0D0F';
-const INPUT_BG = '#1A1A1D';
-const BORDER = 'rgba(255,255,255,0.10)';
-const BORDER_FOCUS = '#8FE05A';
-const TEXT = '#FFFFFF';
-const TEXT_MUTED = '#9A9A9F';
-const ACCENT = '#8FE05A';
+const INPUT_BG = 'rgba(255,255,255,0.05)';
+const BORDER = 'rgba(255,255,255,0.16)';
+const BORDER_FOCUS = dg.accent;
+const TEXT = dg.ink900;
+const TEXT_MUTED = dg.ink500;
+const ACCENT = dg.accent;
 
 export function EditProfileScreen() {
   const navigation = useNavigation<Nav>();
@@ -85,6 +87,7 @@ export function EditProfileScreen() {
 
   return (
     <View style={styles.root}>
+      <DarkGlassBackground glow="topRight" glowSize={260} glowOpacity={0.18} />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -185,7 +188,7 @@ const styles = StyleSheet.create({
   headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 17, color: TEXT },
   headerSpacer: { width: 40 },
   content: { paddingHorizontal: spacing[4], paddingTop: spacing[6], paddingBottom: spacing[6], gap: spacing[5] },
-  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[7], borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', backgroundColor: BG },
+  footer: { paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[7] },
 
   avatarSection: { alignItems: 'center' },
   avatarWrap: { position: 'relative', width: 88, height: 88 },
