@@ -10,7 +10,6 @@ import { pendingRun } from '../../storage/storage';
 import { logout, deleteAccount } from '../../services/auth';
 import { Button } from '../../components/Button';
 import { BottomSheet } from '../../components/BottomSheet';
-import { DarkGlassBackground } from '../../components/DarkGlassBackground';
 import { GlassCard } from '../../components/GlassCard';
 import { Icon } from '../../components/Icon';
 import { dg } from '../../components/darkGlassTokens';
@@ -68,7 +67,6 @@ export function ProfileScreen() {
 
   return (
     <View style={styles.root}>
-      <DarkGlassBackground glow="topRight" glowSize={260} glowOpacity={0.18} />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.avatarSection}>
@@ -80,9 +78,15 @@ export function ProfileScreen() {
             </View>
             <Text style={styles.displayName}>{displayName}</Text>
             <Text style={styles.email}>{profile?.email || user?.email || ''}</Text>
-            <TouchableOpacity style={styles.editBtn} onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.75}>
-              <Text style={styles.editBtnText}>Editar perfil</Text>
-            </TouchableOpacity>
+            <Button
+              label="Editar perfil"
+              variant="secondary"
+              size="sm"
+              fullWidth={false}
+              dark
+              onPress={() => navigation.navigate('EditProfile')}
+              style={styles.editBtn}
+            />
           </View>
 
           <GlassCard variant="secondary" style={styles.settingsList}>
@@ -158,8 +162,7 @@ const styles = StyleSheet.create({
   avatarText: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 34, color: dg.ink900 },
   displayName: { fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: dg.ink900 },
   email: { fontFamily: 'PlusJakartaSans', fontSize: 14, color: dg.ink500 },
-  editBtn: { marginTop: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)', borderRadius: 20, paddingVertical: 7, paddingHorizontal: 20 },
-  editBtnText: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 13, color: '#FFFFFF' },
+  editBtn: { marginTop: 4 },
   settingsList: { borderRadius: 16, paddingVertical: 4, paddingHorizontal: spacing[4] },
   settingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 18 },
   settingsRowDivider: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },

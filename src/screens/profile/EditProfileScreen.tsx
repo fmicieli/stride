@@ -12,7 +12,6 @@ import { useAuth } from '../../context/AuthContext';
 import { saveUserProfile } from '../../services/firestore';
 import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
-import { DarkGlassBackground } from '../../components/DarkGlassBackground';
 import { dg } from '../../components/darkGlassTokens';
 import { spacing, radius, controlSize } from '../../theme';
 
@@ -47,6 +46,12 @@ export function EditProfileScreen() {
 
   const initial = (name || 'R').charAt(0).toUpperCase();
   const email = profile?.email || user?.email || '';
+
+  const isDirty =
+    name.trim() !== (profile?.name || '') ||
+    lastName.trim() !== (profile?.lastName || '') ||
+    phone.trim() !== (profile?.phone || '') ||
+    avatar !== profile?.avatar;
 
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -87,7 +92,6 @@ export function EditProfileScreen() {
 
   return (
     <View style={styles.root}>
-      <DarkGlassBackground glow="topRight" glowSize={260} glowOpacity={0.18} />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -110,7 +114,7 @@ export function EditProfileScreen() {
                     </View>
                 }
                 <View style={styles.cameraBadge}>
-                  <Icon name="camera" size={14} color="#FFFFFF" />
+                  <Icon name="camera" size={14} color={dg.ctaText} />
                 </View>
               </TouchableOpacity>
             </View>
@@ -148,9 +152,7 @@ export function EditProfileScreen() {
             {/* Email — deshabilitado */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Email</Text>
-              <View style={styles.inputDisabled}>
-                <Text style={styles.inputDisabledText} numberOfLines={1}>{email}</Text>
-              </View>
+              <Text style={styles.inputDisabledText} numberOfLines={1}>{email}</Text>
             </View>
 
             {/* Teléfono */}
@@ -171,7 +173,13 @@ export function EditProfileScreen() {
           </ScrollView>
 
           <View style={styles.footer}>
-            <Button label={saving ? 'Guardando...' : 'Guardar cambios'} onPress={handleSave} disabled={saving} loading={saving} dark />
+            <Button
+              label={saving ? 'Guardando...' : 'Guardar cambios'}
+              onPress={handleSave}
+              disabled={saving || !isDirty}
+              loading={saving}
+              dark
+            />
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -206,6 +214,6 @@ const styles = StyleSheet.create({
   inputGroup: { gap: spacing[2] },
   inputLabel: { fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 13, color: TEXT_MUTED },
   input: { borderWidth: 1, borderColor: BORDER, borderRadius: radius.sm, height: controlSize.md, paddingHorizontal: spacing[3], fontFamily: 'PlusJakartaSans', fontSize: 15, color: TEXT, backgroundColor: INPUT_BG },
-  inputDisabled: { borderWidth: 1, borderColor: BORDER, borderRadius: radius.sm, height: controlSize.md, paddingHorizontal: spacing[3], backgroundColor: 'rgba(255,255,255,0.03)', justifyContent: 'center' },
-  inputDisabledText: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: TEXT_MUTED },
+  // Disabled field (email): no box at all, per Figma spec — plain label + value.
+  inputDisabledText: { fontFamily: 'PlusJakartaSans', fontSize: 15, color: dg.ink500 },
 });
