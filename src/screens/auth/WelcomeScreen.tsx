@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Animated, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
+import { Video, ResizeMode } from 'expo-av';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -11,8 +12,11 @@ import { spacing } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Welcome'>;
 
-const heroSource = require('../../../assets/welcome-hero.jpg');
-const heroUri = typeof heroSource === 'string' ? heroSource : heroSource.uri;
+const posterSource = require('../../../assets/welcome-hero.jpg');
+const posterUri = typeof posterSource === 'string' ? posterSource : posterSource.uri;
+
+const videoSource = require('../../../assets/welcome.mp4');
+const videoUri = typeof videoSource === 'string' ? videoSource : videoSource.uri;
 
 export function WelcomeScreen() {
   const navigation = useNavigation<Nav>();
@@ -44,9 +48,38 @@ export function WelcomeScreen() {
     <View style={styles.root}>
       <View style={styles.hero}>
         {Platform.OS === 'web' ? (
-          <View style={styles.heroImageWeb} />
+          // @ts-ignore web-only <video>: autoplay muted loop, cropped to cover the hero area.
+          // Plain inline style object — a raw DOM tag needs a real CSS object,
+          // not a StyleSheet.create() reference (see OnboardingDateScreen's <input>).
+          <video
+            src={videoUri}
+            poster={posterUri}
+            autoPlay
+            muted
+            loop
+            playsInline
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
         ) : (
-          <Image source={heroSource} style={styles.heroImage} resizeMode="cover" />
+          <Video
+            source={videoSource}
+            posterSource={posterSource}
+            usePoster
+            style={styles.heroImage}
+            resizeMode={ResizeMode.COVER}
+            shouldPlay
+            isLooping
+            isMuted
+          />
         )}
         <View style={styles.heroOverlay} pointerEvents="none" />
         <View style={styles.logoWrap}>
@@ -73,14 +106,6 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0D0D0F' },
   hero: { flex: 1, overflow: 'hidden' },
   heroImage: { ...StyleSheet.absoluteFillObject },
-  heroImageWeb: {
-    ...StyleSheet.absoluteFillObject,
-    ...({
-      backgroundImage: `url(${heroUri})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    } as any),
-  },
   heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10,10,12,0.45)' },
   logoWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   fade:
