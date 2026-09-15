@@ -11,7 +11,7 @@ import { getPlan, saveSession, saveStreak, getSessions } from '../../services/fi
 import { pendingRun } from '../../storage/storage';
 import { TrainingPlan, TrainingSession, DayKey } from '../../types';
 import { formatDuration, buildSessionIntervals, SessionInterval, computeKm } from '../../utils/planGenerator';
-import { say, primeVoice, ringBell } from '../../utils/voice';
+import { say, primeVoice, ringBell, ringTick } from '../../utils/voice';
 import { Button } from '../../components/Button';
 import { BottomSheet } from '../../components/BottomSheet';
 import { SessionSummary } from '../../components/SessionSummary';
@@ -133,9 +133,8 @@ export function ActiveTrainingScreen() {
       const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) meta.setAttribute('content', '#0D1210');
 
-      const styleEl = document.createElement('style');
-      styleEl.textContent = '@keyframes strideTrack{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}';
-      document.head.appendChild(styleEl);
+      // Re-prime AudioContext in case iOS suspended it during navigation
+      primeVoice();
 
       let wakeLock: WakeLockSentinel | null = null;
       const acquireWakeLock = async () => {
@@ -155,7 +154,6 @@ export function ActiveTrainingScreen() {
         if (meta) meta.setAttribute('content', '#0D0D0F');
         wakeLock?.release().catch(() => {});
         document.removeEventListener('visibilitychange', onVisible);
-        styleEl.remove();
       };
     }, []),
   );
@@ -174,9 +172,8 @@ export function ActiveTrainingScreen() {
     }, [user]),
   );
 
-  // Background gradient animation (native only; web uses CSS)
+  // Background color breathing animation (both platforms)
   useEffect(() => {
-    if (Platform.OS === 'web') return;
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(bgAnim, { toValue: 1, duration: 5000, useNativeDriver: false, easing: Easing.inOut(Easing.sin) }),
@@ -214,7 +211,7 @@ export function ActiveTrainingScreen() {
     let waitTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
     const beat = () => {
-      if (Platform.OS === 'web') ringBell(1);
+      if (Platform.OS === 'web') ringTick();
       else dingRef.current?.replayAsync().catch(() => {});
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       countAnim.setValue(0);
@@ -235,7 +232,7 @@ export function ActiveTrainingScreen() {
         if (n <= 0) {
           if (tickId) { clearInterval(tickId); tickId = null; }
           countAnim.setValue(1);
-          if (Platform.OS === 'web') ringBell(1);
+          if (Platform.OS === 'web') ringBell(2);
           setPhase('running');
           return;
         }
@@ -397,22 +394,12 @@ export function ActiveTrainingScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      {Platform.OS === 'web' ? (
-        // @ts-ignore — web-only CSS gradient animation
-        <View style={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundImage: 'linear-gradient(160deg, #0F2218 0%, #0D1210 35%, #08150F 65%, #101A14 100%)',
-          backgroundSize: '300% 300%',
-          animation: 'strideTrack 8s ease infinite',
-        }} />
-      ) : (
-        <Animated.View style={[StyleSheet.absoluteFillObject, {
-          backgroundColor: bgAnim.interpolate({
-            inputRange: [0, 0.5, 1],
-            outputRange: ['#0D1210', '#0F1E14', '#0D1210'],
-          }),
-        }]} />
-      )}
+      <Animated.View style={[StyleSheet.absoluteFillObject, {
+        backgroundColor: bgAnim.interpolate({
+          inputRange: [0, 0.5, 1],
+          outputRange: ['#0D1210', '#0F1E14', '#0D1210'],
+        }),
+      }]} />
       <View style={styles.content}>
         <View style={styles.badge}>
           <Text style={styles.badgeText}>

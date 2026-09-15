@@ -38,6 +38,27 @@ function synthStrike(ctx: AudioContext, when: number, vol = 0.65): void {
   }
 }
 
+function synthTick(ctx: AudioContext, when: number): void {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.frequency.value = 1100;
+  osc.type = 'sine';
+  gain.gain.setValueAtTime(0.35, when);
+  gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.07);
+  osc.start(when);
+  osc.stop(when + 0.08);
+}
+
+export function ringTick(): void {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const schedule = () => synthTick(ctx, ctx.currentTime + 0.1);
+  if (ctx.state === 'running') schedule();
+  else ctx.resume().then(schedule).catch(() => {});
+}
+
 export function ringBell(count = 1): void {
   const ctx = getAudioCtx();
   if (!ctx) return;
@@ -46,7 +67,7 @@ export function ringBell(count = 1): void {
     const gap = 0.65;
     for (let i = 0; i < count; i++) {
       // Small 0.02 s offset so "now" is always a valid future time
-      synthStrike(ctx, ctx.currentTime + 0.02 + i * gap);
+      synthStrike(ctx, ctx.currentTime + 0.1 + i * gap);
     }
   };
 
@@ -65,13 +86,19 @@ export function primeAudio(): void {
   const ctx = getAudioCtx();
   if (!ctx) return;
 
+  // Play a near-silent 50ms tone — more reliable unlock signal on iOS than a blank buffer
   const play = () => {
     try {
-      const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
-      const src = ctx.createBufferSource();
-      src.buffer = buf;
-      src.connect(ctx.destination);
-      src.start();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 440;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.05);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.06);
     } catch {}
   };
 
