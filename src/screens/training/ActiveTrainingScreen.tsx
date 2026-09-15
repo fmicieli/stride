@@ -172,12 +172,12 @@ export function ActiveTrainingScreen() {
     }, [user]),
   );
 
-  // Background color breathing animation (both platforms)
+  // Background overlay pulse (opacity on native driver — GPU-smooth on web + native)
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(bgAnim, { toValue: 1, duration: 5000, useNativeDriver: false, easing: Easing.inOut(Easing.sin) }),
-        Animated.timing(bgAnim, { toValue: 0, duration: 5000, useNativeDriver: false, easing: Easing.inOut(Easing.sin) }),
+        Animated.timing(bgAnim, { toValue: 1, duration: 3000, useNativeDriver: true, easing: Easing.inOut(Easing.sin) }),
+        Animated.timing(bgAnim, { toValue: 0, duration: 3000, useNativeDriver: true, easing: Easing.inOut(Easing.sin) }),
       ]),
     );
     loop.start();
@@ -394,11 +394,11 @@ export function ActiveTrainingScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      {/* Static base + animated green overlay */}
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#0D1210' }]} />
       <Animated.View style={[StyleSheet.absoluteFillObject, {
-        backgroundColor: bgAnim.interpolate({
-          inputRange: [0, 0.5, 1],
-          outputRange: ['#0D1210', '#0F1E14', '#0D1210'],
-        }),
+        backgroundColor: '#2A5035',
+        opacity: bgAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.35] }),
       }]} />
       <View style={styles.content}>
         <View style={styles.badge}>
