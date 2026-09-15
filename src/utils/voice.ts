@@ -1,112 +1,71 @@
 import * as Speech from 'expo-speech';
 import { Platform } from 'react-native';
 
-// ─── Web Audio bell synthesizer ───────────────────────────────────────────────
-let webAudioCtx: AudioContext | null = null;
+// ─── Web: HTML5 Audio bells (iOS-PWA reliable) ────────────────────────────────
+// Expo web resolves require() to a URL string; native returns a module object.
+const dingRaw = Platform.OS === 'web' ? require('../../assets/ding.wav') : null;
+const dingUrl: string | null =
+  dingRaw == null ? null
+  : typeof dingRaw === 'string' ? dingRaw
+  : (dingRaw as any)?.uri ?? null;
 
-function getAudioCtx(): AudioContext | null {
-  if (Platform.OS !== 'web') return null;
+function makeAudio(src: string | null, playbackRate = 1, volume = 1): HTMLAudioElement | null {
+  if (!src || typeof window === 'undefined') return null;
   try {
-    if (!webAudioCtx || webAudioCtx.state === 'closed') {
-      webAudioCtx = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
-    }
-    const ctx = webAudioCtx as AudioContext;
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-    return ctx;
+    const el = new Audio(src);
+    el.preload = 'auto';
+    el.playbackRate = playbackRate;
+    el.volume = volume;
+    return el;
   } catch { return null; }
 }
 
-function synthStrike(ctx: AudioContext, when: number, vol = 0.65): void {
-  const partials: [number, number, number][] = [
-    [1.000, 1.00, 3.2],
-    [2.756, 0.50, 2.2],
-    [5.404, 0.25, 1.5],
-    [8.933, 0.12, 0.9],
-  ];
-  const base = 880;
-  for (const [ratio, amp, decay] of partials) {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = base * ratio;
-    osc.type = 'sine';
-    gain.gain.setValueAtTime(vol * amp, when);
-    gain.gain.exponentialRampToValueAtTime(0.0001, when + decay);
-    osc.start(when);
-    osc.stop(when + decay + 0.05);
-  }
-}
+// Two bell elements so back-to-back ringBell(2) can overlap
+const webBell1 = makeAudio(dingUrl);
+const webBell2 = makeAudio(dingUrl);
+// Tick: same file at 2× speed → shorter, higher-pitched, distinct from the bell
+const webTick  = makeAudio(dingUrl, 2.0, 0.75);
 
-function synthTick(ctx: AudioContext, when: number): void {
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.frequency.value = 1100;
-  osc.type = 'sine';
-  gain.gain.setValueAtTime(0.35, when);
-  gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.07);
-  osc.start(when);
-  osc.stop(when + 0.08);
-}
-
-export function ringTick(): void {
-  const ctx = getAudioCtx();
-  if (!ctx) return;
-  const schedule = () => synthTick(ctx, ctx.currentTime + 0.1);
-  if (ctx.state === 'running') schedule();
-  else ctx.resume().then(schedule).catch(() => {});
+function playEl(el: HTMLAudioElement | null): void {
+  if (!el) return;
+  el.currentTime = 0;
+  el.play().catch(() => {});
 }
 
 export function ringBell(count = 1): void {
-  const ctx = getAudioCtx();
-  if (!ctx) return;
-
-  const schedule = () => {
-    const gap = 0.65;
-    for (let i = 0; i < count; i++) {
-      // Small 0.02 s offset so "now" is always a valid future time
-      synthStrike(ctx, ctx.currentTime + 0.1 + i * gap);
-    }
-  };
-
-  // Must wait for the context to actually be running before scheduling;
-  // scheduling on a suspended context schedules at time 0 which is
-  // already in the past by the time resume() resolves → silent.
-  if (ctx.state === 'running') {
-    schedule();
-  } else {
-    ctx.resume().then(schedule).catch(() => {});
+  if (Platform.OS === 'web') {
+    playEl(webBell1);
+    if (count >= 2) setTimeout(() => playEl(webBell2), 650);
+    return;
   }
 }
 
+export function ringTick(): void {
+  if (Platform.OS === 'web') {
+    playEl(webTick);
+    return;
+  }
+}
+
+// Called synchronously from a user-gesture handler to unlock HTML5 Audio on iOS PWA.
+// Each element must receive a .play() call inside the gesture before it can be
+// triggered programmatically later (iOS autoplay policy).
 export function primeAudio(): void {
   if (Platform.OS !== 'web') return;
-  const ctx = getAudioCtx();
-  if (!ctx) return;
-
-  // Play a near-silent 50ms tone — more reliable unlock signal on iOS than a blank buffer
-  const play = () => {
-    try {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 440;
-      osc.type = 'sine';
-      gain.gain.setValueAtTime(0.001, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.05);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.06);
-    } catch {}
+  const unlock = (el: HTMLAudioElement | null) => {
+    if (!el) return;
+    el.muted = true;
+    el.play()
+      .then(() => {
+        el.pause();
+        el.currentTime = 0;
+        el.muted = false;
+      })
+      .catch(() => {});
   };
-
-  if (ctx.state === 'running') {
-    play();
-  } else {
-    ctx.resume().then(play).catch(() => {});
-  }
+  unlock(webBell1);
+  unlock(webBell2);
+  unlock(webTick);
 }
 
 // ─── Voice / TTS ──────────────────────────────────────────────────────────────
