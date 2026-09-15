@@ -271,11 +271,11 @@ export function HomeScreen() {
                   <TouchableOpacity
                     style={styles.cta}
                     activeOpacity={0.85}
-                    onPress={() =>
-                      hasPendingRun
-                        ? navigation.navigate('ActiveTraining', { resume: true })
-                        : setShowPreRun(true)
-                    }
+                    onPress={() => {
+                      primeVoice();
+                      if (hasPendingRun) navigation.navigate('ActiveTraining', { resume: true });
+                      else setShowPreRun(true);
+                    }}
                   >
                     <Text style={styles.ctaText}>{hasPendingRun ? 'Reanudar entrenamiento' : 'Empezar'}</Text>
                   </TouchableOpacity>

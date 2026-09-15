@@ -92,7 +92,11 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 16,
   },
-  sheetDark: { backgroundColor: '#0D0D0F' },
+  sheetDark: {
+    backgroundColor: '#1A1A1D',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.10)',
+  },
   close: {
     position: 'absolute',
     top: spacing[4],

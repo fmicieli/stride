@@ -449,8 +449,8 @@ export function ActiveTrainingScreen() {
             ];
           })()}
         />
-        <Button label="Reanudar" onPress={handleResume} />
-        <Button label="Finalizar entrenamiento" variant="tertiaryDanger" onPress={handleFinishPressed} />
+        <Button label="Reanudar" onPress={handleResume} dark />
+        <Button label="Finalizar entrenamiento" variant="tertiaryDanger" onPress={handleFinishPressed} dark />
       </BottomSheet>
 
       <BottomSheet
@@ -460,8 +460,8 @@ export function ActiveTrainingScreen() {
         subtitle="¿Querés finalizarlo igual? Vas a poder retomarlo más tarde durante el día."
         dark
       >
-        <Button label="Sí, finalizar" variant="tertiaryDanger" onPress={handleLeaveIncomplete} />
-        <Button label="Seguir entrenando" onPress={() => { setShowFinishConfirm(false); setPaused(true); }} />
+        <Button label="Sí, finalizar" variant="tertiaryDanger" onPress={handleLeaveIncomplete} dark />
+        <Button label="Seguir entrenando" onPress={() => { setShowFinishConfirm(false); setPaused(true); }} dark />
       </BottomSheet>
 
       {showStopSummary && (
