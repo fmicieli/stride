@@ -30,7 +30,7 @@ function ControlIcon({ name }: { name: 'pause' | 'play' }) {
         // @ts-ignore
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
           {/* @ts-ignore */}
-          <path d="M 7 4 L 18 11 L 7 18 Z" fill="#FFFFFF" />
+          <path d="M 7 4 L 18 11 L 7 18 Z" fill="#000000" />
         </svg>
       );
     }
@@ -38,13 +38,13 @@ function ControlIcon({ name }: { name: 'pause' | 'play' }) {
       // @ts-ignore
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* @ts-ignore */}
-        <path d="M 8 4 L 8 18" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+        <path d="M 8 4 L 8 18" stroke="#000000" strokeWidth="3" strokeLinecap="round" />
         {/* @ts-ignore */}
-        <path d="M 14 4 L 14 18" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+        <path d="M 14 4 L 14 18" stroke="#000000" strokeWidth="3" strokeLinecap="round" />
       </svg>
     );
   }
-  return <Text style={{ fontSize: 22, color: '#FFFFFF' }}>{name === 'play' ? '▶' : '⏸'}</Text>;
+  return <Text style={{ fontSize: 22, color: '#000000' }}>{name === 'play' ? '▶' : '⏸'}</Text>;
 }
 
 type Nav = StackNavigationProp<RootStackParamList, 'ActiveTraining'>;
@@ -92,6 +92,7 @@ export function ActiveTrainingScreen() {
   const [ready, setReady] = useState(!isResume);
   const [pendingElapsedRaw, setPendingElapsedRaw] = useState<number | null>(null);
   const countAnim = useRef(new Animated.Value(0)).current;
+  const bgAnim = useRef(new Animated.Value(0)).current;
   const prevIntervalIdxRef = useRef(-1);
   const finishingRef = useRef(false);
   const resumeLoadedRef = useRef(false);
@@ -132,6 +133,10 @@ export function ActiveTrainingScreen() {
       const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) meta.setAttribute('content', '#0D1210');
 
+      const styleEl = document.createElement('style');
+      styleEl.textContent = '@keyframes strideTrack{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}';
+      document.head.appendChild(styleEl);
+
       let wakeLock: WakeLockSentinel | null = null;
       const acquireWakeLock = async () => {
         try {
@@ -150,6 +155,7 @@ export function ActiveTrainingScreen() {
         if (meta) meta.setAttribute('content', '#0D0D0F');
         wakeLock?.release().catch(() => {});
         document.removeEventListener('visibilitychange', onVisible);
+        styleEl.remove();
       };
     }, []),
   );
@@ -167,6 +173,19 @@ export function ActiveTrainingScreen() {
       });
     }, [user]),
   );
+
+  // Background gradient animation (native only; web uses CSS)
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(bgAnim, { toValue: 1, duration: 5000, useNativeDriver: false, easing: Easing.inOut(Easing.sin) }),
+        Animated.timing(bgAnim, { toValue: 0, duration: 5000, useNativeDriver: false, easing: Easing.inOut(Easing.sin) }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
 
   // Preload the interval-change chime
   useEffect(() => {
@@ -378,6 +397,22 @@ export function ActiveTrainingScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      {Platform.OS === 'web' ? (
+        // @ts-ignore — web-only CSS gradient animation
+        <View style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundImage: 'linear-gradient(160deg, #0F2218 0%, #0D1210 35%, #08150F 65%, #101A14 100%)',
+          backgroundSize: '300% 300%',
+          animation: 'strideTrack 8s ease infinite',
+        }} />
+      ) : (
+        <Animated.View style={[StyleSheet.absoluteFillObject, {
+          backgroundColor: bgAnim.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: ['#0D1210', '#0F1E14', '#0D1210'],
+          }),
+        }]} />
+      )}
       <View style={styles.content}>
         <View style={styles.badge}>
           <Text style={styles.badgeText}>
