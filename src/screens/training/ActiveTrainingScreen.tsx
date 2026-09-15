@@ -95,6 +95,8 @@ export function ActiveTrainingScreen() {
   const prevIntervalIdxRef = useRef(-1);
   const finishingRef = useRef(false);
   const resumeLoadedRef = useRef(false);
+  // On native the ding loads async; don't start the countdown until it's ready
+  const soundReadyRef = useRef(Platform.OS === 'web');
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pausedRef = useRef(false);
@@ -158,10 +160,10 @@ export function ActiveTrainingScreen() {
     Audio.setAudioModeAsync({ playsInSilentModeIOS: true }).catch(() => {});
     Audio.Sound.createAsync(DING, { volume: 0.9 })
       .then(({ sound }) => {
-        if (mounted) dingRef.current = sound;
+        if (mounted) { dingRef.current = sound; soundReadyRef.current = true; }
         else sound.unloadAsync();
       })
-      .catch(() => {});
+      .catch(() => { soundReadyRef.current = true; }); // allow countdown even if load fails
     return () => {
       mounted = false;
       dingRef.current?.unloadAsync();
@@ -169,43 +171,70 @@ export function ActiveTrainingScreen() {
     };
   }, []);
 
-  // 3·2·1 countdown with a spoken beat + bell, before the warm-up starts
+  // 3·2·1 countdown with a bell beat, before the warm-up starts
   useEffect(() => {
     if (phase !== 'countdown' || intervals.length === 0) return;
-    let n = 3;
-    setCount(n);
 
-    const beat = (spoken: number) => {
+    let tickId: ReturnType<typeof setInterval> | null = null;
+    let settleId: ReturnType<typeof setTimeout> | null = null;
+    let waitId: ReturnType<typeof setInterval> | null = null;
+    let waitTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const beat = () => {
       if (Platform.OS === 'web') ringBell(1);
       else dingRef.current?.replayAsync().catch(() => {});
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       countAnim.setValue(0);
       Animated.timing(countAnim, {
-        toValue: 1,
-        duration: 420,
+        toValue: 1, duration: 420,
         easing: Easing.out(Easing.back(1.7)),
         useNativeDriver: true,
       }).start();
     };
-    beat(3);
 
-    const id = setInterval(() => {
-      n -= 1;
-      if (n <= 0) {
-        clearInterval(id);
-        countAnim.setValue(1);
-        if (Platform.OS === 'web') ringBell(1);
-        setPhase('running');
-        return;
-      }
+    const start = () => {
+      let n = 3;
       setCount(n);
-      beat(n);
-    }, 900);
+      beat();
 
-    const settle = setTimeout(() => setPhase('running'), 900 * 3 + 800);
+      tickId = setInterval(() => {
+        n -= 1;
+        if (n <= 0) {
+          if (tickId) { clearInterval(tickId); tickId = null; }
+          countAnim.setValue(1);
+          if (Platform.OS === 'web') ringBell(1);
+          setPhase('running');
+          return;
+        }
+        setCount(n);
+        beat();
+      }, 900);
+
+      settleId = setTimeout(() => setPhase('running'), 900 * 3 + 800);
+    };
+
+    if (soundReadyRef.current) {
+      start();
+    } else {
+      // Native: wait up to 1.5 s for the ding .wav to finish loading
+      waitId = setInterval(() => {
+        if (soundReadyRef.current) {
+          if (waitId) { clearInterval(waitId); waitId = null; }
+          if (waitTimeoutId) { clearTimeout(waitTimeoutId); waitTimeoutId = null; }
+          start();
+        }
+      }, 50);
+      waitTimeoutId = setTimeout(() => {
+        if (waitId) { clearInterval(waitId); waitId = null; }
+        start();
+      }, 1500);
+    }
+
     return () => {
-      clearInterval(id);
-      clearTimeout(settle);
+      if (waitId) clearInterval(waitId);
+      if (waitTimeoutId) clearTimeout(waitTimeoutId);
+      if (tickId) clearInterval(tickId);
+      if (settleId) clearTimeout(settleId);
     };
   }, [phase, intervals.length]);
 

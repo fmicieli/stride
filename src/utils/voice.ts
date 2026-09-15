@@ -41,9 +41,22 @@ function synthStrike(ctx: AudioContext, when: number, vol = 0.65): void {
 export function ringBell(count = 1): void {
   const ctx = getAudioCtx();
   if (!ctx) return;
-  const gap = 0.65;
-  for (let i = 0; i < count; i++) {
-    synthStrike(ctx, ctx.currentTime + i * gap);
+
+  const schedule = () => {
+    const gap = 0.65;
+    for (let i = 0; i < count; i++) {
+      // Small 0.02 s offset so "now" is always a valid future time
+      synthStrike(ctx, ctx.currentTime + 0.02 + i * gap);
+    }
+  };
+
+  // Must wait for the context to actually be running before scheduling;
+  // scheduling on a suspended context schedules at time 0 which is
+  // already in the past by the time resume() resolves → silent.
+  if (ctx.state === 'running') {
+    schedule();
+  } else {
+    ctx.resume().then(schedule).catch(() => {});
   }
 }
 
@@ -51,11 +64,22 @@ export function primeAudio(): void {
   if (Platform.OS !== 'web') return;
   const ctx = getAudioCtx();
   if (!ctx) return;
-  const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
-  const src = ctx.createBufferSource();
-  src.buffer = buf;
-  src.connect(ctx.destination);
-  src.start();
+
+  const play = () => {
+    try {
+      const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start();
+    } catch {}
+  };
+
+  if (ctx.state === 'running') {
+    play();
+  } else {
+    ctx.resume().then(play).catch(() => {});
+  }
 }
 
 // ─── Voice / TTS ──────────────────────────────────────────────────────────────
