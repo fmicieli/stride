@@ -124,18 +124,32 @@ export function ActiveTrainingScreen() {
     setReady(true);
   }, [isResume, pendingElapsedRaw, intervals]);
 
-  // Make the status bar dark while on this screen (PWA + Chrome Android)
+  // Dark status bar + Screen Wake Lock while training (keeps screen on during workout)
   useFocusEffect(
     useCallback(() => {
-      if (Platform.OS === 'web') {
-        const meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', '#0D1210');
-      }
+      if (Platform.OS !== 'web') return;
+
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', '#0D1210');
+
+      let wakeLock: WakeLockSentinel | null = null;
+      const acquireWakeLock = async () => {
+        try {
+          if ('wakeLock' in navigator) {
+            wakeLock = await (navigator as any).wakeLock.request('screen');
+          }
+        } catch {}
+      };
+      acquireWakeLock();
+
+      // Re-acquire after the page becomes visible again (OS releases it on hide)
+      const onVisible = () => { if (document.visibilityState === 'visible') acquireWakeLock(); };
+      document.addEventListener('visibilitychange', onVisible);
+
       return () => {
-        if (Platform.OS === 'web') {
-          const meta = document.querySelector('meta[name="theme-color"]');
-          if (meta) meta.setAttribute('content', '#0D0D0F');
-        }
+        if (meta) meta.setAttribute('content', '#0D0D0F');
+        wakeLock?.release().catch(() => {});
+        document.removeEventListener('visibilitychange', onVisible);
       };
     }, []),
   );
