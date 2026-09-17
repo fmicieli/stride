@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -20,6 +19,7 @@ import { useOnboarding } from '../../utils/onboardingContext';
 import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
 import { GoogleGlyph } from '../../components/GoogleGlyph';
+import { showAlert } from '../../utils/alert';
 import { spacing } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Login'>;
@@ -59,7 +59,7 @@ export function LoginScreen() {
       }
     } catch (e: any) {
       if (e.code !== 'auth/popup-closed-by-user') {
-        Alert.alert('Error', 'No se pudo iniciar sesión con Google. Intentá de nuevo.');
+        showAlert('Error', 'No se pudo iniciar sesión con Google. Intentá de nuevo.');
       }
     } finally {
       setGoogleLoading(false);
@@ -68,7 +68,7 @@ export function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Completá todos los campos');
+      showAlert('Error', 'Completá todos los campos');
       return;
     }
     setLoading(true);
@@ -84,13 +84,15 @@ export function LoginScreen() {
         navigation.replace(existingPlan ? 'MainTabs' : 'OnboardingGoal');
       }
     } catch (e: any) {
+      // Modern Firebase projects have email-enumeration protection on, which
+      // collapses wrong-password/no-such-user into a single generic code.
       const msg =
-        e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password'
+        e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential'
           ? 'Email o contraseña incorrectos'
           : e.code === 'auth/invalid-email'
           ? 'Email inválido'
           : 'Ocurrió un error. Intentá de nuevo';
-      Alert.alert('Error', msg);
+      showAlert('Error', msg);
     } finally {
       setLoading(false);
     }

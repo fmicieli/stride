@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -7,6 +7,7 @@ import { RootStackParamList } from '../../navigation';
 import { sendPasswordReset } from '../../services/auth';
 import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
+import { showAlert } from '../../utils/alert';
 import { spacing } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'ForgotPassword'>;
@@ -26,7 +27,7 @@ export function ForgotPasswordScreen() {
   const [focused, setFocused] = useState(false);
 
   const handleSend = async () => {
-    if (!email.trim()) { Alert.alert('Error', 'Ingresá tu email'); return; }
+    if (!email.trim()) { showAlert('Error', 'Ingresá tu email'); return; }
     setLoading(true);
     try {
       await sendPasswordReset(email.trim());
@@ -35,7 +36,7 @@ export function ForgotPasswordScreen() {
       const msg = e.code === 'auth/user-not-found' ? 'No encontramos una cuenta con ese email'
         : e.code === 'auth/invalid-email' ? 'Email inválido'
         : 'Ocurrió un error. Intentá de nuevo';
-      Alert.alert('Error', msg);
+      showAlert('Error', msg);
     } finally { setLoading(false); }
   };
 

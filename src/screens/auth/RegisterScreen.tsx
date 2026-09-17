@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -20,6 +19,7 @@ import { useOnboarding } from '../../utils/onboardingContext';
 import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
 import { GoogleGlyph } from '../../components/GoogleGlyph';
+import { showAlert } from '../../utils/alert';
 import { spacing } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'Register'>;
@@ -72,7 +72,7 @@ export function RegisterScreen() {
       }
     } catch (e: any) {
       if (e.code !== 'auth/popup-closed-by-user') {
-        Alert.alert('Error', 'No se pudo iniciar sesión con Google. Intentá de nuevo.');
+        showAlert('Error', 'No se pudo iniciar sesión con Google. Intentá de nuevo.');
       }
     } finally {
       setGoogleLoading(false);
@@ -93,11 +93,19 @@ export function RegisterScreen() {
       }
       navigation.replace('MainTabs');
     } catch (e: any) {
-      const msg =
-        e.code === 'auth/email-already-in-use' ? 'Ese email ya está registrado'
-        : e.code === 'auth/invalid-email' ? 'Email inválido'
-        : 'Ocurrió un error. Intentá de nuevo';
-      Alert.alert('Error', msg);
+      if (e.code === 'auth/email-already-in-use') {
+        showAlert(
+          'Ya tenés una cuenta',
+          'Ese email ya está registrado. ¿Querés iniciar sesión en su lugar?',
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Iniciar sesión', onPress: () => navigation.navigate('Login') },
+          ],
+        );
+      } else {
+        const msg = e.code === 'auth/invalid-email' ? 'Email inválido' : 'Ocurrió un error. Intentá de nuevo';
+        showAlert('Error', msg);
+      }
     } finally {
       setLoading(false);
     }

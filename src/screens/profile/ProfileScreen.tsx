@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput, Alert, Platform, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -13,6 +13,7 @@ import { BottomSheet } from '../../components/BottomSheet';
 import { GlassCard } from '../../components/GlassCard';
 import { Icon } from '../../components/Icon';
 import { dg } from '../../components/darkGlassTokens';
+import { showAlert } from '../../utils/alert';
 import { spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList>;
@@ -52,7 +53,7 @@ export function ProfileScreen() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!deletePassword.trim()) { Alert.alert('Error', 'Ingresá tu contraseña para confirmar'); return; }
+    if (!deletePassword.trim()) { showAlert('Error', 'Ingresá tu contraseña para confirmar'); return; }
     setLoading(true);
     try {
       await deleteAccount(deletePassword);
@@ -61,7 +62,7 @@ export function ProfileScreen() {
       navigation.navigate('Welcome');
     } catch (e: any) {
       const msg = e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential' ? 'Contraseña incorrecta' : 'Ocurrió un error. Intentá de nuevo';
-      Alert.alert('Error', msg);
+      showAlert('Error', msg);
     } finally { setLoading(false); }
   };
 

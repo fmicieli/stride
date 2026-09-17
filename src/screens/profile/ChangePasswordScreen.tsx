@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -9,6 +9,7 @@ import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
 import { DarkGlassBackground } from '../../components/DarkGlassBackground';
 import { dg } from '../../components/darkGlassTokens';
+import { showAlert } from '../../utils/alert';
 import { spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'ChangePassword'>;
@@ -47,10 +48,13 @@ export function ChangePasswordScreen() {
     setSaving(true);
     try {
       await changePassword(current, newPass);
-      Alert.alert('Listo', 'Tu contraseña fue actualizada', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+      showAlert('Listo', 'Tu contraseña fue actualizada', [{ text: 'OK', onPress: () => navigation.goBack() }]);
     } catch (e: any) {
-      const msg = e.code === 'auth/wrong-password' ? 'La contraseña actual es incorrecta' : 'Ocurrió un error. Intentá de nuevo';
-      Alert.alert('Error', msg);
+      const msg =
+        e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential'
+          ? 'La contraseña actual es incorrecta'
+          : 'Ocurrió un error. Intentá de nuevo';
+      showAlert('Error', msg);
     } finally { setSaving(false); }
   };
 

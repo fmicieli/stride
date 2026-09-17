@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ScrollView, Alert, Image,
+  KeyboardAvoidingView, Platform, ScrollView, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -13,6 +13,7 @@ import { saveUserProfile } from '../../services/firestore';
 import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
 import { dg } from '../../components/darkGlassTokens';
+import { showAlert } from '../../utils/alert';
 import { spacing, radius, controlSize } from '../../theme';
 
 type Nav = StackNavigationProp<RootStackParamList, 'EditProfile'>;
@@ -56,7 +57,7 @@ export function EditProfileScreen() {
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permiso requerido', 'Necesitamos acceso a tu galería para cambiar la foto.');
+      showAlert('Permiso requerido', 'Necesitamos acceso a tu galería para cambiar la foto.');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -72,7 +73,7 @@ export function EditProfileScreen() {
 
   const handleSave = async () => {
     if (!user) return;
-    if (!name.trim()) { Alert.alert('Error', 'El nombre es obligatorio'); return; }
+    if (!name.trim()) { showAlert('Error', 'El nombre es obligatorio'); return; }
     setSaving(true);
     try {
       await saveUserProfile(user.uid, {
@@ -84,7 +85,7 @@ export function EditProfileScreen() {
       await refreshProfile();
       navigation.goBack();
     } catch {
-      Alert.alert('Error', 'No se pudo guardar. Intentá de nuevo');
+      showAlert('Error', 'No se pudo guardar. Intentá de nuevo');
     } finally { setSaving(false); }
   };
 
